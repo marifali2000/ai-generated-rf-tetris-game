@@ -64,6 +64,10 @@ class Game {
       onSpeedChange: (v) => this.#syncSpeed(v),
       onMute: () => this.#demoSetMuted(true),
       onUnmute: () => this.#demoSetMuted(false),
+      onPause: () => this.#demoPause(),
+      onResume: () => this.#demoResume(),
+      onHighlight: (type) => this.#demoHighlightDesktop(type),
+      onClearHighlight: () => this.#demoClearDesktopHighlight(),
     });
 
     this.#bindInput();
@@ -771,7 +775,6 @@ class Game {
     } else {
       // Start demo
       this.#autoPlayer.start();
-      this.#demoCycler.start();
       this.#btnDemo?.classList.add('active');
       demoControls?.classList.remove('demo-controls-hidden');
       // Sync demo controls with current values
@@ -786,6 +789,8 @@ class Game {
       if (this.#state !== 'playing') {
         this.#startGame();
       }
+      // Start settings cycler after game is running
+      this.#demoCycler.start();
       this.#updateButtons();
     }
   }
@@ -868,6 +873,48 @@ class Game {
     if (this.#sound.muted !== muted) {
       this.#sound.toggleMute();
       this.#updateMuteButton();
+    }
+  }
+
+  /** Pause game loop for demo setting highlight phase. */
+  #demoPause() {
+    if (this.#state !== 'playing') return;
+    this.#autoPlayer.pause();
+    this.#state = 'paused';
+    this.#renderer.showOverlay('⚙ CHANGING SETTING…');
+  }
+
+  /** Resume game loop after demo setting is applied. */
+  #demoResume() {
+    if (this.#state !== 'paused') return;
+    this.#autoPlayer.resume();
+    this.#state = 'playing';
+    this.#renderer.hideOverlay();
+    this.#lastTimestamp = performance.now();
+    this.#lastDropTime = performance.now();
+    if (!this.#animFrameId) {
+      this.#animFrameId = requestAnimationFrame((ts) => this.#gameLoop(ts));
+    }
+  }
+
+  /** Map setting type → desktop sidebar section ID. */
+  #demoHighlightDesktop(type) {
+    const map = {
+      theme: 'theme-section',
+      volume: 'volume-section',
+      speed: 'speed-section',
+      mute: 'button-section',
+      unmute: 'button-section',
+    };
+    const id = map[type];
+    if (id) {
+      document.getElementById(id)?.classList.add('demo-section-highlight');
+    }
+  }
+
+  #demoClearDesktopHighlight() {
+    for (const el of document.querySelectorAll('.demo-section-highlight')) {
+      el.classList.remove('demo-section-highlight');
     }
   }
 

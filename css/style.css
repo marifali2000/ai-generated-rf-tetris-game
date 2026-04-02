@@ -473,9 +473,23 @@ kbd {
   animation: settingsGlow 1.2s ease-in-out 3;
 }
 
+/* Demo cycler — desktop highlight for sidebar sections */
+.demo-section-highlight {
+  background: rgba(90, 176, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px;
+  margin: -6px;
+  animation: demoSectionPulse 0.8s ease-in-out infinite;
+}
+
 @keyframes settingsGlow {
   0%, 100% { box-shadow: none; }
   50% { box-shadow: 0 0 15px rgba(90, 176, 255, 0.4), 0 0 30px rgba(90, 176, 255, 0.2); border-radius: 8px; }
+}
+
+@keyframes demoSectionPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(90, 176, 255, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(90, 176, 255, 0.5), 0 0 40px rgba(90, 176, 255, 0.2); }
 }
 
 /* Demo settings indicator (floating text) */

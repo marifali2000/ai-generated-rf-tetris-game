@@ -311,6 +311,32 @@
     color: #fff;
   }
 
+  /* Demo cycler — highlight phase styles */
+  #demo-controls.demo-highlight-active {
+    opacity: 1 !important;
+    border-color: rgba(90, 176, 255, 0.6);
+    box-shadow: 0 0 25px rgba(90, 176, 255, 0.3);
+  }
+
+  .demo-row-highlight {
+    background: rgba(90, 176, 255, 0.12);
+    border-radius: 8px;
+    padding: 4px 6px;
+    margin: -4px -6px;
+    animation: demoRowPulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes demoRowPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(90, 176, 255, 0.2); }
+    50% { box-shadow: 0 0 18px rgba(90, 176, 255, 0.5); }
+  }
+
+  .demo-control-highlight {
+    outline: 2px solid rgba(90, 176, 255, 0.8);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
   #keys-section {
     display: none;
   }
