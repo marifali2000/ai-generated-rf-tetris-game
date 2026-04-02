@@ -24,6 +24,7 @@ class Scoring {
   #backToBack = 0;
   #lastClearWasDifficult = false;
   #highScore = 0;
+  #dropSpeedMultiplier = 1;
 
   get score() { return this.#score; }
   get level() { return this.#level; }
@@ -31,6 +32,9 @@ class Scoring {
   get combo() { return this.#combo; }
   get backToBack() { return this.#backToBack; }
   get highScore() { return this.#highScore; }
+
+  /** Set drop speed multiplier (0.5 = half speed, 2 = double speed). */
+  setDropSpeedMultiplier(m) { this.#dropSpeedMultiplier = Math.max(0.25, Math.min(10, m)); }
 
   constructor() {
     this.#loadHighScore();
@@ -114,7 +118,7 @@ class Scoring {
   getDropInterval() {
     const idx = Math.min(this.#level - 1, GRAVITY_TABLE.length - 1);
     const frames = GRAVITY_TABLE[idx];
-    return (frames / 60) * 1000;
+    return (frames / 60) * 1000 / this.#dropSpeedMultiplier;
   }
 
   #calcBasePoints(count, tSpinType) {

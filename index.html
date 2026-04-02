@@ -67,6 +67,12 @@
         <div id="speed-label" class="speed-label">2×</div>
       </div>
 
+      <div id="drop-speed-section">
+        <h3>DROP SPEED</h3>
+        <input type="range" id="drop-speed-slider" min="0" max="6" step="1" value="1" class="volume-slider">
+        <div id="drop-speed-label" class="speed-label">1×</div>
+      </div>
+
       <div id="keys-section">
         <div class="key-row"><kbd>←</kbd><kbd>→</kbd> Move</div>
         <div class="key-row"><kbd>↓</kbd> Soft Drop</div>
@@ -134,6 +140,11 @@
       <span id="demo-speed-label" class="demo-val">2×</span>
     </div>
     <div class="demo-row">
+      <label class="demo-label">🏎️</label>
+      <input type="range" id="demo-drop-speed" min="0" max="6" step="1" value="1" class="demo-slider">
+      <span id="demo-drop-speed-label" class="demo-val">1×</span>
+    </div>
+    <div class="demo-row">
       <label class="demo-label">🎵</label>
       <select id="demo-theme" class="demo-select">
         <option value="glass">Glass</option>
@@ -188,6 +199,11 @@
         <label class="drawer-label">ANIM</label>
         <input type="range" id="mobile-speed" min="0" max="3" step="1" value="2" class="drawer-slider">
         <span id="mobile-speed-label" class="drawer-label" style="min-width:35px;text-align:right">2×</span>
+      </div>
+      <div class="drawer-row">
+        <label class="drawer-label">DROP</label>
+        <input type="range" id="mobile-drop-speed" min="0" max="6" step="1" value="1" class="drawer-slider">
+        <span id="mobile-drop-speed-label" class="drawer-label" style="min-width:35px;text-align:right">1×</span>
       </div>
       <div id="drawer-gestures">
         Tap to start/stop · Swipe ←→ move · ↓ drop · Tap rotate · 2-finger hold

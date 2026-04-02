@@ -14,6 +14,8 @@ const LOCK_DELAY = 500; // ms
 const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window;
 const SPEED_STOPS = [0.25, 1, 2, 4];
 const SPEED_LABELS = ['0.5×', '1×', '2×', '4×'];
+const DROP_SPEED_STOPS = [0.5, 1, 2, 4, 6, 8, 10];
+const DROP_SPEED_LABELS = ['0.5×', '1×', '2×', '4×', '6×', '8×', '10×'];
 
 class Game {
   #board;
@@ -167,6 +169,11 @@ class Game {
     speedSlider?.addEventListener('input', (e) => {
       this.#syncSpeed(e.target.value);
     });
+
+    const dropSpeedSlider = document.getElementById('drop-speed-slider');
+    dropSpeedSlider?.addEventListener('input', (e) => {
+      this.#syncDropSpeed(e.target.value);
+    });
   }
 
   /** Bind a mobile drawer button: init sound, run action, close drawer. */
@@ -236,6 +243,25 @@ class Game {
     mobileSpeed?.addEventListener('input', (e) => {
       this.#syncSpeed(e.target.value);
     });
+
+    const mobileDropSpeed = document.getElementById('mobile-drop-speed');
+    mobileDropSpeed?.addEventListener('input', (e) => {
+      this.#syncDropSpeed(e.target.value);
+    });
+  }
+
+  /** Sync drop-speed controls across desktop, mobile, and demo panels. */
+  #syncDropSpeed(value) {
+    const idx = Number(value);
+    const mult = DROP_SPEED_STOPS[idx];
+    this.#scoring.setDropSpeedMultiplier(mult);
+    const label = DROP_SPEED_LABELS[idx];
+    for (const [sId, lId] of [['drop-speed-slider', 'drop-speed-label'], ['mobile-drop-speed', 'mobile-drop-speed-label'], ['demo-drop-speed', 'demo-drop-speed-label']]) {
+      const s = document.getElementById(sId);
+      const l = document.getElementById(lId);
+      if (s) s.value = value;
+      if (l) l.textContent = label;
+    }
   }
 
   /** Sync speed controls across desktop, mobile, and demo panels. */
@@ -269,6 +295,10 @@ class Game {
 
     document.getElementById('demo-speed')?.addEventListener('input', (e) => {
       this.#syncSpeed(e.target.value);
+    });
+
+    document.getElementById('demo-drop-speed')?.addEventListener('input', (e) => {
+      this.#syncDropSpeed(e.target.value);
     });
 
     document.getElementById('demo-theme')?.addEventListener('change', (e) => {
@@ -326,6 +356,7 @@ class Game {
 
   /** Buffer actions during animations, execute immediately otherwise. */
   #bufferedAction(action) {
+    if (this.#autoPlayer.active) return;
     if (this.#renderer.isAnimating) {
       this.#inputBuffer = action;
       return;
@@ -350,6 +381,7 @@ class Game {
   }
 
   #handleStart() {
+    if (this.#autoPlayer.active) return;
     const tutOverlay = document.getElementById('tutorial-overlay');
     const wasTutorial = tutOverlay?.classList.contains('visible');
     tutOverlay?.classList.remove('visible');
@@ -691,6 +723,7 @@ class Game {
   }
 
   #togglePause() {
+    if (this.#autoPlayer.active) return;
     if (this.#state === 'playing') {
       this.#state = 'paused';
       this.#sound.playPause();

@@ -545,7 +545,7 @@ class Renderer {
           this.#fx.collapseGrid.push({
             px: c * CELL_SIZE + CELL_SIZE / 2,
             py: r * CELL_SIZE + CELL_SIZE / 2,
-            color: grid[r][c],
+            color: remapColor(grid[r][c], this.#visualTheme),
             alpha: 1,
             delay,
             vy: 0,
