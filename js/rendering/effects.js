@@ -2,7 +2,7 @@
  * EffectsEngine — visual effects, particles, animations.
  * Extracted from Renderer for modularity (< 1000 lines per file).
  */
-import { drawCell, lightenColor, darkenColor } from './cell-themes.js';
+import { drawCell, lightenColor, darkenColor, remapColor, getThemeAccent } from './cell-themes.js';
 import { Particle, MAX_PARTICLES, STARS } from './particles.js';
 
 const CELL_SIZE = 32;
@@ -81,7 +81,8 @@ class EffectsEngine {
   }
 
   addSweepBeams(clearedRows, count, isTetris) {
-    const color = isTetris ? '#ffe080' : '#80c0ff';
+    const accent = getThemeAccent(this.visualTheme);
+    const color = isTetris ? '#ffe080' : accent.slam;
     for (let i = 0; i < clearedRows.length; i++) {
       this.sweepBeams.push({
         row: clearedRows[i],
@@ -101,7 +102,7 @@ class EffectsEngine {
       const colors = clearedRowColors[i];
       for (let c = 0; c < colors.length; c++) {
         if (!colors[c]) continue;
-        // Each cell breaks into 3–4 sub-shards for glass feel
+        const remapped = remapColor(colors[c], this.visualTheme);
         const shardCount = 3 + Math.floor(Math.random() * 2);
         for (let s = 0; s < shardCount; s++) {
           const offsetX = (Math.random() - 0.5) * CELL_SIZE * 0.6;
@@ -109,7 +110,7 @@ class EffectsEngine {
           this.dissolveGrid.push({
             px: c * CELL_SIZE + CELL_SIZE / 2 + offsetX,
             py: row * CELL_SIZE + CELL_SIZE / 2 + offsetY,
-            color: colors[c],
+            color: remapped,
             scale: 0.4 + Math.random() * 0.5,
             rotation: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.06,
@@ -125,6 +126,7 @@ class EffectsEngine {
   }
 
   addShockwaves(clearedRows, count, isTetris) {
+    const accent = getThemeAccent(this.visualTheme);
     const midRow = clearedRows[Math.floor(clearedRows.length / 2)];
     const centerY = midRow * CELL_SIZE + CELL_SIZE / 2;
     this.shockwaves.push({
@@ -133,7 +135,7 @@ class EffectsEngine {
       radius: 5,
       maxRadius: 350 + count * 60,
       alpha: 0.7 + count * 0.1,
-      color: isTetris ? '#ffe080' : '#80c0ff',
+      color: isTetris ? '#ffe080' : accent.slam,
       lineWidth: 3 + count,
     });
 
@@ -166,19 +168,19 @@ class EffectsEngine {
 
   addExplosionParticles(clearedRows, clearedRowColors, count) {
     const particlesPerCell = 4 + count * 3;
+    const accent = getThemeAccent(this.visualTheme);
     for (let i = 0; i < clearedRows.length; i++) {
       const row = clearedRows[i];
       const colors = clearedRowColors[i];
       for (let c = 0; c < colors.length; c++) {
         const cx = c * CELL_SIZE + CELL_SIZE / 2;
         const cy = row * CELL_SIZE + CELL_SIZE / 2;
-        const color = colors[c] || '#aaccee';
+        const color = remapColor(colors[c], this.visualTheme) || accent.dust;
         for (let p = 0; p < particlesPerCell; p++) {
           if (this.particles.length < MAX_PARTICLES) {
             const shard = new Particle(cx, cy, color);
-            // Mix in glass-tinted shards for glass feel
             if (Math.random() < 0.4) {
-              shard.color = '#d0eaff';
+              shard.color = accent.shard;
             }
             this.particles.push(shard);
           }
@@ -188,6 +190,7 @@ class EffectsEngine {
   }
 
   addSlamLines(piece, intensity) {
+    const slamColor = remapColor(piece.color, this.visualTheme);
     const shape = piece.shape;
     for (let c = 0; c < shape[0].length; c++) {
       for (let r = 0; r < shape.length; r++) {
@@ -198,6 +201,7 @@ class EffectsEngine {
             bottomY: (piece.y + r) * CELL_SIZE,
             alpha: 0.5 * intensity,
             width: 2,
+            color: slamColor,
           });
           break;
         }
@@ -206,6 +210,8 @@ class EffectsEngine {
   }
 
   addDustParticles(piece) {
+    const accent = getThemeAccent(this.visualTheme);
+    const dustColor = remapColor(piece.color, this.visualTheme) || accent.dust;
     const shape = piece.shape;
     for (let c = 0; c < shape[0].length; c++) {
       for (let r = shape.length - 1; r >= 0; r--) {
@@ -214,7 +220,7 @@ class EffectsEngine {
           const cy = (piece.y + r + 1) * CELL_SIZE;
           for (let i = 0; i < 3; i++) {
             if (this.particles.length < MAX_PARTICLES) {
-              const p = new Particle(cx, cy, '#8ab4d6');
+              const p = new Particle(cx, cy, dustColor);
               p.vy = -(Math.random() * 2 + 0.5);
               p.vx = (Math.random() - 0.5) * 6;
               p.size = 1.5 + Math.random() * 2;
@@ -253,10 +259,11 @@ class EffectsEngine {
 
   drawSlamLines(ctx) {
     if (this.slamLines.length === 0) return;
+    const accent = getThemeAccent(this.visualTheme);
     for (const sl of this.slamLines) {
       ctx.save();
       ctx.globalAlpha = sl.alpha;
-      ctx.strokeStyle = '#80c0ff';
+      ctx.strokeStyle = sl.color || accent.slam;
       ctx.lineWidth = sl.width;
       ctx.beginPath();
       ctx.moveTo(sl.x, sl.topY);
@@ -270,13 +277,13 @@ class EffectsEngine {
 
   drawCrackLines(ctx) {
     if (this.crackLines.length === 0) return;
+    const accent = getThemeAccent(this.visualTheme);
     for (const cl of this.crackLines) {
       if (cl.delay > 0) { cl.delay--; continue; }
       ctx.save();
       ctx.globalAlpha = cl.alpha;
-      // White crack with glow
       ctx.strokeStyle = '#ffffff';
-      ctx.shadowColor = '#80c0ff';
+      ctx.shadowColor = accent.slam;
       ctx.shadowBlur = 8 * cl.alpha;
       ctx.lineWidth = 1.5;
       for (const seg of cl.segments) {
@@ -471,7 +478,8 @@ class EffectsEngine {
     }
 
     ctx.save();
-    const tintColor = vr.cells.length > 0 ? vr.cells[0].color : '#80c0ff';
+    const rawTint = vr.cells.length > 0 ? vr.cells[0].color : '#80c0ff';
+    const tintColor = remapColor(rawTint, this.visualTheme);
     ctx.globalAlpha = vr.highlightAlpha * 0.4;
     ctx.fillStyle = tintColor;
     ctx.shadowColor = tintColor;
@@ -505,9 +513,10 @@ class EffectsEngine {
         cell.particlesSpawned = true;
         const cx = cell.col * CELL_SIZE + CELL_SIZE / 2;
         const cy = vr.row * CELL_SIZE + CELL_SIZE / 2;
+        const pColor = remapColor(cell.color, this.visualTheme);
         for (let p = 0; p < 5; p++) {
           if (this.particles.length < MAX_PARTICLES) {
-            this.particles.push(new Particle(cx, cy, cell.color));
+            this.particles.push(new Particle(cx, cy, pColor));
           }
         }
       }
@@ -524,14 +533,15 @@ class EffectsEngine {
     const px = cell.col * CELL_SIZE + CELL_SIZE / 2;
     const py = row * CELL_SIZE + CELL_SIZE / 2;
     const half = CELL_SIZE / 2;
+    const c = remapColor(cell.color, this.visualTheme);
     ctx.save();
     ctx.translate(px, py);
     ctx.scale(cell.scale, cell.scale);
     ctx.globalAlpha = cell.alpha;
     const grad = ctx.createLinearGradient(-half, -half, half * 0.4, half);
-    grad.addColorStop(0, lightenColor(cell.color, 28));
-    grad.addColorStop(0.35, cell.color);
-    grad.addColorStop(1, darkenColor(cell.color, 30));
+    grad.addColorStop(0, lightenColor(c, 28));
+    grad.addColorStop(0.35, c);
+    grad.addColorStop(1, darkenColor(c, 30));
     ctx.fillStyle = grad;
     ctx.fillRect(-half + 1, -half + 1, CELL_SIZE - 2, CELL_SIZE - 2);
     ctx.restore();

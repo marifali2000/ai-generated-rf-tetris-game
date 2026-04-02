@@ -23,13 +23,13 @@ const THEME_COLORS = Object.freeze({
     '#f0a000': '#deb887',  // L — burlywood
   }),
   metal: Object.freeze({
-    '#00f0f0': '#a8b8c8',  // I — bright steel
-    '#f0f000': '#7a8a9a',  // O — gunmetal
-    '#a000f0': '#8890a0',  // T — blue steel
-    '#00f000': '#c0c8d0',  // S — polished chrome
-    '#f00000': '#606870',  // Z — dark iron
-    '#0000f0': '#9098a8',  // J — brushed nickel
-    '#f0a000': '#b0b8c0',  // L — light alloy
+    '#00f0f0': '#4a5060',  // I — dark steel
+    '#f0f000': '#2a2e38',  // O — black iron
+    '#a000f0': '#3a3e48',  // T — dark gunmetal
+    '#00f000': '#585e68',  // S — brushed dark chrome
+    '#f00000': '#1e2228',  // Z — blackened iron
+    '#0000f0': '#404850',  // J — dark nickel
+    '#f0a000': '#505860',  // L — dark alloy
   }),
   gold: Object.freeze({
     '#00f0f0': '#ffd700',  // I — pure gold
@@ -55,6 +55,26 @@ const THEME_COLORS = Object.freeze({
 function remapColor(color, theme) {
   const map = THEME_COLORS[theme];
   return map?.[color] ?? color;
+}
+
+/**
+ * Theme-specific accent colors for particles, slam lines, dust, glows.
+ * Falls back to the default blueish accent if no theme-specific color.
+ */
+const THEME_ACCENTS = Object.freeze({
+  glass:    { dust: '#a0d0ff', slam: '#80c0ff', shard: '#d0eaff' },
+  concrete: { dust: '#a09080', slam: '#b0a090', shard: '#c8b8a8' },
+  crystal:  { dust: '#c0a0ff', slam: '#b090ff', shard: '#e0d0ff' },
+  metal:    { dust: '#606870', slam: '#808890', shard: '#404850' },
+  ice:      { dust: '#a0e0ff', slam: '#80d0ff', shard: '#d0f0ff' },
+  wood:     { dust: '#c4956a', slam: '#a07850', shard: '#d2a96a' },
+  plastic:  { dust: '#ff90b0', slam: '#ff80a0', shard: '#ffc0d0' },
+  gold:     { dust: '#daa520', slam: '#f0c050', shard: '#ffe080' },
+  silver:   { dust: '#a0a0a8', slam: '#b8b8c0', shard: '#d0d0d8' },
+});
+
+function getThemeAccent(theme) {
+  return THEME_ACCENTS[theme] || THEME_ACCENTS.glass;
 }
 
 function lightenColor(hex, percent) {
@@ -741,4 +761,4 @@ const PREVIEW_CELL_DRAWERS = {
   },
 };
 
-export { drawCell, drawMiniCell, drawPreviewPiece, lightenColor, darkenColor, hexToRgba };
+export { drawCell, drawMiniCell, drawPreviewPiece, lightenColor, darkenColor, hexToRgba, remapColor, getThemeAccent };

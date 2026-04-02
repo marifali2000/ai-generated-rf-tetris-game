@@ -2,7 +2,7 @@
  * Canvas rendering — board, pieces, ghost, grid, side panels, particles, screen shake.
  */
 import { getColorForType, getShapeForType } from './piece.js';
-import { drawCell, drawMiniCell, drawPreviewPiece, lightenColor, darkenColor, hexToRgba } from './rendering/cell-themes.js';
+import { drawCell, drawMiniCell, drawPreviewPiece, lightenColor, darkenColor, hexToRgba, remapColor } from './rendering/cell-themes.js';
 import { EffectsEngine } from './rendering/effects.js';
 
 const CELL_SIZE = 32;
@@ -174,13 +174,14 @@ class Renderer {
   triggerLockPulse(piece) {
     const cells = [];
     const shape = piece.shape;
+    const c = remapColor(piece.color, this.#visualTheme);
     for (let r = 0; r < shape.length; r++) {
-      for (let c = 0; c < shape[r].length; c++) {
-        if (shape[r][c]) {
+      for (let col = 0; col < shape[r].length; col++) {
+        if (shape[r][col]) {
           cells.push({
-            x: (piece.x + c) * CELL_SIZE + CELL_SIZE / 2,
+            x: (piece.x + col) * CELL_SIZE + CELL_SIZE / 2,
             y: (piece.y + r) * CELL_SIZE + CELL_SIZE / 2,
-            color: piece.color,
+            color: c,
           });
         }
       }
@@ -297,7 +298,7 @@ class Renderer {
     if (state.ghostY !== undefined) {
       this.#drawGhostPiece(ctx, state.currentPiece.shape, state.currentPiece.x, state.ghostY, state.currentPiece.color);
     }
-    ctx.shadowColor = state.currentPiece.color;
+    ctx.shadowColor = remapColor(state.currentPiece.color, this.#visualTheme);
     ctx.shadowBlur = 18;
     this.#drawPiece(ctx, state.currentPiece.shape, state.currentPiece.x, state.currentPiece.y, state.currentPiece.color, 1);
     ctx.shadowBlur = 0;
@@ -381,11 +382,12 @@ class Renderer {
   }
 
   #drawGhostPiece(ctx, shape, px, py, color) {
+    const c = remapColor(color, this.#visualTheme);
     ctx.save();
     ctx.setLineDash([5, 4]);
     ctx.lineWidth = 1.8;
-    ctx.strokeStyle = hexToRgba(color, 0.45);
-    ctx.fillStyle = hexToRgba(color, 0.07);
+    ctx.strokeStyle = hexToRgba(c, 0.45);
+    ctx.fillStyle = hexToRgba(c, 0.07);
     for (let r = 0; r < shape.length; r++) {
       for (let c = 0; c < shape[r].length; c++) {
         if (shape[r][c]) {
@@ -587,7 +589,7 @@ class Renderer {
           cells.push({
             x: (piece.x + c) * CELL_SIZE + CELL_SIZE / 2,
             y: (piece.y + r) * CELL_SIZE + CELL_SIZE / 2,
-            color: piece.color,
+            color: remapColor(piece.color, this.#visualTheme),
           });
         }
       }
