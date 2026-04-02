@@ -1394,153 +1394,407 @@ class SoundEngine {
     }
   }
 
-  // ─── Row Highlight Sound — building anticipation ─────────────────────
+  // ─── Row Highlight Sound — theme-aware anticipation ──────────────────
 
   /**
-   * Low rumble + rising tone when a row starts glowing before clearing.
-   * rowIndex: which row in the sequence (0, 1, 2...) for pitch escalation.
+   * Sound when a row starts glowing before clearing. Dispatches to theme.
    */
   playRowHighlight(rowIndex = 0) {
     if (!this.#ctx) return;
     const t = this.#now();
     const baseFreq = 120 + rowIndex * 40;
+    const vol = 0.15;
 
-    // Deep rumble
-    const osc = this.#ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(baseFreq, t);
-    osc.frequency.linearRampToValueAtTime(baseFreq * 1.5, t + 0.6);
-    const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0, t);
-    env.gain.linearRampToValueAtTime(0.15, t + 0.1);
-    env.gain.setValueAtTime(0.15, t + 0.4);
-    env.gain.linearRampToValueAtTime(0, t + 0.8);
-    osc.connect(env);
-    env.connect(this.#masterGain);
-    osc.start(t);
-    osc.stop(t + 0.85);
-
-    // Shimmer overtone
-    const shimmer = this.#ctx.createOscillator();
-    shimmer.type = 'triangle';
-    shimmer.frequency.setValueAtTime(baseFreq * 3, t);
-    shimmer.frequency.linearRampToValueAtTime(baseFreq * 4, t + 0.6);
-    const sEnv = this.#ctx.createGain();
-    sEnv.gain.setValueAtTime(0, t);
-    sEnv.gain.linearRampToValueAtTime(0.04, t + 0.15);
-    sEnv.gain.linearRampToValueAtTime(0, t + 0.7);
-    shimmer.connect(sEnv);
-    sEnv.connect(this.#masterGain);
-    shimmer.start(t);
-    shimmer.stop(t + 0.75);
+    switch (this.#soundTheme) {
+      case 'concrete': this.#rowHighlightConcrete(t, baseFreq, vol, rowIndex); break;
+      case 'crystal':  this.#rowHighlightCrystal(t, baseFreq, vol, rowIndex); break;
+      case 'metal':    this.#rowHighlightMetal(t, baseFreq, vol, rowIndex); break;
+      case 'ice':      this.#rowHighlightIce(t, baseFreq, vol, rowIndex); break;
+      default:         this.#rowHighlightGlass(t, baseFreq, vol, rowIndex); break;
+    }
   }
 
-  // ─── Per-Cell Pop Sound — satisfying left-to-right sweep ─────────────
+  #rowHighlightGlass(t, baseFreq, vol, rowIndex) {
+    // Glass: high shimmer building
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq * 4, t);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 6, t + 0.7);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(vol * 0.4, t + 0.1);
+    env.gain.linearRampToValueAtTime(0, t + 0.8);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.85);
+    // Sub rumble
+    const sub = this.#ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(baseFreq, t);
+    sub.frequency.linearRampToValueAtTime(baseFreq * 1.3, t + 0.6);
+    const sEnv = this.#ctx.createGain();
+    sEnv.gain.setValueAtTime(0, t);
+    sEnv.gain.linearRampToValueAtTime(vol, t + 0.1);
+    sEnv.gain.linearRampToValueAtTime(0, t + 0.8);
+    sub.connect(sEnv); sEnv.connect(this.#masterGain);
+    sub.start(t); sub.stop(t + 0.85);
+  }
+
+  #rowHighlightConcrete(t, baseFreq, vol, rowIndex) {
+    // Concrete: deep grinding rumble
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(baseFreq * 0.5, t);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 0.8, t + 0.7);
+    const filter = this.#ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 300;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(vol, t + 0.15);
+    env.gain.linearRampToValueAtTime(0, t + 0.8);
+    osc.connect(filter); filter.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.85);
+    // Crackle noise
+    const noise = this.#ctx.createBufferSource();
+    noise.buffer = this.#createNoiseBuffer(0.5);
+    const nf = this.#ctx.createBiquadFilter();
+    nf.type = 'bandpass'; nf.frequency.value = 200; nf.Q.value = 1;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0, t);
+    ne.gain.linearRampToValueAtTime(vol * 0.3, t + 0.1);
+    ne.gain.linearRampToValueAtTime(0, t + 0.6);
+    noise.connect(nf); nf.connect(ne); ne.connect(this.#masterGain);
+    noise.start(t); noise.stop(t + 0.65);
+  }
+
+  #rowHighlightCrystal(t, baseFreq, vol, rowIndex) {
+    // Crystal: ascending bell-like arpeggios
+    const notes = [1, 1.25, 1.5, 2]; // major chord intervals
+    for (let i = 0; i < notes.length; i++) {
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = baseFreq * 3 * notes[i];
+      const env = this.#ctx.createGain();
+      const startT = t + i * 0.12;
+      env.gain.setValueAtTime(0, startT);
+      env.gain.linearRampToValueAtTime(vol * 0.5, startT + 0.02);
+      env.gain.exponentialRampToValueAtTime(0.001, startT + 0.25);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(startT); osc.stop(startT + 0.3);
+    }
+  }
+
+  #rowHighlightMetal(t, baseFreq, vol, rowIndex) {
+    // Metal: industrial hum building
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(baseFreq, t);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 1.8, t + 0.7);
+    const filter = this.#ctx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 400;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(vol * 0.6, t + 0.15);
+    env.gain.linearRampToValueAtTime(0, t + 0.8);
+    osc.connect(filter); filter.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.85);
+  }
+
+  #rowHighlightIce(t, baseFreq, vol, rowIndex) {
+    // Ice: high-pitched creak
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq * 8, t);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 5, t + 0.5);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(vol * 0.3, t + 0.05);
+    env.gain.linearRampToValueAtTime(0, t + 0.6);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.65);
+    // Sub crackle
+    const noise = this.#ctx.createBufferSource();
+    noise.buffer = this.#createNoiseBuffer(0.3);
+    const nf = this.#ctx.createBiquadFilter();
+    nf.type = 'highpass'; nf.frequency.value = 4000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0, t);
+    ne.gain.linearRampToValueAtTime(vol * 0.2, t + 0.05);
+    ne.gain.linearRampToValueAtTime(0, t + 0.4);
+    noise.connect(nf); nf.connect(ne); ne.connect(this.#masterGain);
+    noise.start(t); noise.stop(t + 0.45);
+  }
+
+  // ─── Per-Cell Pop Sound — theme-aware sweep ──────────────────────────
 
   /**
-   * Short crystalline pop that rises in pitch across the row.
-   * col: column index (0–9), used to pitch the sound progressively higher.
+   * Per-cell sound as each block vanishes left-to-right. Dispatches to theme.
    */
   playCellPop(col, totalCols = 10) {
     if (!this.#ctx) return;
     const t = this.#now();
-    // Rising pitch from left to right: C5 to C6
-    const baseFreq = 523 + (col / totalCols) * 523;
-    const microVar = 1 + (Math.random() - 0.5) * 0.06;
+    const progress = col / totalCols; // 0 to 1 across row
 
-    // Main tone — short, bright
-    const osc = this.#ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = baseFreq * microVar;
-    const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0.18, t);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-    osc.connect(env);
-    env.connect(this.#masterGain);
-    osc.start(t);
-    osc.stop(t + 0.16);
-
-    // Harmonic overtone for sparkle
-    const harm = this.#ctx.createOscillator();
-    harm.type = 'sine';
-    harm.frequency.value = baseFreq * 2 * microVar;
-    const hEnv = this.#ctx.createGain();
-    hEnv.gain.setValueAtTime(0.06, t);
-    hEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-    harm.connect(hEnv);
-    hEnv.connect(this.#masterGain);
-    harm.start(t);
-    harm.stop(t + 0.09);
-
-    // Tiny noise click for crispness
-    const click = this.#ctx.createBufferSource();
-    click.buffer = this.#createNoiseBuffer(0.02);
-    const cFilter = this.#ctx.createBiquadFilter();
-    cFilter.type = 'highpass';
-    cFilter.frequency.value = 3000;
-    const cEnv = this.#ctx.createGain();
-    cEnv.gain.setValueAtTime(0.08, t);
-    cEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
-    click.connect(cFilter);
-    cFilter.connect(cEnv);
-    cEnv.connect(this.#masterGain);
-    click.start(t);
-    click.stop(t + 0.025);
+    switch (this.#soundTheme) {
+      case 'concrete': this.#cellPopConcrete(t, progress); break;
+      case 'crystal':  this.#cellPopCrystal(t, progress); break;
+      case 'metal':    this.#cellPopMetal(t, progress); break;
+      case 'ice':      this.#cellPopIce(t, progress); break;
+      default:         this.#cellPopGlass(t, progress); break;
+    }
   }
 
-  // ─── Row Cleared Sound — satisfying completion ───────────────────────
+  #cellPopGlass(t, progress) {
+    // Glass: rising crystalline tink
+    const freq = 800 + progress * 1200;
+    const v = 1 + (Math.random() - 0.5) * 0.06;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq * v;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.14, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.13);
+    // Glass shard noise
+    const click = this.#ctx.createBufferSource();
+    click.buffer = this.#createNoiseBuffer(0.015);
+    const cf = this.#ctx.createBiquadFilter();
+    cf.type = 'highpass'; cf.frequency.value = 4000;
+    const ce = this.#ctx.createGain();
+    ce.gain.setValueAtTime(0.07, t);
+    ce.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+    click.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
+    click.start(t); click.stop(t + 0.02);
+  }
+
+  #cellPopConcrete(t, progress) {
+    // Concrete: chunky thud getting shorter
+    const freq = 80 + progress * 60;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.18, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.09);
+    // Dust crumble
+    const noise = this.#ctx.createBufferSource();
+    noise.buffer = this.#createNoiseBuffer(0.04);
+    const nf = this.#ctx.createBiquadFilter();
+    nf.type = 'bandpass'; nf.frequency.value = 500 + progress * 400; nf.Q.value = 2;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    noise.connect(nf); nf.connect(ne); ne.connect(this.#masterGain);
+    noise.start(t); noise.stop(t + 0.05);
+  }
+
+  #cellPopCrystal(t, progress) {
+    // Crystal: bell chime rising in pitch
+    const freq = 1047 + progress * 1047; // C6 to C7
+    const v = 1 + (Math.random() - 0.5) * 0.04;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq * v;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.12, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.21);
+    // Harmonic shimmer
+    const h = this.#ctx.createOscillator();
+    h.type = 'sine';
+    h.frequency.value = freq * 2.5 * v;
+    const he = this.#ctx.createGain();
+    he.gain.setValueAtTime(0.04, t);
+    he.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    h.connect(he); he.connect(this.#masterGain);
+    h.start(t); h.stop(t + 0.13);
+  }
+
+  #cellPopMetal(t, progress) {
+    // Metal: metallic ping rising
+    const freq = 400 + progress * 800;
+    const v = 1 + (Math.random() - 0.5) * 0.08;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.value = freq * v;
+    const filter = this.#ctx.createBiquadFilter();
+    filter.type = 'bandpass'; filter.frequency.value = freq * 2; filter.Q.value = 5;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.1, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(filter); filter.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.11);
+  }
+
+  #cellPopIce(t, progress) {
+    // Ice: crisp crack/pop ascending
+    const freq = 2000 + progress * 3000;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, t + 0.06);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.12, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.07);
+    // Tiny ice crackle
+    const noise = this.#ctx.createBufferSource();
+    noise.buffer = this.#createNoiseBuffer(0.02);
+    const nf = this.#ctx.createBiquadFilter();
+    nf.type = 'highpass'; nf.frequency.value = 6000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.08, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    noise.connect(nf); nf.connect(ne); ne.connect(this.#masterGain);
+    noise.start(t); noise.stop(t + 0.025);
+  }
+
+  // ─── Row Cleared Sound — theme-aware completion ──────────────────────
 
   /**
-   * Completion chime when an entire row finishes vanishing.
-   * rowIndex: row sequence number for pitch escalation.
+   * Completion sound when an entire row finishes vanishing. Dispatches to theme.
    */
   playRowCleared(rowIndex = 0) {
     if (!this.#ctx) return;
     const t = this.#now();
-    // Rising major chord notes per row
-    const chordFreqs = [523, 659, 784, 1047]; // C5, E5, G5, C6
-    const freq = chordFreqs[Math.min(rowIndex, chordFreqs.length - 1)];
 
-    // Main chime
+    switch (this.#soundTheme) {
+      case 'concrete': this.#rowClearedConcrete(t, rowIndex); break;
+      case 'crystal':  this.#rowClearedCrystal(t, rowIndex); break;
+      case 'metal':    this.#rowClearedMetal(t, rowIndex); break;
+      case 'ice':      this.#rowClearedIce(t, rowIndex); break;
+      default:         this.#rowClearedGlass(t, rowIndex); break;
+    }
+  }
+
+  #rowClearedGlass(t, rowIndex) {
+    // Glass: shatter burst + chime
+    const chordFreqs = [523, 659, 784, 1047];
+    const freq = chordFreqs[Math.min(rowIndex, chordFreqs.length - 1)];
     const osc = this.#ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = freq;
     const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0.25, t);
-    env.gain.exponentialRampToValueAtTime(0.08, t + 0.15);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
-    osc.connect(env);
-    env.connect(this.#masterGain);
-    osc.start(t);
-    osc.stop(t + 0.65);
-
-    // Octave shimmer
-    const oct = this.#ctx.createOscillator();
-    oct.type = 'triangle';
-    oct.frequency.value = freq * 2;
-    const oEnv = this.#ctx.createGain();
-    oEnv.gain.setValueAtTime(0.08, t);
-    oEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-    oct.connect(oEnv);
-    oEnv.connect(this.#masterGain);
-    oct.start(t);
-    oct.stop(t + 0.45);
-
-    // Small noise burst for crunch feel
+    env.gain.setValueAtTime(0.22, t);
+    env.gain.exponentialRampToValueAtTime(0.06, t + 0.1);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.55);
+    // Shatter noise
     const noise = this.#ctx.createBufferSource();
-    noise.buffer = this.#createNoiseBuffer(0.08);
+    noise.buffer = this.#createNoiseBuffer(0.15);
     const nf = this.#ctx.createBiquadFilter();
-    nf.type = 'bandpass';
-    nf.frequency.value = 2000 + rowIndex * 500;
-    nf.Q.value = 1;
+    nf.type = 'highpass'; nf.frequency.value = 2000;
     const ne = this.#ctx.createGain();
-    ne.gain.setValueAtTime(0.1, t);
-    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-    noise.connect(nf);
-    nf.connect(ne);
-    ne.connect(this.#masterGain);
-    noise.start(t);
-    noise.stop(t + 0.09);
+    ne.gain.setValueAtTime(0.15, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    noise.connect(nf); nf.connect(ne); ne.connect(this.#masterGain);
+    noise.start(t); noise.stop(t + 0.16);
+  }
+
+  #rowClearedConcrete(t, rowIndex) {
+    // Concrete: heavy collapse thud
+    const freq = 60 + rowIndex * 15;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, t + 0.3);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.3, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.45);
+    // Rubble debris
+    const noise = this.#ctx.createBufferSource();
+    noise.buffer = this.#createNoiseBuffer(0.2);
+    const nf = this.#ctx.createBiquadFilter();
+    nf.type = 'bandpass'; nf.frequency.value = 400; nf.Q.value = 1;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.12, t + 0.05);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    noise.connect(nf); nf.connect(ne); ne.connect(this.#masterGain);
+    noise.start(t); noise.stop(t + 0.3);
+  }
+
+  #rowClearedCrystal(t, rowIndex) {
+    // Crystal: bright major chord resolution
+    const chordFreqs = [523, 659, 784, 1047];
+    const base = chordFreqs[Math.min(rowIndex, chordFreqs.length - 1)];
+    const intervals = [1, 1.25, 1.5]; // root, major 3rd, 5th
+    for (let i = 0; i < intervals.length; i++) {
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = base * intervals[i];
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.12, t + i * 0.03);
+      env.gain.exponentialRampToValueAtTime(0.001, t + i * 0.03 + 0.6);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(t + i * 0.03); osc.stop(t + i * 0.03 + 0.65);
+    }
+  }
+
+  #rowClearedMetal(t, rowIndex) {
+    // Metal: heavy clang + ring
+    const freq = 200 + rowIndex * 80;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+    const filter = this.#ctx.createBiquadFilter();
+    filter.type = 'bandpass'; filter.frequency.value = freq * 3; filter.Q.value = 8;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(filter); filter.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.55);
+    // Impact transient
+    const click = this.#ctx.createBufferSource();
+    click.buffer = this.#createNoiseBuffer(0.02);
+    const ce = this.#ctx.createGain();
+    ce.gain.setValueAtTime(0.15, t);
+    ce.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    click.connect(ce); ce.connect(this.#masterGain);
+    click.start(t); click.stop(t + 0.025);
+  }
+
+  #rowClearedIce(t, rowIndex) {
+    // Ice: cracking shatter + tinkling
+    const freq = 1500 + rowIndex * 300;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.3, t + 0.3);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.4);
+    // Ice debris tinkle
+    for (let i = 0; i < 3; i++) {
+      const tink = this.#ctx.createOscillator();
+      tink.type = 'sine';
+      tink.frequency.value = 3000 + Math.random() * 2000;
+      const te = this.#ctx.createGain();
+      const st = t + 0.05 + i * 0.04;
+      te.gain.setValueAtTime(0.05, st);
+      te.gain.exponentialRampToValueAtTime(0.001, st + 0.08);
+      tink.connect(te); te.connect(this.#masterGain);
+      tink.start(st); tink.stop(st + 0.09);
+    }
+    // Crack noise
+    const noise = this.#ctx.createBufferSource();
+    noise.buffer = this.#createNoiseBuffer(0.1);
+    const nf = this.#ctx.createBiquadFilter();
+    nf.type = 'highpass'; nf.frequency.value = 3000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.12, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    noise.connect(nf); nf.connect(ne); ne.connect(this.#masterGain);
+    noise.start(t); noise.stop(t + 0.11);
   }
 }
 
