@@ -2505,85 +2505,59 @@ class SoundEngine {
   }
 
   #rowHighlightGlass(t, rowIndex, pitch, ds) {
-    // Realistic glass stress creak — crackling, no tonal whistle
-    // Layer 1: Glass micro-fracture crackle (noise-only, no sine)
-    const crack = this.#ctx.createBufferSource();
-    crack.buffer = this.#createNoiseBuffer(0.5 * ds);
-    const cf = this.#ctx.createBiquadFilter();
-    cf.type = 'bandpass'; cf.frequency.value = 3000 + rowIndex * 800; cf.Q.value = 1.5;
-    const ce = this.#ctx.createGain();
-    // Intermittent crackling — sounds like glass fracturing
-    ce.gain.setValueAtTime(0, t);
-    ce.gain.linearRampToValueAtTime(0.1, t + 0.02 * ds);
-    ce.gain.setValueAtTime(0.03, t + 0.08 * ds);
-    ce.gain.linearRampToValueAtTime(0.12, t + 0.12 * ds);
-    ce.gain.setValueAtTime(0.02, t + 0.2 * ds);
-    ce.gain.linearRampToValueAtTime(0.1, t + 0.25 * ds);
-    ce.gain.setValueAtTime(0.01, t + 0.35 * ds);
-    ce.gain.linearRampToValueAtTime(0.08, t + 0.38 * ds);
-    ce.gain.linearRampToValueAtTime(0, t + 0.5 * ds);
-    crack.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
-    crack.start(t); crack.stop(t + 0.55 * ds);
+    // Glass stress — intermittent micro-cracks as pressure builds
+    const dur = 0.5 * ds;
 
-    // Layer 2: High-freq glass crinkle (very short bursts)
-    const crinkle = this.#ctx.createBufferSource();
-    crinkle.buffer = this.#createNoiseBuffer(0.4 * ds);
-    const crf = this.#ctx.createBiquadFilter();
-    crf.type = 'highpass'; crf.frequency.value = 6000;
-    const cre = this.#ctx.createGain();
-    cre.gain.setValueAtTime(0, t);
-    cre.gain.linearRampToValueAtTime(0.04, t + 0.05 * ds);
-    cre.gain.setValueAtTime(0.01, t + 0.15 * ds);
-    cre.gain.linearRampToValueAtTime(0.05, t + 0.2 * ds);
-    cre.gain.linearRampToValueAtTime(0, t + 0.45 * ds);
-    crinkle.connect(crf); crf.connect(cre); cre.connect(this.#masterGain);
-    crinkle.start(t); crinkle.stop(t + 0.5 * ds);
+    // 4-6 intermittent stress cracks — like glass about to shatter
+    const cracks = 4 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < cracks; i++) {
+      const ct = t + (i / cracks) * dur * 0.85 + Math.random() * 0.02 * ds;
+      this.#crackBurst(ct, 3000 + rowIndex * 800 + Math.random() * 2000,
+        4 + Math.random() * 4, 0.003 + Math.random() * 0.003,
+        0.08 + Math.random() * 0.06);
+    }
 
-    // Layer 3: Sub-bass tension (felt, not heard)
-    const sub = this.#ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.value = 45 + rowIndex * 8;
-    const sEnv = this.#ctx.createGain();
-    sEnv.gain.setValueAtTime(0, t);
-    sEnv.gain.linearRampToValueAtTime(0.1, t + 0.1 * ds);
-    sEnv.gain.linearRampToValueAtTime(0, t + 0.5 * ds);
-    sub.connect(sEnv); sEnv.connect(this.#masterGain);
-    sub.start(t); sub.stop(t + 0.55 * ds);
+    // Subtle high-freq crinkle — 2-3 very quiet short bursts
+    const crinkles = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < crinkles; i++) {
+      const ct = t + Math.random() * dur * 0.7;
+      this.#crackBurst(ct, 6000 + Math.random() * 3000, 3,
+        0.002, 0.03 + Math.random() * 0.02, 'highpass');
+    }
+
+    // Sub-bass tension
+    this.#ping(t, 45 + rowIndex * 8, dur, 0.08);
   }
 
   #rowHighlightConcrete(t, rowIndex, pitch, ds) {
-    // Realistic pre-demolition stress — rumbling, cracking
-    // Layer 1: Deep structural groan
-    const groanFreq = (40 + rowIndex * 12) * pitch;
+    // Concrete stress — deep structural groan + discrete pre-fracture snaps
+    const dur = 0.5 * ds;
+    const freq = (40 + rowIndex * 12) * pitch;
+
+    // Deep structural groan (oscillator, not noise — no "water" quality)
     const osc = this.#ctx.createOscillator();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(groanFreq, t);
-    osc.frequency.linearRampToValueAtTime(groanFreq * 0.7, t + 0.5 * ds);
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.linearRampToValueAtTime(freq * 0.7, t + dur);
     const filter = this.#ctx.createBiquadFilter();
     filter.type = 'lowpass'; filter.frequency.value = 200;
     const env = this.#ctx.createGain();
     env.gain.setValueAtTime(0, t);
-    env.gain.linearRampToValueAtTime(0.18, t + 0.08 * ds);
-    env.gain.setValueAtTime(0.18, t + 0.3 * ds);
-    env.gain.linearRampToValueAtTime(0, t + 0.55 * ds);
+    env.gain.linearRampToValueAtTime(0.15, t + 0.1 * ds);
+    env.gain.setValueAtTime(0.15, t + 0.3 * ds);
+    env.gain.linearRampToValueAtTime(0, t + dur);
     osc.connect(filter); filter.connect(env); env.connect(this.#masterGain);
-    osc.start(t); osc.stop(t + 0.6 * ds);
+    osc.start(t); osc.stop(t + dur + 0.05);
 
-    // Layer 2: Concrete cracking noise — gritty, low-mid frequency
-    const crack = this.#ctx.createBufferSource();
-    crack.buffer = this.#createNoiseBuffer(0.5 * ds);
-    const cf = this.#ctx.createBiquadFilter();
-    cf.type = 'bandpass'; cf.frequency.value = 300 + rowIndex * 50; cf.Q.value = 0.8;
-    const ce = this.#ctx.createGain();
-    ce.gain.setValueAtTime(0, t);
-    ce.gain.linearRampToValueAtTime(0.1, t + 0.05 * ds);
-    ce.gain.setValueAtTime(0.04, t + 0.15 * ds);
-    ce.gain.linearRampToValueAtTime(0.12, t + 0.25 * ds);
-    ce.gain.linearRampToValueAtTime(0, t + 0.5 * ds);
-    crack.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
-    crack.start(t); crack.stop(t + 0.55 * ds);
+    // 3-4 pre-fracture stress cracks
+    const cracks = 3 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < cracks; i++) {
+      const ct = t + (i / cracks) * dur * 0.8 + Math.random() * 0.03 * ds;
+      this.#crackBurst(ct, 200 + Math.random() * 200, 2,
+        0.008 + Math.random() * 0.006, 0.08 + Math.random() * 0.05);
+    }
 
-    // Layer 3: Rebar stress (metallic undertone)
+    // Rebar stress tone
     const rebar = this.#ctx.createOscillator();
     rebar.type = 'square';
     rebar.frequency.value = 120 * pitch;
@@ -2594,7 +2568,7 @@ class SoundEngine {
     re.gain.linearRampToValueAtTime(0.04, t + 0.15 * ds);
     re.gain.linearRampToValueAtTime(0, t + 0.45 * ds);
     rebar.connect(rf); rf.connect(re); re.connect(this.#masterGain);
-    rebar.start(t); rebar.stop(t + 0.5 * ds);
+    rebar.start(t); rebar.stop(t + dur);
   }
 
   #rowHighlightCrystal(t, rowIndex, pitch, ds) {
@@ -2638,98 +2612,69 @@ class SoundEngine {
   }
 
   #rowHighlightMetal(t, rowIndex, pitch, ds) {
-    // Metal stress — like a steel beam bending under load
-    // Layer 1: Deep metallic groan (low square through resonant filter)
+    // Metal stress — bending beam + discrete metallic plinks
+    const dur = 0.5 * ds;
     const freq = (80 + rowIndex * 30) * pitch;
+
+    // Deep metallic groan (oscillator through resonant filter)
     const osc = this.#ctx.createOscillator();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(freq, t);
-    osc.frequency.linearRampToValueAtTime(freq * 1.3, t + 0.5 * ds);
+    osc.frequency.linearRampToValueAtTime(freq * 1.3, t + dur);
     const filter = this.#ctx.createBiquadFilter();
     filter.type = 'bandpass'; filter.frequency.value = freq * 2; filter.Q.value = 6;
     const env = this.#ctx.createGain();
     env.gain.setValueAtTime(0, t);
     env.gain.linearRampToValueAtTime(0.12, t + 0.1 * ds);
     env.gain.setValueAtTime(0.12, t + 0.35 * ds);
-    env.gain.linearRampToValueAtTime(0, t + 0.55 * ds);
+    env.gain.linearRampToValueAtTime(0, t + dur);
     osc.connect(filter); filter.connect(env); env.connect(this.#masterGain);
-    osc.start(t); osc.stop(t + 0.6 * ds);
+    osc.start(t); osc.stop(t + dur + 0.05);
 
-    // Layer 2: Metallic rattle (filtered noise simulating vibration)
-    const rattle = this.#ctx.createBufferSource();
-    rattle.buffer = this.#createNoiseBuffer(0.4 * ds);
-    const rf = this.#ctx.createBiquadFilter();
-    rf.type = 'bandpass'; rf.frequency.value = 800 + rowIndex * 200; rf.Q.value = 10;
-    const re = this.#ctx.createGain();
-    re.gain.setValueAtTime(0, t);
-    re.gain.linearRampToValueAtTime(0.06, t + 0.08 * ds);
-    re.gain.setValueAtTime(0.02, t + 0.2 * ds);
-    re.gain.linearRampToValueAtTime(0.07, t + 0.3 * ds);
-    re.gain.linearRampToValueAtTime(0, t + 0.5 * ds);
-    rattle.connect(rf); rf.connect(re); re.connect(this.#masterGain);
-    rattle.start(t); rattle.stop(t + 0.55 * ds);
+    // Metallic plinks — discrete high-Q noise bursts (not continuous rattle)
+    const plinks = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < plinks; i++) {
+      const pt = t + (i / plinks) * dur * 0.7 + Math.random() * 0.03 * ds;
+      this.#crackBurst(pt, 800 + rowIndex * 200 + Math.random() * 500,
+        12 + Math.random() * 8, 0.008 + Math.random() * 0.005,
+        0.04 + Math.random() * 0.03);
+    }
 
-    // Layer 3: Sub vibration
-    const sub = this.#ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.value = 40 * pitch;
-    const sEnv = this.#ctx.createGain();
-    sEnv.gain.setValueAtTime(0, t);
-    sEnv.gain.linearRampToValueAtTime(0.1, t + 0.1 * ds);
-    sEnv.gain.linearRampToValueAtTime(0, t + 0.5 * ds);
-    sub.connect(sEnv); sEnv.connect(this.#masterGain);
-    sub.start(t); sub.stop(t + 0.55 * ds);
+    // Sub vibration
+    this.#ping(t, 40 * pitch, dur, 0.08);
   }
 
   #rowHighlightIce(t, rowIndex, pitch, ds) {
-    // Ice cracking under pressure — sharp cracks, no whistle
-    // Layer 1: Short sharp crack bursts (pitch-dropped noise, not sine)
-    const crack1 = this.#ctx.createBufferSource();
-    crack1.buffer = this.#createNoiseBuffer(0.06);
-    const c1f = this.#ctx.createBiquadFilter();
-    c1f.type = 'bandpass'; c1f.frequency.value = 4000 + rowIndex * 500; c1f.Q.value = 2;
-    const c1e = this.#ctx.createGain();
-    c1e.gain.setValueAtTime(0.15, t);
-    c1e.gain.exponentialRampToValueAtTime(0.001, t + 0.05 * ds);
-    crack1.connect(c1f); c1f.connect(c1e); c1e.connect(this.#masterGain);
-    crack1.start(t); crack1.stop(t + 0.06 * ds);
+    // Ice stress — sharp discrete stress cracks + sub rumble
+    const dur = 0.5 * ds;
+
+    // Short sharp crack burst at start
+    this.#crackBurst(t, 4000 + rowIndex * 500, 6, 0.004,
+      0.12, 'highpass');
 
     // Second crack after a gap
-    const crack2 = this.#ctx.createBufferSource();
-    crack2.buffer = this.#createNoiseBuffer(0.05);
-    const c2f = this.#ctx.createBiquadFilter();
-    c2f.type = 'highpass'; c2f.frequency.value = 5000;
-    const c2e = this.#ctx.createGain();
-    c2e.gain.setValueAtTime(0.12, t + 0.15 * ds);
-    c2e.gain.exponentialRampToValueAtTime(0.001, t + 0.2 * ds);
-    crack2.connect(c2f); c2f.connect(c2e); c2e.connect(this.#masterGain);
-    crack2.start(t + 0.15 * ds); crack2.stop(t + 0.22 * ds);
+    this.#crackBurst(t + 0.15 * ds, 5000 + Math.random() * 2000, 5,
+      0.003, 0.10, 'highpass');
 
-    // Layer 2: Creaking ice noise (broadband, slow swell)
-    const creak = this.#ctx.createBufferSource();
-    creak.buffer = this.#createNoiseBuffer(0.4 * ds);
-    const cf = this.#ctx.createBiquadFilter();
-    cf.type = 'bandpass'; cf.frequency.value = 2000 + rowIndex * 400; cf.Q.value = 1;
-    const ce = this.#ctx.createGain();
-    ce.gain.setValueAtTime(0, t);
-    ce.gain.linearRampToValueAtTime(0.06, t + 0.08 * ds);
-    ce.gain.setValueAtTime(0.02, t + 0.18 * ds);
-    ce.gain.linearRampToValueAtTime(0.07, t + 0.25 * ds);
-    ce.gain.linearRampToValueAtTime(0, t + 0.45 * ds);
-    creak.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
-    creak.start(t); creak.stop(t + 0.5 * ds);
+    // 2-3 additional stress cracks spread across duration
+    const extras = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < extras; i++) {
+      const ct = t + 0.1 * ds + (i / extras) * dur * 0.7 + Math.random() * 0.03 * ds;
+      this.#crackBurst(ct, 3000 + Math.random() * 3000, 4 + Math.random() * 4,
+        0.003, 0.05 + Math.random() * 0.04);
+    }
 
-    // Layer 3: Low sub-ice rumble (frozen lake groaning)
+    // Low sub-ice rumble (frozen lake groaning)
     const sub = this.#ctx.createOscillator();
     sub.type = 'sine';
     sub.frequency.setValueAtTime(40 * pitch, t);
-    sub.frequency.linearRampToValueAtTime(30 * pitch, t + 0.4 * ds);
+    sub.frequency.linearRampToValueAtTime(30 * pitch, t + dur);
     const se = this.#ctx.createGain();
     se.gain.setValueAtTime(0, t);
-    se.gain.linearRampToValueAtTime(0.1, t + 0.08 * ds);
-    se.gain.linearRampToValueAtTime(0, t + 0.45 * ds);
+    se.gain.linearRampToValueAtTime(0.08, t + 0.08 * ds);
+    se.gain.linearRampToValueAtTime(0, t + dur);
     sub.connect(se); se.connect(this.#masterGain);
-    sub.start(t); sub.stop(t + 0.5 * ds);
+    sub.start(t); sub.stop(t + dur + 0.05);
   }
 
   // ─── Per-Cell Pop Sound — theme-aware sweep ──────────────────────────
@@ -2972,313 +2917,233 @@ class SoundEngine {
     }
   }
 
+  // Helper: short filtered noise crack transient — the building block of all break sounds
+  #crackBurst(t, freq, q, len, vol, type = 'bandpass') {
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(len + 0.005);
+    const f = this.#ctx.createBiquadFilter();
+    f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = this.#ctx.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + len);
+    n.connect(f); f.connect(g); g.connect(this.#masterGain);
+    n.start(t); n.stop(t + len + 0.005);
+    return g;
+  }
+
+  // Helper: quick sine ping with exponential decay
+  #ping(t, freq, len, vol) {
+    const o = this.#ctx.createOscillator();
+    o.type = 'sine'; o.frequency.value = freq;
+    const g = this.#ctx.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + len);
+    o.connect(g); g.connect(this.#masterGain);
+    o.start(t); o.stop(t + len + 0.005);
+    return g;
+  }
+
   #rowClearedGlass(t, rowIndex, pitch, ds) {
-    // One continuous glass pane shattering left-to-right
-    // Total sound duration spans the full cell sweep
-    const dur = 0.8 * ds; // total sound length
+    // Glass pane shattering L→R: sharp discrete cracks only, no continuous noise
+    const dur = 0.8 * ds;
 
-    // Layer 1: Sweeping crack — bandpass noise sweeps L-to-R (high→low freq = left→right)
-    const sweep = this.#ctx.createBufferSource();
-    sweep.buffer = this.#createNoiseBuffer(dur + 0.2);
-    const swF = this.#ctx.createBiquadFilter();
-    swF.type = 'bandpass'; swF.Q.value = 2.5;
-    swF.frequency.setValueAtTime(8000, t);
-    swF.frequency.linearRampToValueAtTime(1200, t + dur * 0.8);
-    swF.frequency.exponentialRampToValueAtTime(400, t + dur);
-    const swE = this.#ctx.createGain();
-    swE.gain.setValueAtTime(0.08, t);
-    swE.gain.linearRampToValueAtTime(0.30, t + dur * 0.15);
-    swE.gain.setValueAtTime(0.25, t + dur * 0.5);
-    swE.gain.linearRampToValueAtTime(0.10, t + dur * 0.85);
-    swE.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    sweep.connect(swF); swF.connect(swE); swE.connect(this.#masterGain);
-    this.#addReverb(swE, dur * 0.6, 0.3, 0.2);
-    sweep.start(t); sweep.stop(t + dur + 0.1);
+    // Initial impact crack at left edge — loud, sharp
+    this.#crackBurst(t, 4500 * pitch, 8, 0.004, 0.45);
+    this.#ping(t, 3200 * pitch, 0.06, 0.08);
 
-    // Layer 2: Staggered crack transients — 6-8 sharp pops spread across the sweep
-    const cracks = 6 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < cracks; i++) {
-      const ct = t + (i / cracks) * dur * 0.9 + Math.random() * 0.02 * ds;
-      const cn = this.#ctx.createBufferSource();
-      cn.buffer = this.#createNoiseBuffer(0.025);
-      const cf = this.#ctx.createBiquadFilter();
-      cf.type = 'highpass';
-      cf.frequency.value = 3000 + Math.random() * 5000;
-      const ce = this.#ctx.createGain();
-      ce.gain.setValueAtTime(0.12 + Math.random() * 0.10, ct);
-      ce.gain.exponentialRampToValueAtTime(0.001, ct + 0.02 + Math.random() * 0.015);
-      cn.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
-      cn.start(ct); cn.stop(ct + 0.04);
+    // Sub-bass thud at impact point
+    this.#ping(t, 55 + rowIndex * 8, dur * 0.25, 0.15);
+
+    // 10-cell fracture cascade L→R — each cell is a discrete crack
+    for (let i = 0; i < 10; i++) {
+      const ct = t + ((i + 1) / 11) * dur * 0.7 + (Math.random() - 0.5) * 0.006 * ds;
+      const freq = (3000 + Math.random() * 5000) * pitch;
+      // Main crack: short noise burst through high-Q bandpass
+      this.#crackBurst(ct, freq, 6 + Math.random() * 6,
+        0.003 + Math.random() * 0.003, 0.22 + Math.random() * 0.18);
+      // Glass resonance ring from each crack point
+      this.#ping(ct + 0.002, freq * 0.8,
+        0.03 + Math.random() * 0.03, 0.04 + Math.random() * 0.03);
+      // Secondary micro-crack (60% chance)
+      if (Math.random() > 0.4) {
+        const mt = ct + 0.004 + Math.random() * 0.008;
+        this.#crackBurst(mt, (5000 + Math.random() * 4000) * pitch,
+          8, 0.002, 0.10 + Math.random() * 0.08);
+      }
     }
 
-    // Layer 3: Glass shard tinkles — high-pitched sine pings that trail behind the crack
-    const shards = 5 + Math.floor(Math.random() * 4);
+    // Shard tinkles trailing behind fracture front
+    const shards = 6 + Math.floor(Math.random() * 4);
     for (let i = 0; i < shards; i++) {
-      const st = t + (i / shards) * dur * 0.85 + 0.03 * ds;
-      const shard = this.#ctx.createOscillator();
-      shard.type = 'sine';
-      shard.frequency.value = (3000 + Math.random() * 5000) * pitch;
-      const se = this.#ctx.createGain();
-      se.gain.setValueAtTime(0.06, st);
-      se.gain.exponentialRampToValueAtTime(0.001, st + 0.08 * ds);
-      shard.connect(se); se.connect(this.#masterGain);
-      shard.start(st); shard.stop(st + 0.1 * ds);
+      const st = t + (i / shards) * dur * 0.7 + 0.02 * ds + Math.random() * 0.015;
+      this.#ping(st, (5000 + Math.random() * 6000) * pitch,
+        0.03 + Math.random() * 0.04, 0.03 + Math.random() * 0.03);
     }
 
-    // Layer 4: Musical reward chime — escalates per row
-    const chordFreqs = [523, 659, 784, 1047];
-    const chime = this.#ctx.createOscillator();
-    chime.type = 'sine';
-    chime.frequency.value = chordFreqs[Math.min(rowIndex, 3)] * pitch;
-    const chE = this.#ctx.createGain();
-    chE.gain.setValueAtTime(0, t + 0.05 * ds);
-    chE.gain.linearRampToValueAtTime(0.12, t + 0.08 * ds);
-    chE.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    chime.connect(chE); chE.connect(this.#masterGain);
-    this.#addReverb(chE, dur * 0.5, 0.2, 0.08);
-    chime.start(t + 0.05 * ds); chime.stop(t + dur + 0.05);
-
-    // Layer 5: Sub-bass impact (visceral weight)
-    const sub = this.#ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.setValueAtTime(55 + rowIndex * 8, t);
-    sub.frequency.exponentialRampToValueAtTime(30, t + dur * 0.5);
-    const subE = this.#ctx.createGain();
-    subE.gain.setValueAtTime(0.18, t);
-    subE.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.4);
-    sub.connect(subE); subE.connect(this.#masterGain);
-    sub.start(t); sub.stop(t + dur * 0.5);
+    // Late falling debris — quiet tinkles
+    for (let i = 0; i < 4; i++) {
+      const dt = t + dur * 0.55 + Math.random() * dur * 0.35;
+      this.#ping(dt, (6000 + Math.random() * 6000) * pitch,
+        0.015 + Math.random() * 0.02, 0.015 + Math.random() * 0.015);
+    }
   }
 
   #rowClearedConcrete(t, rowIndex, pitch, ds) {
-    // Concrete slab crumbling left-to-right — heavy, gritty, rumbling
+    // Concrete fracturing L→R: heavy discrete cracks, chunky impacts, gritty
     const dur = 0.8 * ds;
 
-    // Layer 1: Low rumbling crumble sweep (bandpass noise, freq drops as it sweeps right)
-    const rumble = this.#ctx.createBufferSource();
-    rumble.buffer = this.#createNoiseBuffer(dur + 0.2);
-    const rF = this.#ctx.createBiquadFilter();
-    rF.type = 'bandpass'; rF.Q.value = 0.8;
-    rF.frequency.setValueAtTime(600, t);
-    rF.frequency.linearRampToValueAtTime(200, t + dur);
-    const rE = this.#ctx.createGain();
-    rE.gain.setValueAtTime(0.05, t);
-    rE.gain.linearRampToValueAtTime(0.28, t + dur * 0.12);
-    rE.gain.setValueAtTime(0.22, t + dur * 0.6);
-    rE.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    rumble.connect(rF); rF.connect(rE); rE.connect(this.#masterGain);
-    rumble.start(t); rumble.stop(t + dur + 0.1);
+    // Initial heavy crack — loud low snap + deep thump
+    this.#crackBurst(t, 300 * pitch, 2.5, 0.015, 0.42);
+    this.#ping(t, (50 + rowIndex * 10) * pitch, 0.04, 0.35);
 
-    // Layer 2: Cracking impacts — staggered concrete chunks snapping
-    const chunks = 5 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < chunks; i++) {
-      const ct = t + (i / chunks) * dur * 0.85 + Math.random() * 0.02 * ds;
-      const cn = this.#ctx.createBufferSource();
-      cn.buffer = this.#createNoiseBuffer(0.04);
-      const cf = this.#ctx.createBiquadFilter();
-      cf.type = 'bandpass'; cf.frequency.value = 200 + Math.random() * 400; cf.Q.value = 1.5;
-      const ce = this.#ctx.createGain();
-      ce.gain.setValueAtTime(0.15 + Math.random() * 0.12, ct);
-      ce.gain.exponentialRampToValueAtTime(0.001, ct + 0.03 + Math.random() * 0.02);
-      cn.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
-      cn.start(ct); cn.stop(ct + 0.06);
-    }
-
-    // Layer 3: Dust/debris trail (high-freq noise fading in behind the crack front)
-    const dust = this.#ctx.createBufferSource();
-    dust.buffer = this.#createNoiseBuffer(dur);
-    const dF = this.#ctx.createBiquadFilter();
-    dF.type = 'highpass'; dF.frequency.value = 2000;
-    const dE = this.#ctx.createGain();
-    dE.gain.setValueAtTime(0, t + dur * 0.1);
-    dE.gain.linearRampToValueAtTime(0.06, t + dur * 0.3);
-    dE.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    dust.connect(dF); dF.connect(dE); dE.connect(this.#masterGain);
-    this.#addReverb(dE, dur * 0.4, 0.15, 0.08);
-    dust.start(t); dust.stop(t + dur + 0.05);
-
-    // Layer 4: Sub-bass thud (the weight of concrete)
+    // Sub-bass rumble from impact
     const sub = this.#ctx.createOscillator();
     sub.type = 'sine';
-    sub.frequency.setValueAtTime((50 + rowIndex * 10) * pitch, t);
+    sub.frequency.setValueAtTime((45 + rowIndex * 8) * pitch, t);
     sub.frequency.exponentialRampToValueAtTime(25, t + dur * 0.4);
     const sE = this.#ctx.createGain();
-    sE.gain.setValueAtTime(0.30, t);
+    sE.gain.setValueAtTime(0.25, t);
     sE.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.35);
     sub.connect(sE); sE.connect(this.#masterGain);
     sub.start(t); sub.stop(t + dur * 0.4);
+
+    // 10-cell concrete chunk cascade L→R
+    for (let i = 0; i < 10; i++) {
+      const ct = t + ((i + 1) / 11) * dur * 0.75 + (Math.random() - 0.5) * 0.008 * ds;
+      // Heavy crack: low-mid bandpass noise burst
+      this.#crackBurst(ct, 200 + Math.random() * 300, 2 + Math.random() * 2,
+        0.012 + Math.random() * 0.01, 0.20 + Math.random() * 0.15);
+      // Chunk impact — low sine thud for each chunk
+      this.#ping(ct, (60 + Math.random() * 80) * pitch,
+        0.02 + Math.random() * 0.01, 0.08 + Math.random() * 0.06);
+      // Debris scatter (40% chance)
+      if (Math.random() > 0.6) {
+        this.#crackBurst(ct + 0.008, 1000 + Math.random() * 1500,
+          1.5, 0.006, 0.06 + Math.random() * 0.04);
+      }
+    }
+
+    // Dust cloud: tiny quiet high-freq bursts trailing behind
+    for (let i = 0; i < 6; i++) {
+      const dt = t + (i / 6) * dur * 0.6 + 0.03 * ds + Math.random() * 0.01;
+      this.#crackBurst(dt, 2000 + Math.random() * 2000, 0.8,
+        0.008 + Math.random() * 0.005, 0.03 + Math.random() * 0.02, 'highpass');
+    }
   }
 
   #rowClearedCrystal(t, rowIndex, pitch, ds) {
-    // Crystal rod fracturing left-to-right — shimmering harmonic cascade
+    // Crystal fracturing L→R: each crack excites a resonant harmonic ping
     const dur = 0.8 * ds;
     const chordFreqs = [523, 659, 784, 1047];
     const base = chordFreqs[Math.min(rowIndex, 3)] * pitch;
+    const harmonics = [1, 1.25, 1.5, 2, 2.5, 3, 4];
 
-    // Layer 1: Cascading harmonic pings — staggered across the sweep
-    const intervals = [1, 1.25, 1.5, 2, 2.5, 3];
-    for (let i = 0; i < intervals.length; i++) {
-      const osc = this.#ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = base * intervals[i];
-      const env = this.#ctx.createGain();
-      const st = t + (i / intervals.length) * dur * 0.6;
-      env.gain.setValueAtTime(0, st);
-      env.gain.linearRampToValueAtTime(0.10, st + 0.01 * ds);
-      env.gain.exponentialRampToValueAtTime(0.001, st + dur * 0.7);
-      osc.connect(env); env.connect(this.#masterGain);
-      osc.start(st); osc.stop(st + dur * 0.8);
+    // Initial crystal crack — sharp + bright resonance
+    this.#crackBurst(t, 2500 * pitch, 12, 0.004, 0.35);
+    this.#ping(t, base, 0.12, 0.12);
+    // Sub wobble
+    this.#ping(t, 55 + rowIndex * 8, dur * 0.2, 0.10);
+
+    // 10-cell crystal fracture L→R — each crack triggers a harmonic
+    for (let i = 0; i < 10; i++) {
+      const ct = t + ((i + 1) / 11) * dur * 0.65 + (Math.random() - 0.5) * 0.005 * ds;
+      // Crack transient through high-Q bandpass
+      this.#crackBurst(ct, (2000 + Math.random() * 3000) * pitch,
+        10 + Math.random() * 5, 0.003 + Math.random() * 0.002,
+        0.18 + Math.random() * 0.12);
+      // Harmonic ping — picks from the harmonic series
+      const harm = harmonics[i % harmonics.length];
+      this.#ping(ct + 0.002, base * harm,
+        0.05 + Math.random() * 0.06, 0.06 + Math.random() * 0.04);
     }
 
-    // Layer 2: Crystalline shatter sweep (highpass noise sweeping down)
-    const shatter = this.#ctx.createBufferSource();
-    shatter.buffer = this.#createNoiseBuffer(dur);
-    const sF = this.#ctx.createBiquadFilter();
-    sF.type = 'bandpass'; sF.Q.value = 4;
-    sF.frequency.setValueAtTime(10000, t);
-    sF.frequency.exponentialRampToValueAtTime(2000, t + dur * 0.8);
-    const sE = this.#ctx.createGain();
-    sE.gain.setValueAtTime(0.04, t);
-    sE.gain.linearRampToValueAtTime(0.08, t + dur * 0.2);
-    sE.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    shatter.connect(sF); sF.connect(sE); sE.connect(this.#masterGain);
-    this.#addReverb(sE, dur * 0.8, 0.35, 0.18);
-    shatter.start(t); shatter.stop(t + dur + 0.1);
-
-    // Layer 3: Inharmonic shimmer (crystal character — detuned partial)
-    const shim = this.#ctx.createOscillator();
-    shim.type = 'sine';
-    shim.frequency.value = base * 3.76;
-    const shE = this.#ctx.createGain();
-    shE.gain.setValueAtTime(0.03, t);
-    shE.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.7);
-    shim.connect(shE); shE.connect(this.#masterGain);
-    shim.start(t); shim.stop(t + dur * 0.75);
+    // Shimmer trail — overlapping harmonic decays with reverb
+    for (let i = 0; i < 5; i++) {
+      const st = t + dur * 0.3 + (i / 5) * dur * 0.5;
+      const harm = harmonics[Math.floor(Math.random() * harmonics.length)];
+      const node = this.#ping(st, base * harm,
+        0.08 + Math.random() * 0.06, 0.03 + Math.random() * 0.02);
+      this.#addReverb(node, dur * 0.4, 0.25, 0.08);
+    }
   }
 
   #rowClearedMetal(t, rowIndex, pitch, ds) {
-    // Metal beam tearing apart left-to-right — grinding, clanging, resonant
+    // Metal tearing L→R: resonant clangs, each hit rings with inharmonic partials
     const dur = 0.8 * ds;
-    const freq = (150 + rowIndex * 60) * pitch;
+    const baseFreq = (180 + rowIndex * 50) * pitch;
 
-    // Layer 1: Grinding metal sweep (sawtooth through sweeping bandpass)
-    const grind = this.#ctx.createOscillator();
-    grind.type = 'sawtooth';
-    grind.frequency.setValueAtTime(freq, t);
-    grind.frequency.linearRampToValueAtTime(freq * 0.5, t + dur);
-    const gF = this.#ctx.createBiquadFilter();
-    gF.type = 'bandpass'; gF.Q.value = 8;
-    gF.frequency.setValueAtTime(freq * 4, t);
-    gF.frequency.linearRampToValueAtTime(freq * 1.5, t + dur);
-    const gE = this.#ctx.createGain();
-    gE.gain.setValueAtTime(0.05, t);
-    gE.gain.linearRampToValueAtTime(0.18, t + dur * 0.1);
-    gE.gain.setValueAtTime(0.15, t + dur * 0.6);
-    gE.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    grind.connect(gF); gF.connect(gE); gE.connect(this.#masterGain);
-    this.#addReverb(gE, dur * 0.5, 0.3, 0.12);
-    grind.start(t); grind.stop(t + dur + 0.05);
+    // Initial metal strike — loud high-Q clang
+    this.#crackBurst(t, baseFreq * 3, 20, 0.008, 0.40);
+    // Ringing from initial strike (long high-Q noise = metallic ring)
+    this.#crackBurst(t, baseFreq * 5, 25, 0.06, 0.12);
+    // Sub impact
+    this.#ping(t, 45, dur * 0.2, 0.20);
 
-    // Layer 2: Impact clangs — staggered metallic hits
-    const clangs = 4 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < clangs; i++) {
-      const ct = t + (i / clangs) * dur * 0.85 + Math.random() * 0.015 * ds;
-      const clang = this.#ctx.createOscillator();
-      clang.type = 'square';
-      clang.frequency.value = (300 + Math.random() * 800) * pitch;
-      const cF = this.#ctx.createBiquadFilter();
-      cF.type = 'bandpass'; cF.frequency.value = clang.frequency.value * 3; cF.Q.value = 15;
-      const cE = this.#ctx.createGain();
-      cE.gain.setValueAtTime(0.10 + Math.random() * 0.08, ct);
-      cE.gain.exponentialRampToValueAtTime(0.001, ct + 0.06 * ds);
-      clang.connect(cF); cF.connect(cE); cE.connect(this.#masterGain);
-      clang.start(ct); clang.stop(ct + 0.08 * ds);
+    // 10-cell metal tear L→R: each is a clang through very high Q
+    for (let i = 0; i < 10; i++) {
+      const ct = t + ((i + 1) / 11) * dur * 0.7 + (Math.random() - 0.5) * 0.006 * ds;
+      const clangFreq = (300 + Math.random() * 900) * pitch;
+      // Resonant clang — high Q creates metallic ringing
+      this.#crackBurst(ct, clangFreq, 15 + Math.random() * 10,
+        0.006 + Math.random() * 0.006, 0.15 + Math.random() * 0.12);
+      // Inharmonic partial (metallic timbre = non-integer freq ratios)
+      const ratio = 1.4 + Math.random() * 1.6;
+      this.#crackBurst(ct, clangFreq * ratio, 18,
+        0.01, 0.06 + Math.random() * 0.04);
     }
 
-    // Layer 3: Rattling debris (high-Q resonant noise bursts)
-    const rattle = this.#ctx.createBufferSource();
-    rattle.buffer = this.#createNoiseBuffer(dur * 0.7);
-    const rF = this.#ctx.createBiquadFilter();
-    rF.type = 'bandpass'; rF.frequency.value = 2000; rF.Q.value = 12;
-    const rE = this.#ctx.createGain();
-    rE.gain.setValueAtTime(0, t + dur * 0.15);
-    rE.gain.linearRampToValueAtTime(0.05, t + dur * 0.3);
-    rE.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.85);
-    rattle.connect(rF); rF.connect(rE); rE.connect(this.#masterGain);
-    rattle.start(t); rattle.stop(t + dur * 0.9);
-
-    // Layer 4: Sub-bass thud
-    const sub = this.#ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.setValueAtTime(45, t);
-    sub.frequency.exponentialRampToValueAtTime(25, t + dur * 0.3);
-    const sE = this.#ctx.createGain();
-    sE.gain.setValueAtTime(0.22, t);
-    sE.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.3);
-    sub.connect(sE); sE.connect(this.#masterGain);
-    sub.start(t); sub.stop(t + dur * 0.35);
+    // Scraping texture: longer resonant noise bursts with reverb
+    for (let i = 0; i < 3; i++) {
+      const st = t + (i / 3) * dur * 0.5 + 0.02 * ds;
+      const node = this.#crackBurst(st, 800 + Math.random() * 1200, 20,
+        0.03 + Math.random() * 0.02, 0.04 + Math.random() * 0.03);
+      this.#addReverb(node, dur * 0.3, 0.2, 0.06);
+    }
   }
 
   #rowClearedIce(t, rowIndex, pitch, ds) {
-    // Ice shelf cracking left-to-right — sharp fracture propagation + tinkles
+    // Ice shelf cracking L→R: ultra-sharp bright snaps + characteristic pings
     const dur = 0.8 * ds;
 
-    // Layer 1: Propagating crack sweep (bright noise with descending bandpass)
-    const crack = this.#ctx.createBufferSource();
-    crack.buffer = this.#createNoiseBuffer(dur + 0.2);
-    const cF = this.#ctx.createBiquadFilter();
-    cF.type = 'bandpass'; cF.Q.value = 2;
-    cF.frequency.setValueAtTime(9000, t);
-    cF.frequency.linearRampToValueAtTime(2000, t + dur * 0.7);
-    cF.frequency.exponentialRampToValueAtTime(800, t + dur);
-    const cE = this.#ctx.createGain();
-    cE.gain.setValueAtTime(0.06, t);
-    cE.gain.linearRampToValueAtTime(0.22, t + dur * 0.1);
-    cE.gain.setValueAtTime(0.18, t + dur * 0.5);
-    cE.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    crack.connect(cF); cF.connect(cE); cE.connect(this.#masterGain);
-    this.#addReverb(cE, dur * 0.5, 0.25, 0.15);
-    crack.start(t); crack.stop(t + dur + 0.1);
+    // Initial ice crack — extremely bright and sharp
+    this.#crackBurst(t, 7000 * pitch, 10, 0.003, 0.45, 'highpass');
+    this.#ping(t, 8000 * pitch, 0.04, 0.06);
 
-    // Layer 2: Sharp crack transients — ice snapping
-    const snaps = 7 + Math.floor(Math.random() * 4);
-    for (let i = 0; i < snaps; i++) {
-      const st = t + (i / snaps) * dur * 0.9 + Math.random() * 0.01 * ds;
-      const snap = this.#ctx.createBufferSource();
-      snap.buffer = this.#createNoiseBuffer(0.015);
-      const sF = this.#ctx.createBiquadFilter();
-      sF.type = 'highpass'; sF.frequency.value = 5000 + Math.random() * 4000;
-      const sE = this.#ctx.createGain();
-      sE.gain.setValueAtTime(0.15 + Math.random() * 0.10, st);
-      sE.gain.exponentialRampToValueAtTime(0.001, st + 0.015 + Math.random() * 0.01);
-      snap.connect(sF); sF.connect(sE); sE.connect(this.#masterGain);
-      snap.start(st); snap.stop(st + 0.03);
-    }
-
-    // Layer 3: Ice shard tinkles — crystalline pings trailing behind the crack
-    const tinkles = 5 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < tinkles; i++) {
-      const tt = t + (i / tinkles) * dur * 0.8 + 0.04 * ds;
-      const tink = this.#ctx.createOscillator();
-      tink.type = 'sine';
-      tink.frequency.value = (5000 + Math.random() * 7000) * pitch;
-      const tE = this.#ctx.createGain();
-      tE.gain.setValueAtTime(0.04 + Math.random() * 0.03, tt);
-      tE.gain.exponentialRampToValueAtTime(0.001, tt + 0.06 * ds);
-      tink.connect(tE); tE.connect(this.#masterGain);
-      tink.start(tt); tink.stop(tt + 0.08 * ds);
-    }
-
-    // Layer 4: Deep ice groan (sub-bass — the lake groaning)
+    // Deep ice groan (sub-bass — the lake groaning)
     const groan = this.#ctx.createOscillator();
     groan.type = 'sine';
     groan.frequency.setValueAtTime(50 * pitch, t);
-    groan.frequency.linearRampToValueAtTime(30, t + dur * 0.5);
+    groan.frequency.linearRampToValueAtTime(30, t + dur * 0.45);
     const gE = this.#ctx.createGain();
     gE.gain.setValueAtTime(0.14, t);
-    gE.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.5);
+    gE.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.45);
     groan.connect(gE); gE.connect(this.#masterGain);
-    groan.start(t); groan.stop(t + dur * 0.55);
+    groan.start(t); groan.stop(t + dur * 0.5);
+
+    // 10-cell ice fracture cascade L→R — rapid sharp snaps
+    for (let i = 0; i < 10; i++) {
+      const ct = t + ((i + 1) / 11) * dur * 0.65 + (Math.random() - 0.5) * 0.004 * ds;
+      // Sharp ice snap: very short, very bright
+      this.#crackBurst(ct, (6000 + Math.random() * 5000) * pitch,
+        8 + Math.random() * 6, 0.002 + Math.random() * 0.002,
+        0.25 + Math.random() * 0.15, 'highpass');
+      // Characteristic ice ping
+      this.#ping(ct + 0.001, (7000 + Math.random() * 5000) * pitch,
+        0.02 + Math.random() * 0.03, 0.03 + Math.random() * 0.03);
+      // Branching micro-crack (50% chance)
+      if (Math.random() > 0.5) {
+        const bt = ct + 0.003 + Math.random() * 0.005;
+        this.#crackBurst(bt, (8000 + Math.random() * 4000) * pitch,
+          10, 0.002, 0.08 + Math.random() * 0.06, 'highpass');
+      }
+    }
+
+    // Ice shard tinkles after fracture
+    for (let i = 0; i < 5; i++) {
+      const st = t + dur * 0.4 + Math.random() * dur * 0.4;
+      this.#ping(st, (8000 + Math.random() * 6000) * pitch,
+        0.015 + Math.random() * 0.02, 0.02 + Math.random() * 0.02);
+    }
   }
 }
 

@@ -29,7 +29,7 @@ js/scoring.js       — Score, level, lines tracking
 - **Randomizer**: 7-bag random generator (one of each piece per bag)
 - **Gravity**: Pieces fall faster as level increases
 - **Lock delay**: 0.5 seconds after landing before piece locks
-- **Scoring**: Single=100, Double=300, Triple=500, Tetris=800 (multiplied by level)
+- **Scoring**: Single=10, Double=30, Triple=70, Tetris=150 (multiplied by level)
 - **Levels**: Advance every 10 lines cleared
 - **Hold piece**: Player can hold one piece (swap once per drop)
 - **Next piece preview**: Show next 3 pieces
