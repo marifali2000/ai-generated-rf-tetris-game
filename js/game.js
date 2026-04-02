@@ -67,6 +67,8 @@ class Game {
       localStorage.setItem('tetris-tutorial-seen', '1');
       this.#sound.init();
       this.#sound.warmUp();
+      // Show hamburger hint after tutorial
+      this.#showHamburgerHint();
       if (this.#state === 'idle' || this.#state === 'gameOver') {
         this.#handleStart();
       } else if (this.#state === 'paused') {
@@ -78,17 +80,8 @@ class Game {
       this.#renderer.showOverlay('');
     } else {
       this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
-    }
-
-    // Hamburger highlight hint on mobile (show at start, dismiss on first menu tap)
-    if (IS_MOBILE) {
-      const hint = document.getElementById('hamburger-hint');
-      const toggle = document.getElementById('mobile-menu-toggle');
-      // Show hint after a brief delay
-      setTimeout(() => {
-        toggle?.classList.add('hamburger-highlight');
-        hint?.classList.add('visible');
-      }, 500);
+      // Show hamburger hint if tutorial already seen
+      if (IS_MOBILE) this.#showHamburgerHint();
     }
 
     // Landscape detection — pause game in landscape on mobile
@@ -364,6 +357,14 @@ class Game {
       this.#inputBuffer = null;
       this.#executeAction(action);
     }
+  }
+
+  #showHamburgerHint() {
+    const hint = document.getElementById('hamburger-hint');
+    const toggle = document.getElementById('mobile-menu-toggle');
+    if (!hint || !toggle) return;
+    toggle.classList.add('hamburger-highlight');
+    hint.classList.add('visible');
   }
 
   #handleStart() {

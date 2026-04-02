@@ -516,8 +516,8 @@ kbd {
   #hamburger-hint {
     display: block;
     position: fixed;
-    top: calc(env(safe-area-inset-top, 6px) + 42px);
-    right: 8px;
+    top: calc(env(safe-area-inset-top, 6px) + 4px);
+    right: 52px;
     z-index: 31;
     background: rgba(90, 176, 255, 0.15);
     border: 1px solid rgba(90, 176, 255, 0.5);
@@ -533,6 +533,7 @@ kbd {
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s ease;
+    white-space: nowrap;
   }
 
   #hamburger-hint.visible {
@@ -546,12 +547,12 @@ kbd {
 
   @keyframes hint-bob {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(4px); }
+    50% { transform: translateY(3px); }
   }
 
   @keyframes hint-arrow-bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(4px); }
   }
 
   /* Demo floating controls */

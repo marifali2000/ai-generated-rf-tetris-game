@@ -119,176 +119,445 @@ class SoundEngine {
     return this.#ctx.currentTime;
   }
 
-  // ─── Spawn — "Crystalline Pop" ────────────────────────────────────────
+  // ─── Spawn — Theme-aware piece appear ──────────────────────────────
 
-  /**
-   * Bubbly pop + octave shimmer + percussive click transient.
-   * Pitch micro-varied ±4% to stay fresh over hundreds of spawns.
-   */
+  /** Dispatches to active sound theme. */
   playSpawn() {
     if (!this.#ctx) return;
+    switch (this.#soundTheme) {
+      case 'glass': this.#spawnGlass(); break;
+      case 'concrete': this.#spawnConcrete(); break;
+      case 'crystal': this.#spawnCrystal(); break;
+      case 'metal': this.#spawnMetal(); break;
+      case 'ice': this.#spawnIce(); break;
+    }
+  }
+
+  #spawnGlass() {
     const t = this.#now();
     const pf = 0.96 + Math.random() * 0.08;
-
-    // Layer 1: Bubbly pop — quick sine chirp up
-    const pop = this.#ctx.createOscillator();
-    pop.type = 'sine';
-    pop.frequency.setValueAtTime(280 * pf, t);
-    pop.frequency.exponentialRampToValueAtTime(950 * pf, t + 0.05);
-    pop.frequency.exponentialRampToValueAtTime(600 * pf, t + 0.12);
-    const popEnv = this.#ctx.createGain();
-    popEnv.gain.setValueAtTime(0.28, t);
-    popEnv.gain.linearRampToValueAtTime(0.32, t + 0.03);
-    popEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-    pop.connect(popEnv);
-    popEnv.connect(this.#masterGain);
-    pop.start(t); pop.stop(t + 0.17);
-
-    // Layer 2: Octave shimmer
-    const shimmer = this.#ctx.createOscillator();
-    shimmer.type = 'triangle';
-    shimmer.frequency.setValueAtTime(560 * pf, t);
-    shimmer.frequency.exponentialRampToValueAtTime(1900 * pf, t + 0.04);
-    shimmer.frequency.exponentialRampToValueAtTime(1200 * pf, t + 0.1);
-    const shimEnv = this.#ctx.createGain();
-    shimEnv.gain.setValueAtTime(0.07, t);
-    shimEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-    shimmer.connect(shimEnv);
-    shimEnv.connect(this.#masterGain);
-    shimmer.start(t); shimmer.stop(t + 0.11);
-
-    // Layer 3: Tiny air click (percussive transient)
-    const click = this.#ctx.createBufferSource();
-    click.buffer = this.#createNoiseBuffer(0.015);
-    const clickFilter = this.#ctx.createBiquadFilter();
-    clickFilter.type = 'bandpass';
-    clickFilter.frequency.value = 4500;
-    clickFilter.Q.value = 1.5;
-    const clickEnv = this.#ctx.createGain();
-    clickEnv.gain.setValueAtTime(0.12, t);
-    clickEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
-    click.connect(clickFilter);
-    clickFilter.connect(clickEnv);
-    clickEnv.connect(this.#masterGain);
-    click.start(t); click.stop(t + 0.02);
-  }
-
-  // ─── Rotate — "Crystal Tick" ──────────────────────────────────────────
-
-  /**
-   * Musical click with octave harmonic for brightness.
-   * ±3% pitch micro-variation.
-   */
-  playRotate() {
-    if (!this.#ctx) return;
-    const t = this.#now();
-    const pitch = 0.97 + Math.random() * 0.06;
-
-    // Fundamental tick
+    // Glass tinkle ping
     const osc = this.#ctx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.value = 1200 * pitch;
+    osc.frequency.setValueAtTime(2800 * pf, t);
+    osc.frequency.exponentialRampToValueAtTime(3500 * pf, t + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(2200 * pf, t + 0.12);
     const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0.22, t);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-    osc.connect(env);
-    env.connect(this.#masterGain);
-    osc.start(t); osc.stop(t + 0.05);
-
-    // Octave harmonic for brightness
-    const h = this.#ctx.createOscillator();
-    h.type = 'sine';
-    h.frequency.value = 2400 * pitch;
-    const hEnv = this.#ctx.createGain();
-    hEnv.gain.setValueAtTime(0.06, t);
-    hEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
-    h.connect(hEnv);
-    hEnv.connect(this.#masterGain);
-    h.start(t); h.stop(t + 0.03);
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.15);
+    // High sparkle
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.02);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = 7000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.08, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.03);
   }
 
-  // ─── Lock — "Satisfying Click-Thud" ───────────────────────────────────
+  #spawnConcrete() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Stone tap
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(120 * pf, t);
+    osc.frequency.exponentialRampToValueAtTime(60 * pf, t + 0.08);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.11);
+    // Grit texture
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.03);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 400;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.08, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.04);
+  }
 
-  /**
-   * Snappy transient + brief sub-bass weight you feel more than hear.
-   */
+  #spawnCrystal() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Crystal bell chime
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200 * pf, t);
+    osc.frequency.exponentialRampToValueAtTime(1800 * pf, t + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(1400 * pf, t + 0.12);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.18, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.16);
+    // Harmonic overtone
+    const h = this.#ctx.createOscillator();
+    h.type = 'sine'; h.frequency.value = 2400 * pf;
+    const he = this.#ctx.createGain();
+    he.gain.setValueAtTime(0.05, t);
+    he.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    h.connect(he); he.connect(this.#masterGain);
+    h.start(t); h.stop(t + 0.09);
+  }
+
+  #spawnMetal() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Metallic ping
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(500 * pf, t);
+    osc.frequency.exponentialRampToValueAtTime(300 * pf, t + 0.06);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.12, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.09);
+    // Ring resonance
+    const ring = this.#ctx.createOscillator();
+    ring.type = 'sine'; ring.frequency.value = 1100 * pf;
+    const re = this.#ctx.createGain();
+    re.gain.setValueAtTime(0.06, t);
+    re.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    ring.connect(re); re.connect(this.#masterGain);
+    ring.start(t); ring.stop(t + 0.11);
+  }
+
+  #spawnIce() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Ice crackle
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.03);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = 3000 * pf; bpf.Q.value = 4;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.15, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.04);
+    // Cold sine ping
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 1800 * pf;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.1, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.07);
+  }
+
+  // ─── Rotate — Theme-aware piece rotation ─────────────────────────────
+
+  /** Dispatches to active sound theme. */
+  playRotate() {
+    if (!this.#ctx) return;
+    switch (this.#soundTheme) {
+      case 'glass': this.#rotateGlass(); break;
+      case 'concrete': this.#rotateConcrete(); break;
+      case 'crystal': this.#rotateCrystal(); break;
+      case 'metal': this.#rotateMetal(); break;
+      case 'ice': this.#rotateIce(); break;
+    }
+  }
+
+  #rotateGlass() {
+    const t = this.#now();
+    const p = 0.97 + Math.random() * 0.06;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 3200 * p;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.15, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.04);
+  }
+
+  #rotateConcrete() {
+    const t = this.#now();
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.03);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 500;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.12, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.04);
+  }
+
+  #rotateCrystal() {
+    const t = this.#now();
+    const p = 0.97 + Math.random() * 0.06;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 1800 * p;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.15, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.05);
+  }
+
+  #rotateMetal() {
+    const t = this.#now();
+    const p = 0.97 + Math.random() * 0.06;
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square'; osc.frequency.value = 800 * p;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.1, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.04);
+  }
+
+  #rotateIce() {
+    const t = this.#now();
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.02);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = 4000; bpf.Q.value = 5;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.12, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.03);
+  }
+
+  // ─── Lock — Theme-aware piece lock ────────────────────────────────────
+
+  /** Dispatches to active sound theme. */
   playLock() {
     if (!this.#ctx) return;
-    const t = this.#now();
-
-    // Sharp click transient
-    const click = this.#ctx.createBufferSource();
-    click.buffer = this.#createNoiseBuffer(0.03);
-    const clickFilter = this.#ctx.createBiquadFilter();
-    clickFilter.type = 'bandpass';
-    clickFilter.frequency.value = 3200 + Math.random() * 600;
-    clickFilter.Q.value = 2.5;
-    const clickEnv = this.#ctx.createGain();
-    clickEnv.gain.setValueAtTime(0.35, t);
-    clickEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
-    click.connect(clickFilter);
-    clickFilter.connect(clickEnv);
-    clickEnv.connect(this.#masterGain);
-    click.start(t); click.stop(t + 0.04);
-
-    // Sub weight (felt more than heard)
-    const sub = this.#ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.value = 100;
-    const subEnv = this.#ctx.createGain();
-    subEnv.gain.setValueAtTime(0.15, t);
-    subEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-    sub.connect(subEnv);
-    subEnv.connect(this.#masterGain);
-    sub.start(t); sub.stop(t + 0.07);
+    switch (this.#soundTheme) {
+      case 'glass': this.#lockGlass(); break;
+      case 'concrete': this.#lockConcrete(); break;
+      case 'crystal': this.#lockCrystal(); break;
+      case 'metal': this.#lockMetal(); break;
+      case 'ice': this.#lockIce(); break;
+    }
   }
 
-  // ─── Hard Drop — "Weighted Impact" ────────────────────────────────────
+  #lockGlass() {
+    const t = this.#now();
+    // Glass clink
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 2500 + Math.random() * 300;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.07);
+    // Tiny glass tap
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.015);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = 5000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.02);
+  }
 
-  /**
-   * Deep thud with floor resonance + dust scatter noise texture.
-   */
+  #lockConcrete() {
+    const t = this.#now();
+    // Concrete thud
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(100 + Math.random() * 30, t);
+    osc.frequency.exponentialRampToValueAtTime(40, t + 0.06);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.25, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.07);
+    // Grit
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.025);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 350;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.03);
+  }
+
+  #lockCrystal() {
+    const t = this.#now();
+    // Crystal clunk
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 1000 + Math.random() * 200;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.07);
+  }
+
+  #lockMetal() {
+    const t = this.#now();
+    // Metal clank
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(400 + Math.random() * 100, t);
+    osc.frequency.exponentialRampToValueAtTime(150, t + 0.05);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.18, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.07);
+  }
+
+  #lockIce() {
+    const t = this.#now();
+    // Ice crunch
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.04);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = 2500 + Math.random() * 500; bpf.Q.value = 3;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.2, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.05);
+  }
+
+  // ─── Hard Drop — Theme-aware impact ───────────────────────────────────
+
+  /** Dispatches to active sound theme. */
   playHardDrop() {
     if (!this.#ctx) return;
-    const t = this.#now();
+    switch (this.#soundTheme) {
+      case 'glass': this.#hardDropGlass(); break;
+      case 'concrete': this.#hardDropConcrete(); break;
+      case 'crystal': this.#hardDropCrystal(); break;
+      case 'metal': this.#hardDropMetal(); break;
+      case 'ice': this.#hardDropIce(); break;
+    }
+  }
 
-    // Sub impact — feels heavy
+  #hardDropGlass() {
+    const t = this.#now();
+    // Glass impact — bright shatter with sub
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.08);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = 4000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.25, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.09);
+    // Sub weight
     const sub = this.#ctx.createOscillator();
     sub.type = 'sine';
     sub.frequency.setValueAtTime(90, t);
-    sub.frequency.exponentialRampToValueAtTime(40, t + 0.12);
-    const subEnv = this.#ctx.createGain();
-    subEnv.gain.setValueAtTime(0.65, t);
-    subEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-    sub.connect(subEnv);
-    subEnv.connect(this.#masterGain);
+    sub.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.15, t);
+    se.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    sub.connect(se); se.connect(this.#masterGain);
+    sub.start(t); sub.stop(t + 0.11);
+  }
+
+  #hardDropConcrete() {
+    const t = this.#now();
+    // Heavy concrete slam
+    const sub = this.#ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(70, t);
+    sub.frequency.exponentialRampToValueAtTime(25, t + 0.12);
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.5, t);
+    se.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    sub.connect(se); se.connect(this.#masterGain);
     sub.start(t); sub.stop(t + 0.13);
+    // Concrete dust
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.08);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 300;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.18, t + 0.01);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t + 0.01); n.stop(t + 0.09);
+  }
 
-    // Mid body (floor resonance)
-    const body = this.#ctx.createOscillator();
-    body.type = 'triangle';
-    body.frequency.setValueAtTime(180, t);
-    body.frequency.exponentialRampToValueAtTime(60, t + 0.08);
-    const bodyEnv = this.#ctx.createGain();
-    bodyEnv.gain.setValueAtTime(0.2, t);
-    bodyEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-    body.connect(bodyEnv);
-    bodyEnv.connect(this.#masterGain);
-    body.start(t); body.stop(t + 0.09);
+  #hardDropCrystal() {
+    const t = this.#now();
+    // Crystal crash
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1500, t);
+    osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.25, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.13);
+    // Crystal shard scatter
+    const h = this.#ctx.createOscillator();
+    h.type = 'sine'; h.frequency.value = 3000;
+    const he = this.#ctx.createGain();
+    he.gain.setValueAtTime(0.08, t);
+    he.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    h.connect(he); he.connect(this.#masterGain);
+    h.start(t); h.stop(t + 0.07);
+  }
 
-    // Dust scatter (short noise texture)
-    const dust = this.#ctx.createBufferSource();
-    dust.buffer = this.#createNoiseBuffer(0.06);
-    const dustFilter = this.#ctx.createBiquadFilter();
-    dustFilter.type = 'highpass';
-    dustFilter.frequency.value = 2000;
-    const dustEnv = this.#ctx.createGain();
-    dustEnv.gain.setValueAtTime(0.18, t + 0.01);
-    dustEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
-    dust.connect(dustFilter);
-    dustFilter.connect(dustEnv);
-    dustEnv.connect(this.#masterGain);
-    dust.start(t + 0.01); dust.stop(t + 0.08);
+  #hardDropMetal() {
+    const t = this.#now();
+    // Metal slam
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + 0.1);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.3, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.11);
+    // Metallic ring aftermath
+    const ring = this.#ctx.createOscillator();
+    ring.type = 'sine'; ring.frequency.value = 600;
+    const re = this.#ctx.createGain();
+    re.gain.setValueAtTime(0.1, t + 0.02);
+    re.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    ring.connect(re); re.connect(this.#masterGain);
+    ring.start(t + 0.02); ring.stop(t + 0.16);
+  }
+
+  #hardDropIce() {
+    const t = this.#now();
+    // Ice crack impact
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.06);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = 3500; bpf.Q.value = 4;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.3, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.07);
+    // Deep ice fracture
+    const sub = this.#ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(100, t);
+    sub.frequency.exponentialRampToValueAtTime(35, t + 0.12);
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.2, t);
+    se.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    sub.connect(se); se.connect(this.#masterGain);
+    sub.start(t); sub.stop(t + 0.13);
   }
 
   // ─── Line Clear — Theme-based Sound ──────────────────────────────────
@@ -989,173 +1258,481 @@ class SoundEngine {
     revSrc.stop(t + 0.075);
   }
 
-  // ─── Level Up — "Triumphant Arpeggio" ─────────────────────────────────
+  // ─── Level Up — Theme-aware celebration ─────────────────────────────
 
-  /**
-   * Ascending major arpeggio C5→E5→G5→C6 with octave sparkle + shimmer burst.
-   */
+  /** Dispatches to active sound theme. */
   playLevelUp() {
     if (!this.#ctx) return;
-    const t = this.#now();
-
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    const noteGap = 0.07;
-
-    notes.forEach((freq, i) => {
-      const osc = this.#ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      const env = this.#ctx.createGain();
-      const start = t + i * noteGap;
-      env.gain.setValueAtTime(0.001, start);
-      env.gain.linearRampToValueAtTime(0.25, start + 0.01);
-      env.gain.exponentialRampToValueAtTime(0.001, start + 0.15);
-      osc.connect(env);
-      env.connect(this.#masterGain);
-      osc.start(start); osc.stop(start + 0.16);
-
-      // Octave sparkle on each note
-      const sparkle = this.#ctx.createOscillator();
-      sparkle.type = 'triangle';
-      sparkle.frequency.value = freq * 2;
-      const spEnv = this.#ctx.createGain();
-      spEnv.gain.setValueAtTime(0.04, start + 0.005);
-      spEnv.gain.exponentialRampToValueAtTime(0.001, start + 0.08);
-      sparkle.connect(spEnv);
-      spEnv.connect(this.#masterGain);
-      sparkle.start(start + 0.005); sparkle.stop(start + 0.09);
-    });
-
-    // Final shimmer burst
-    const shimmer = this.#ctx.createBufferSource();
-    shimmer.buffer = this.#createNoiseBuffer(0.15);
-    const shimFilter = this.#ctx.createBiquadFilter();
-    shimFilter.type = 'bandpass';
-    shimFilter.frequency.value = 6000;
-    shimFilter.Q.value = 0.8;
-    const shimEnv = this.#ctx.createGain();
-    const shimStart = t + notes.length * noteGap;
-    shimEnv.gain.setValueAtTime(0.15, shimStart);
-    shimEnv.gain.exponentialRampToValueAtTime(0.001, shimStart + 0.15);
-    shimmer.connect(shimFilter);
-    shimFilter.connect(shimEnv);
-    shimEnv.connect(this.#masterGain);
-    shimmer.start(shimStart); shimmer.stop(shimStart + 0.16);
+    switch (this.#soundTheme) {
+      case 'glass': this.#levelUpGlass(); break;
+      case 'concrete': this.#levelUpConcrete(); break;
+      case 'crystal': this.#levelUpCrystal(); break;
+      case 'metal': this.#levelUpMetal(); break;
+      case 'ice': this.#levelUpIce(); break;
+    }
   }
 
-  // ─── Game Over — "Cathedral Collapse" ─────────────────────────────────
+  #levelUpGlass() {
+    const t = this.#now();
+    // Ascending glass tinkles
+    for (let i = 0; i < 4; i++) {
+      const s = t + i * 0.07;
+      const freq = 2500 + i * 600;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.18, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.12);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.13);
+    }
+    // Glass shimmer burst
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.12);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = 6000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.12, t + 0.28);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t + 0.28); n.stop(t + 0.41);
+  }
 
-  /**
-   * Descending minor chord + sub-bass rumble + staggered debris cascade + reverb tail.
-   */
+  #levelUpConcrete() {
+    const t = this.#now();
+    // Rising concrete thuds getting louder
+    for (let i = 0; i < 4; i++) {
+      const s = t + i * 0.08;
+      const freq = 50 + i * 20;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, s);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.5, s + 0.1);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.15 + i * 0.05, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.12);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.13);
+    }
+    // Rumble aftermath
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.15);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 300;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.12, t + 0.32);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t + 0.32); n.stop(t + 0.46);
+  }
+
+  #levelUpCrystal() {
+    const t = this.#now();
+    // Crystal ascending chimes
+    const freqs = [800, 1000, 1200, 1600];
+    freqs.forEach((f, i) => {
+      const s = t + i * 0.07;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = f;
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.2, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.15);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.16);
+      // Overtone
+      const h = this.#ctx.createOscillator();
+      h.type = 'sine'; h.frequency.value = f * 2;
+      const he = this.#ctx.createGain();
+      he.gain.setValueAtTime(0.04, s);
+      he.gain.exponentialRampToValueAtTime(0.001, s + 0.08);
+      h.connect(he); he.connect(this.#masterGain);
+      h.start(s); h.stop(s + 0.09);
+    });
+  }
+
+  #levelUpMetal() {
+    const t = this.#now();
+    // Ascending metallic clangs
+    for (let i = 0; i < 4; i++) {
+      const s = t + i * 0.08;
+      const freq = 300 + i * 120;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, s);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.5, s + 0.08);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.12 + i * 0.03, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.1);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.11);
+      // Ring
+      const ring = this.#ctx.createOscillator();
+      ring.type = 'sine'; ring.frequency.value = freq * 2.5;
+      const re = this.#ctx.createGain();
+      re.gain.setValueAtTime(0.05, s);
+      re.gain.exponentialRampToValueAtTime(0.001, s + 0.12);
+      ring.connect(re); re.connect(this.#masterGain);
+      ring.start(s); ring.stop(s + 0.13);
+    }
+  }
+
+  #levelUpIce() {
+    const t = this.#now();
+    // Ascending ice cracks
+    for (let i = 0; i < 4; i++) {
+      const s = t + i * 0.07;
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.04);
+      const bpf = this.#ctx.createBiquadFilter();
+      bpf.type = 'bandpass'; bpf.frequency.value = 2000 + i * 600; bpf.Q.value = 4;
+      const ne = this.#ctx.createGain();
+      ne.gain.setValueAtTime(0.15 + i * 0.03, s);
+      ne.gain.exponentialRampToValueAtTime(0.001, s + 0.04);
+      n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(s); n.stop(s + 0.05);
+    }
+    // Cold shimmer
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 4000;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.08, t + 0.28);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t + 0.28); osc.stop(t + 0.41);
+  }
+
+  // ─── Game Over — Theme-aware collapse ─────────────────────────────────
+
+  /** Dispatches to active sound theme. */
   playGameOver() {
     if (!this.#ctx) return;
-    const t = this.#now();
+    switch (this.#soundTheme) {
+      case 'glass': this.#gameOverGlass(); break;
+      case 'concrete': this.#gameOverConcrete(); break;
+      case 'crystal': this.#gameOverCrystal(); break;
+      case 'metal': this.#gameOverMetal(); break;
+      case 'ice': this.#gameOverIce(); break;
+    }
+  }
 
-    // Descending chord cluster (minor feel: G4, Bb4, C5)
-    const chordFreqs = [392, 466.16, 523.25];
-    chordFreqs.forEach((freq, i) => {
+  #gameOverGlass() {
+    const t = this.#now();
+    // Glass shattering cascade — descending tinkles + debris
+    for (let i = 0; i < 5; i++) {
+      const s = t + i * 0.3;
+      const freq = 4000 - i * 500;
       const osc = this.#ctx.createOscillator();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, t);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.15, t + 2.5);
+      osc.frequency.setValueAtTime(freq, s);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.3, s + 0.5);
       const env = this.#ctx.createGain();
-      env.gain.setValueAtTime(0.3, t + i * 0.05);
-      env.gain.linearRampToValueAtTime(0.001, t + 2.5);
-      osc.connect(env);
-      env.connect(this.#masterGain);
-      osc.start(t + i * 0.05); osc.stop(t + 2.6);
-    });
+      env.gain.setValueAtTime(0.2, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.5);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.51);
+      // Glass debris noise
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.3);
+      const hpf = this.#ctx.createBiquadFilter();
+      hpf.type = 'highpass'; hpf.frequency.value = 3000 + i * 200;
+      const ne = this.#ctx.createGain();
+      ne.gain.setValueAtTime(0.15 - i * 0.02, s + 0.05);
+      ne.gain.exponentialRampToValueAtTime(0.001, s + 0.3);
+      n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(s + 0.05); n.stop(s + 0.31);
+    }
+  }
 
+  #gameOverConcrete() {
+    const t = this.#now();
+    // Building collapse — descending rumbles + debris cascade
     // Sub-bass rumble
     const sub = this.#ctx.createOscillator();
     sub.type = 'sine';
-    sub.frequency.setValueAtTime(80, t + 0.1);
-    sub.frequency.exponentialRampToValueAtTime(20, t + 2.5);
-    const subEnv = this.#ctx.createGain();
-    subEnv.gain.setValueAtTime(0.5, t + 0.1);
-    subEnv.gain.linearRampToValueAtTime(0.001, t + 2.5);
-    sub.connect(subEnv);
-    subEnv.connect(this.#masterGain);
+    sub.frequency.setValueAtTime(60, t + 0.1);
+    sub.frequency.exponentialRampToValueAtTime(15, t + 2.5);
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.4, t + 0.1);
+    se.gain.linearRampToValueAtTime(0.001, t + 2.5);
+    sub.connect(se); se.connect(this.#masterGain);
     sub.start(t + 0.1); sub.stop(t + 2.6);
-
-    // Crumbling debris cascade (staggered noise bursts)
+    // Staggered concrete debris
     for (let i = 0; i < 5; i++) {
-      const offset = 0.3 + i * 0.35;
-      const debris = this.#ctx.createBufferSource();
-      debris.buffer = this.#createNoiseBuffer(0.4);
-      const debFilter = this.#ctx.createBiquadFilter();
-      debFilter.type = 'bandpass';
-      debFilter.frequency.value = 1200 - i * 150;
-      debFilter.Q.value = 0.6;
-      const debEnv = this.#ctx.createGain();
-      debEnv.gain.setValueAtTime(0.2 - i * 0.03, t + offset);
-      debEnv.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.4);
-      debris.connect(debFilter);
-      debFilter.connect(debEnv);
-      debEnv.connect(this.#masterGain);
-      debris.start(t + offset); debris.stop(t + offset + 0.41);
+      const s = t + 0.3 + i * 0.35;
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.4);
+      const lpf = this.#ctx.createBiquadFilter();
+      lpf.type = 'lowpass'; lpf.frequency.value = 500 - i * 60;
+      const ne = this.#ctx.createGain();
+      ne.gain.setValueAtTime(0.2 - i * 0.03, s);
+      ne.gain.exponentialRampToValueAtTime(0.001, s + 0.35);
+      n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(s); n.stop(s + 0.36);
     }
-
-    // Long reverb-like tail
+    // Long rumble tail
     const tail = this.#ctx.createBufferSource();
-    tail.buffer = this.#createNoiseBuffer(3);
-    const tailFilter = this.#ctx.createBiquadFilter();
-    tailFilter.type = 'lowpass';
-    tailFilter.frequency.setValueAtTime(600, t);
-    tailFilter.frequency.exponentialRampToValueAtTime(100, t + 3);
-    const tailEnv = this.#ctx.createGain();
-    tailEnv.gain.setValueAtTime(0.15, t + 0.5);
-    tailEnv.gain.linearRampToValueAtTime(0.001, t + 3);
-    tail.connect(tailFilter);
-    tailFilter.connect(tailEnv);
-    tailEnv.connect(this.#masterGain);
-    tail.start(t + 0.5); tail.stop(t + 3.1);
+    tail.buffer = this.#createNoiseBuffer(2);
+    const tl = this.#ctx.createBiquadFilter();
+    tl.type = 'lowpass'; tl.frequency.setValueAtTime(400, t);
+    tl.frequency.exponentialRampToValueAtTime(60, t + 2.5);
+    const te = this.#ctx.createGain();
+    te.gain.setValueAtTime(0.12, t + 0.5);
+    te.gain.linearRampToValueAtTime(0.001, t + 2.5);
+    tail.connect(tl); tl.connect(te); te.connect(this.#masterGain);
+    tail.start(t + 0.5); tail.stop(t + 2.6);
   }
 
-  // ─── Move — "Soft Nudge" ─────────────────────────────────────────────
+  #gameOverCrystal() {
+    const t = this.#now();
+    // Crystal shattering cascade — descending pure tones
+    for (let i = 0; i < 5; i++) {
+      const s = t + i * 0.3;
+      const freqs = [1600 - i * 150, 1200 - i * 100, 800 - i * 60];
+      freqs.forEach((f) => {
+        const osc = this.#ctx.createOscillator();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(f, s);
+        osc.frequency.exponentialRampToValueAtTime(f * 0.2, s + 0.6);
+        const env = this.#ctx.createGain();
+        env.gain.setValueAtTime(0.15, s);
+        env.gain.exponentialRampToValueAtTime(0.001, s + 0.6);
+        osc.connect(env); env.connect(this.#masterGain);
+        osc.start(s); osc.stop(s + 0.61);
+      });
+    }
+  }
 
-  /**
-   * Subtle, quiet sine blip for left/right movement. Very short so it
-   * never intrudes even at fast DAS repeat rates.
-   */
+  #gameOverMetal() {
+    const t = this.#now();
+    // Metal structural collapse — grinding + impacts
+    const sub = this.#ctx.createOscillator();
+    sub.type = 'square';
+    sub.frequency.setValueAtTime(100, t);
+    sub.frequency.exponentialRampToValueAtTime(20, t + 2);
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.15, t);
+    se.gain.linearRampToValueAtTime(0.001, t + 2);
+    sub.connect(se); se.connect(this.#masterGain);
+    sub.start(t); sub.stop(t + 2.1);
+    for (let i = 0; i < 5; i++) {
+      const s = t + 0.2 + i * 0.35;
+      const freq = 500 - i * 60;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, s);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.3, s + 0.3);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.12, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.3);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.31);
+      // Ring
+      const ring = this.#ctx.createOscillator();
+      ring.type = 'sine'; ring.frequency.value = freq * 2;
+      const re = this.#ctx.createGain();
+      re.gain.setValueAtTime(0.06, s);
+      re.gain.exponentialRampToValueAtTime(0.001, s + 0.4);
+      ring.connect(re); re.connect(this.#masterGain);
+      ring.start(s); ring.stop(s + 0.41);
+    }
+  }
+
+  #gameOverIce() {
+    const t = this.#now();
+    // Ice shelf collapse — cascading cracks + deep rumble
+    for (let i = 0; i < 6; i++) {
+      const s = t + i * 0.25;
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.2);
+      const bpf = this.#ctx.createBiquadFilter();
+      bpf.type = 'bandpass'; bpf.frequency.value = 3000 - i * 300; bpf.Q.value = 3;
+      const ne = this.#ctx.createGain();
+      ne.gain.setValueAtTime(0.18 - i * 0.02, s);
+      ne.gain.exponentialRampToValueAtTime(0.001, s + 0.2);
+      n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(s); n.stop(s + 0.21);
+    }
+    // Deep sub creak
+    const sub = this.#ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(80, t + 0.3);
+    sub.frequency.exponentialRampToValueAtTime(15, t + 2.5);
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.3, t + 0.3);
+    se.gain.linearRampToValueAtTime(0.001, t + 2.5);
+    sub.connect(se); se.connect(this.#masterGain);
+    sub.start(t + 0.3); sub.stop(t + 2.6);
+  }
+
+  // ─── Move — Theme-aware nudge ─────────────────────────────────────────
+
+  /** Dispatches to active sound theme. */
   playMove() {
     if (!this.#ctx) return;
-    const t = this.#now();
-    const osc = this.#ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = 250 + Math.random() * 30;
-    const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0.06, t);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
-    osc.connect(env);
-    env.connect(this.#masterGain);
-    osc.start(t); osc.stop(t + 0.03);
+    switch (this.#soundTheme) {
+      case 'glass': this.#moveGlass(); break;
+      case 'concrete': this.#moveConcrete(); break;
+      case 'crystal': this.#moveCrystal(); break;
+      case 'metal': this.#moveMetal(); break;
+      case 'ice': this.#moveIce(); break;
+    }
   }
 
-  // ─── Hold — "Whoosh" ─────────────────────────────────────────────────
+  #moveGlass() {
+    const t = this.#now();
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 3500 + Math.random() * 300;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.04, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.025);
+  }
 
-  /**
-   * Breathy bandpass sweep for hold/swap action.
-   */
+  #moveConcrete() {
+    const t = this.#now();
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.015);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 300;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.05, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.02);
+  }
+
+  #moveCrystal() {
+    const t = this.#now();
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 1500 + Math.random() * 200;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.04, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.025);
+  }
+
+  #moveMetal() {
+    const t = this.#now();
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square'; osc.frequency.value = 600 + Math.random() * 100;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.03, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.025);
+  }
+
+  #moveIce() {
+    const t = this.#now();
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.015);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = 3000; bpf.Q.value = 3;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.04, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.02);
+  }
+
+  // ─── Hold — Theme-aware swap ──────────────────────────────────────────
+
+  /** Dispatches to active sound theme. */
   playHold() {
     if (!this.#ctx) return;
+    switch (this.#soundTheme) {
+      case 'glass': this.#holdGlass(); break;
+      case 'concrete': this.#holdConcrete(); break;
+      case 'crystal': this.#holdCrystal(); break;
+      case 'metal': this.#holdMetal(); break;
+      case 'ice': this.#holdIce(); break;
+    }
+  }
+
+  #holdGlass() {
     const t = this.#now();
-    const src = this.#ctx.createBufferSource();
-    src.buffer = this.#createNoiseBuffer(0.12);
-    const filter = this.#ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(800, t);
-    filter.frequency.exponentialRampToValueAtTime(3000, t + 0.06);
-    filter.frequency.exponentialRampToValueAtTime(1500, t + 0.12);
-    filter.Q.value = 0.8;
+    // Glass slide whoosh
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.1);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.setValueAtTime(3000, t);
+    hpf.frequency.exponentialRampToValueAtTime(6000, t + 0.05);
+    hpf.frequency.exponentialRampToValueAtTime(4000, t + 0.1);
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.11);
+  }
+
+  #holdConcrete() {
+    const t = this.#now();
+    // Stone slide
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.1);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.setValueAtTime(300, t);
+    lpf.frequency.exponentialRampToValueAtTime(600, t + 0.05);
+    lpf.frequency.exponentialRampToValueAtTime(200, t + 0.1);
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.11);
+  }
+
+  #holdCrystal() {
+    const t = this.#now();
+    // Crystal whoosh
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, t);
+    osc.frequency.exponentialRampToValueAtTime(2000, t + 0.05);
+    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.1);
     const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0.15, t);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-    src.connect(filter);
-    filter.connect(env);
-    env.connect(this.#masterGain);
-    src.start(t); src.stop(t + 0.13);
+    env.gain.setValueAtTime(0.1, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.11);
+  }
+
+  #holdMetal() {
+    const t = this.#now();
+    // Metal slide
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.1);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(500, t);
+    bpf.frequency.exponentialRampToValueAtTime(1500, t + 0.05);
+    bpf.frequency.exponentialRampToValueAtTime(800, t + 0.1);
+    bpf.Q.value = 1;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.11);
+  }
+
+  #holdIce() {
+    const t = this.#now();
+    // Ice slide
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.08);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(2000, t);
+    bpf.frequency.exponentialRampToValueAtTime(5000, t + 0.04);
+    bpf.frequency.exponentialRampToValueAtTime(3000, t + 0.08);
+    bpf.Q.value = 3;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.09);
   }
 
   // ─── Pause — "Tape Stop" ─────────────────────────────────────────────
@@ -1209,218 +1786,699 @@ class SoundEngine {
     osc.start(t); osc.stop(t + 0.19);
   }
 
-  // ─── Combo Hit — Ascending reward chime ───────────────────────────────
+  // ─── Combo Hit — Theme-aware ascending reward ───────────────────────
 
-  /**
-   * Escalating pitched chime per combo level. Higher combo = higher pitch.
-   */
+  /** Dispatches to active sound theme. */
   playComboHit(combo) {
     if (!this.#ctx || combo < 2) return;
-    const t = this.#now();
-    // Base pitch rises with combo (C5, D5, E5, F5, G5, A5, B5, C6...)
-    const semitones = Math.min(combo - 2, 12);
-    const freq = 523.25 * Math.pow(2, semitones / 12);
+    switch (this.#soundTheme) {
+      case 'glass': this.#comboHitGlass(combo); break;
+      case 'concrete': this.#comboHitConcrete(combo); break;
+      case 'crystal': this.#comboHitCrystal(combo); break;
+      case 'metal': this.#comboHitMetal(combo); break;
+      case 'ice': this.#comboHitIce(combo); break;
+    }
+  }
 
+  #comboHitGlass(combo) {
+    const t = this.#now();
+    const semitones = Math.min(combo - 2, 12);
+    const freq = 2000 * Math.pow(2, semitones / 12);
+    // Glass tinkle that rises with combo
     const osc = this.#ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.06);
     const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0.2, t);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-    osc.connect(env);
-    env.connect(this.#masterGain);
-    osc.start(t); osc.stop(t + 0.21);
-
-    // Octave harmonic for shimmer
-    const harm = this.#ctx.createOscillator();
-    harm.type = 'triangle';
-    harm.frequency.setValueAtTime(freq * 2, t);
-    const harmEnv = this.#ctx.createGain();
-    harmEnv.gain.setValueAtTime(0.08, t);
-    harmEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-    harm.connect(harmEnv);
-    harmEnv.connect(this.#masterGain);
-    harm.start(t); harm.stop(t + 0.16);
+    env.gain.setValueAtTime(0.18, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.16);
+    // High-freq noise tinkle
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.06);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = 6000 + combo * 200;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.07);
   }
 
-  // ─── T-Spin — Dramatic whoosh + power chime ──────────────────────────
+  #comboHitConcrete(combo) {
+    const t = this.#now();
+    const intensity = Math.min(combo - 1, 8);
+    const freq = 60 + intensity * 15;
+    // Escalating concrete impact thuds
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.4, t + 0.1);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.25 + intensity * 0.02, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.13);
+    // Gritty rubble noise
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.08);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 400 + intensity * 50;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.12, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.09);
+  }
 
-  /**
-   * Dramatic spinning whoosh followed by a resonant power chime.
-   */
+  #comboHitCrystal(combo) {
+    const t = this.#now();
+    const semitones = Math.min(combo - 2, 12);
+    const freq = 800 * Math.pow(2, semitones / 12);
+    // Clear crystal bell tone rising with combo
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.26);
+    // Resonant harmonic
+    const h = this.#ctx.createOscillator();
+    h.type = 'sine'; h.frequency.value = freq * 2.5;
+    const he = this.#ctx.createGain();
+    he.gain.setValueAtTime(0.06, t);
+    he.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    h.connect(he); he.connect(this.#masterGain);
+    h.start(t); h.stop(t + 0.19);
+  }
+
+  #comboHitMetal(combo) {
+    const t = this.#now();
+    const intensity = Math.min(combo - 1, 8);
+    const freq = 300 + intensity * 60;
+    // Metallic clang escalating
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.6, t + 0.12);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.15, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.16);
+    // Metallic ring
+    const ring = this.#ctx.createOscillator();
+    ring.type = 'sine'; ring.frequency.value = freq * 2.2;
+    const re = this.#ctx.createGain();
+    re.gain.setValueAtTime(0.08, t);
+    re.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    ring.connect(re); re.connect(this.#masterGain);
+    ring.start(t); ring.stop(t + 0.21);
+  }
+
+  #comboHitIce(combo) {
+    const t = this.#now();
+    const intensity = Math.min(combo - 1, 8);
+    const freq = 1500 + intensity * 200;
+    // Sharp ice crack escalating
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.05);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = freq; bpf.Q.value = 3;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.2 + intensity * 0.02, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.06);
+    // Brittle sine
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = freq * 0.8;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.1, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.09);
+  }
+
+  // ─── T-Spin — Theme-aware dramatic effect ────────────────────────────
+
+  /** Dispatches to active sound theme. */
   playTSpin(type) {
     if (!this.#ctx) return;
+    switch (this.#soundTheme) {
+      case 'glass': this.#tSpinGlass(type); break;
+      case 'concrete': this.#tSpinConcrete(type); break;
+      case 'crystal': this.#tSpinCrystal(type); break;
+      case 'metal': this.#tSpinMetal(type); break;
+      case 'ice': this.#tSpinIce(type); break;
+    }
+  }
+
+  #tSpinGlass(type) {
     const t = this.#now();
     const isFull = type === 'full';
-    const vol = isFull ? 0.22 : 0.12;
-
-    // Whoosh — filtered noise sweep
-    const noise = this.#ctx.createBufferSource();
-    noise.buffer = this.#createNoiseBuffer(0.3);
-    const bpf = this.#ctx.createBiquadFilter();
-    bpf.type = 'bandpass';
-    bpf.frequency.setValueAtTime(300, t);
-    bpf.frequency.exponentialRampToValueAtTime(3000, t + 0.08);
-    bpf.frequency.exponentialRampToValueAtTime(600, t + 0.2);
-    bpf.Q.value = 2;
-    const nEnv = this.#ctx.createGain();
-    nEnv.gain.setValueAtTime(vol, t);
-    nEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-    noise.connect(bpf);
-    bpf.connect(nEnv);
-    nEnv.connect(this.#masterGain);
-    noise.start(t); noise.stop(t + 0.26);
-
-    // Power chime — perfect fifth interval
+    const vol = isFull ? 0.2 : 0.12;
+    // Glass spiral — rising filtered noise
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.25);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.setValueAtTime(3000, t);
+    hpf.frequency.exponentialRampToValueAtTime(8000, t + 0.1);
+    hpf.frequency.exponentialRampToValueAtTime(4000, t + 0.2);
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(vol, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.23);
     if (isFull) {
-      const freqs = [440, 660, 880]; // A4, E5, A5
-      freqs.forEach((f, i) => {
-        const osc = this.#ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = f;
-        const g = this.#ctx.createGain();
-        const start = t + 0.05 + i * 0.03;
-        g.gain.setValueAtTime(0.15, start);
-        g.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
-        osc.connect(g);
-        g.connect(this.#masterGain);
-        osc.start(start); osc.stop(start + 0.31);
+      // Glass shatter burst
+      const shard = this.#ctx.createBufferSource();
+      shard.buffer = this.#createNoiseBuffer(0.15);
+      const shpf = this.#ctx.createBiquadFilter();
+      shpf.type = 'highpass'; shpf.frequency.value = 5000;
+      const se = this.#ctx.createGain();
+      se.gain.setValueAtTime(0.18, t + 0.08);
+      se.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      shard.connect(shpf); shpf.connect(se); se.connect(this.#masterGain);
+      shard.start(t + 0.08); shard.stop(t + 0.21);
+    }
+  }
+
+  #tSpinConcrete(type) {
+    const t = this.#now();
+    const isFull = type === 'full';
+    const vol = isFull ? 0.25 : 0.15;
+    // Concrete grinding — lowpass noise sweep
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.3);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.setValueAtTime(200, t);
+    lpf.frequency.exponentialRampToValueAtTime(600, t + 0.12);
+    lpf.frequency.exponentialRampToValueAtTime(150, t + 0.25);
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(vol, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.29);
+    if (isFull) {
+      // Heavy concrete crack
+      const sub = this.#ctx.createOscillator();
+      sub.type = 'triangle';
+      sub.frequency.setValueAtTime(80, t + 0.1);
+      sub.frequency.exponentialRampToValueAtTime(30, t + 0.25);
+      const se = this.#ctx.createGain();
+      se.gain.setValueAtTime(0.3, t + 0.1);
+      se.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      sub.connect(se); se.connect(this.#masterGain);
+      sub.start(t + 0.1); sub.stop(t + 0.26);
+    }
+  }
+
+  #tSpinCrystal(type) {
+    const t = this.#now();
+    const isFull = type === 'full';
+    const vol = isFull ? 0.18 : 0.1;
+    // Crystal spinning resonance
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, t);
+    osc.frequency.exponentialRampToValueAtTime(2400, t + 0.08);
+    osc.frequency.exponentialRampToValueAtTime(1600, t + 0.2);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(vol, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.23);
+    if (isFull) {
+      // Crystal harmonic burst
+      [1600, 2000, 2800].forEach((f, i) => {
+        const h = this.#ctx.createOscillator();
+        h.type = 'sine'; h.frequency.value = f;
+        const he = this.#ctx.createGain();
+        const s = t + 0.06 + i * 0.025;
+        he.gain.setValueAtTime(0.12, s);
+        he.gain.exponentialRampToValueAtTime(0.001, s + 0.2);
+        h.connect(he); he.connect(this.#masterGain);
+        h.start(s); h.stop(s + 0.21);
       });
     }
   }
 
-  // ─── Perfect Clear — Triumphant fanfare ──────────────────────────────
-
-  /**
-   * Major chord arpeggio with sparkle — triumphant celebration.
-   */
-  playPerfectClear() {
-    if (!this.#ctx) return;
+  #tSpinMetal(type) {
     const t = this.#now();
-    // C major arpeggio: C5, E5, G5, C6
-    const freqs = [523.25, 659.25, 783.99, 1046.5];
-    freqs.forEach((f, i) => {
+    const isFull = type === 'full';
+    const vol = isFull ? 0.2 : 0.12;
+    // Metal grinding sweep
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.2);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(400, t);
+    bpf.frequency.exponentialRampToValueAtTime(1500, t + 0.1);
+    bpf.frequency.exponentialRampToValueAtTime(600, t + 0.18);
+    bpf.Q.value = 1.5;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(vol, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.21);
+    if (isFull) {
+      // Heavy metal impact
       const osc = this.#ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      const g = this.#ctx.createGain();
-      const start = t + i * 0.08;
-      g.gain.setValueAtTime(0.2, start);
-      g.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
-      osc.connect(g);
-      g.connect(this.#masterGain);
-      osc.start(start); osc.stop(start + 0.51);
-
-      // Shimmer octave
-      const shim = this.#ctx.createOscillator();
-      shim.type = 'triangle';
-      shim.frequency.value = f * 2;
-      const sg = this.#ctx.createGain();
-      sg.gain.setValueAtTime(0.06, start);
-      sg.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
-      shim.connect(sg);
-      sg.connect(this.#masterGain);
-      shim.start(start); shim.stop(start + 0.41);
-    });
-
-    // Sparkle noise tail
-    const sparkle = this.#ctx.createBufferSource();
-    sparkle.buffer = this.#createNoiseBuffer(0.5);
-    const hpf = this.#ctx.createBiquadFilter();
-    hpf.type = 'highpass';
-    hpf.frequency.value = 6000;
-    const sEnv = this.#ctx.createGain();
-    sEnv.gain.setValueAtTime(0.08, t + 0.2);
-    sEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-    sparkle.connect(hpf);
-    hpf.connect(sEnv);
-    sEnv.connect(this.#masterGain);
-    sparkle.start(t + 0.2); sparkle.stop(t + 0.71);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(200, t + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(80, t + 0.2);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.2, t + 0.08);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(t + 0.08); osc.stop(t + 0.23);
+    }
   }
 
-  // ─── Back-to-Back — Emphatic power chord ─────────────────────────────
+  #tSpinIce(type) {
+    const t = this.#now();
+    const isFull = type === 'full';
+    const vol = isFull ? 0.2 : 0.12;
+    // Ice spinning crack — sharp bandpass sweep
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.2);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(2000, t);
+    bpf.frequency.exponentialRampToValueAtTime(6000, t + 0.08);
+    bpf.frequency.exponentialRampToValueAtTime(3000, t + 0.18);
+    bpf.Q.value = 4;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(vol, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.21);
+    if (isFull) {
+      // Deep ice fracture
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, t + 0.06);
+      osc.frequency.exponentialRampToValueAtTime(50, t + 0.2);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.2, t + 0.06);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(t + 0.06); osc.stop(t + 0.23);
+    }
+  }
 
-  /**
-   * Stacked power chord with sub emphasis.
-   */
+  // ─── Perfect Clear — Theme-aware celebration ─────────────────────────
+
+  /** Dispatches to active sound theme. */
+  playPerfectClear() {
+    if (!this.#ctx) return;
+    switch (this.#soundTheme) {
+      case 'glass': this.#perfectClearGlass(); break;
+      case 'concrete': this.#perfectClearConcrete(); break;
+      case 'crystal': this.#perfectClearCrystal(); break;
+      case 'metal': this.#perfectClearMetal(); break;
+      case 'ice': this.#perfectClearIce(); break;
+    }
+  }
+
+  #perfectClearGlass() {
+    const t = this.#now();
+    // Cascading glass shatter — multiple tinkles
+    for (let i = 0; i < 4; i++) {
+      const s = t + i * 0.08;
+      const freq = 3000 + i * 500;
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.12);
+      const hpf = this.#ctx.createBiquadFilter();
+      hpf.type = 'highpass'; hpf.frequency.value = freq;
+      const ne = this.#ctx.createGain();
+      ne.gain.setValueAtTime(0.15, s);
+      ne.gain.exponentialRampToValueAtTime(0.001, s + 0.12);
+      n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(s); n.stop(s + 0.13);
+      // Tinkle tone
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = freq * 0.8;
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.12, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.15);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.16);
+    }
+  }
+
+  #perfectClearConcrete() {
+    const t = this.#now();
+    // Concrete demolition — staggered heavy impacts
+    for (let i = 0; i < 4; i++) {
+      const s = t + i * 0.1;
+      const freq = 80 - i * 10;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, s);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.3, s + 0.15);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.3, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.15);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.16);
+      // Rubble burst
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.1);
+      const lpf = this.#ctx.createBiquadFilter();
+      lpf.type = 'lowpass'; lpf.frequency.value = 500 - i * 50;
+      const ne = this.#ctx.createGain();
+      ne.gain.setValueAtTime(0.15, s);
+      ne.gain.exponentialRampToValueAtTime(0.001, s + 0.1);
+      n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(s); n.stop(s + 0.11);
+    }
+  }
+
+  #perfectClearCrystal() {
+    const t = this.#now();
+    // Crystal ascending choir — pure harmonic series
+    const freqs = [800, 1000, 1200, 1600];
+    freqs.forEach((f, i) => {
+      const s = t + i * 0.07;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = f;
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.18, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.4);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.41);
+      // Harmonic overtone
+      const h = this.#ctx.createOscillator();
+      h.type = 'sine'; h.frequency.value = f * 2.5;
+      const he = this.#ctx.createGain();
+      he.gain.setValueAtTime(0.05, s);
+      he.gain.exponentialRampToValueAtTime(0.001, s + 0.3);
+      h.connect(he); he.connect(this.#masterGain);
+      h.start(s); h.stop(s + 0.31);
+    });
+  }
+
+  #perfectClearMetal() {
+    const t = this.#now();
+    // Metal demolition — cascading metallic strikes
+    for (let i = 0; i < 4; i++) {
+      const s = t + i * 0.09;
+      const freq = 400 + i * 100;
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, s);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, s + 0.12);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.15, s);
+      env.gain.exponentialRampToValueAtTime(0.001, s + 0.15);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(s); osc.stop(s + 0.16);
+      // Metallic ring resonance
+      const ring = this.#ctx.createOscillator();
+      ring.type = 'sine'; ring.frequency.value = freq * 2.5;
+      const re = this.#ctx.createGain();
+      re.gain.setValueAtTime(0.08, s);
+      re.gain.exponentialRampToValueAtTime(0.001, s + 0.2);
+      ring.connect(re); re.connect(this.#masterGain);
+      ring.start(s); ring.stop(s + 0.21);
+    }
+  }
+
+  #perfectClearIce() {
+    const t = this.#now();
+    // Ice avalanche — cascading sharp cracks
+    for (let i = 0; i < 5; i++) {
+      const s = t + i * 0.07;
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.08);
+      const bpf = this.#ctx.createBiquadFilter();
+      bpf.type = 'bandpass';
+      bpf.frequency.value = 3000 + i * 400;
+      bpf.Q.value = 5;
+      const ne = this.#ctx.createGain();
+      ne.gain.setValueAtTime(0.18, s);
+      ne.gain.exponentialRampToValueAtTime(0.001, s + 0.08);
+      n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(s); n.stop(s + 0.09);
+    }
+    // Deep sub-ice rumble
+    const sub = this.#ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(60, t + 0.1);
+    sub.frequency.exponentialRampToValueAtTime(25, t + 0.5);
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.2, t + 0.1);
+    se.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    sub.connect(se); se.connect(this.#masterGain);
+    sub.start(t + 0.1); sub.stop(t + 0.51);
+  }
+
+  // ─── Back-to-Back — Theme-aware emphatic hit ─────────────────────────
+
+  /** Dispatches to active sound theme. */
   playBackToBack() {
     if (!this.#ctx) return;
+    switch (this.#soundTheme) {
+      case 'glass': this.#backToBackGlass(); break;
+      case 'concrete': this.#backToBackConcrete(); break;
+      case 'crystal': this.#backToBackCrystal(); break;
+      case 'metal': this.#backToBackMetal(); break;
+      case 'ice': this.#backToBackIce(); break;
+    }
+  }
+
+  #backToBackGlass() {
     const t = this.#now();
-    // Power chord: root + fifth
-    const freqs = [220, 330, 440]; // A3, E4, A4
-    freqs.forEach((f, i) => {
+    // Emphatic glass crash — layered shatter
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.2);
+    const hpf = this.#ctx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = 4000;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.25, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    n.connect(hpf); hpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.21);
+    // Glass resonance ping
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 3500;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.15, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.16);
+  }
+
+  #backToBackConcrete() {
+    const t = this.#now();
+    // Heavy double concrete impact
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(70, t);
+    osc.frequency.exponentialRampToValueAtTime(25, t + 0.15);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.35, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.19);
+    // Rubble scatter
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.15);
+    const lpf = this.#ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 350;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.18, t + 0.03);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t + 0.03); n.stop(t + 0.16);
+  }
+
+  #backToBackCrystal() {
+    const t = this.#now();
+    // Crystal power chord — harmonics
+    [1000, 1500, 2000].forEach((f, i) => {
       const osc = this.#ctx.createOscillator();
-      osc.type = i === 0 ? 'sawtooth' : 'sine';
-      osc.frequency.value = f;
-      const g = this.#ctx.createGain();
-      g.gain.setValueAtTime(i === 0 ? 0.1 : 0.15, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-      osc.connect(g);
-      g.connect(this.#masterGain);
+      osc.type = 'sine'; osc.frequency.value = f;
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.15, t);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.connect(env); env.connect(this.#masterGain);
       osc.start(t); osc.stop(t + 0.26);
     });
   }
 
-  // ─── Danger Pulse — Audible warning heartbeat ────────────────────────
+  #backToBackMetal() {
+    const t = this.#now();
+    // Heavy metal strike with ring
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(250, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.12);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.16);
+    // Ring overtone
+    const ring = this.#ctx.createOscillator();
+    ring.type = 'sine'; ring.frequency.value = 800;
+    const re = this.#ctx.createGain();
+    re.gain.setValueAtTime(0.1, t);
+    re.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    ring.connect(re); re.connect(this.#masterGain);
+    ring.start(t); ring.stop(t + 0.26);
+  }
 
-  /**
-   * Warning tone that gets louder and higher as danger increases (1–10).
-   * Uses mid-range frequencies so it's clearly audible on all speakers.
-   */
+  #backToBackIce() {
+    const t = this.#now();
+    // Deep ice fracture — sharp crack + sub rumble
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.08);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = 4000; bpf.Q.value = 5;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.25, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.09);
+    // Sub ice rumble
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.exponentialRampToValueAtTime(30, t + 0.2);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.2, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.21);
+  }
+
+  // ─── Danger Pulse — Theme-aware warning ──────────────────────────────
+
+  /** Dispatches to active sound theme. */
   playDangerPulse(intensity) {
     if (!this.#ctx || intensity < 1) return;
+    switch (this.#soundTheme) {
+      case 'glass': this.#dangerPulseGlass(intensity); break;
+      case 'concrete': this.#dangerPulseConcrete(intensity); break;
+      case 'crystal': this.#dangerPulseCrystal(intensity); break;
+      case 'metal': this.#dangerPulseMetal(intensity); break;
+      case 'ice': this.#dangerPulseIce(intensity); break;
+    }
+  }
+
+  #dangerPulseGlass(intensity) {
     const t = this.#now();
     const i = Math.min(intensity, 10);
-    // Pitch rises from ~150Hz to ~350Hz with danger
-    const freq = 150 + i * 20;
-    // Volume ramps from barely audible to clearly noticeable
-    const vol = 0.03 + i * 0.015;
-
-    // Layer 1: Deep pulse (the "heartbeat" body)
+    const freq = 2000 + i * 200;
+    const vol = 0.03 + i * 0.012;
+    // Glass stress creak — high sine descending
     const osc = this.#ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, t);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.7, t + 0.25);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.7, t + 0.2);
     const env = this.#ctx.createGain();
     env.gain.setValueAtTime(vol, t);
-    env.gain.linearRampToValueAtTime(vol * 1.3, t + 0.06);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.26);
+  }
+
+  #dangerPulseConcrete(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const freq = 50 + i * 10;
+    const vol = 0.04 + i * 0.015;
+    // Concrete stress groan — deep rumble
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.6, t + 0.3);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(vol, t);
     env.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-    osc.connect(env);
-    env.connect(this.#masterGain);
+    osc.connect(env); env.connect(this.#masterGain);
     osc.start(t); osc.stop(t + 0.31);
-
-    // Layer 2: Higher alarm tone (audible on laptop speakers)
-    if (i >= 4) {
-      const alarmFreq = 400 + i * 40;
-      const alarm = this.#ctx.createOscillator();
-      alarm.type = 'triangle';
-      alarm.frequency.setValueAtTime(alarmFreq, t);
-      alarm.frequency.exponentialRampToValueAtTime(alarmFreq * 0.8, t + 0.15);
-      const alarmEnv = this.#ctx.createGain();
-      const alarmVol = 0.02 + (i - 4) * 0.01;
-      alarmEnv.gain.setValueAtTime(alarmVol, t);
-      alarmEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-      alarm.connect(alarmEnv);
-      alarmEnv.connect(this.#masterGain);
-      alarm.start(t); alarm.stop(t + 0.21);
-    }
-
-    // Layer 3: Noise crackle at extreme danger
-    if (i >= 7) {
-      const noise = this.#ctx.createBufferSource();
-      noise.buffer = this.#createNoiseBuffer(0.1);
-      const nf = this.#ctx.createBiquadFilter();
-      nf.type = 'bandpass';
-      nf.frequency.value = 800;
-      nf.Q.value = 2;
+    if (i >= 6) {
+      const n = this.#ctx.createBufferSource();
+      n.buffer = this.#createNoiseBuffer(0.1);
+      const lpf = this.#ctx.createBiquadFilter();
+      lpf.type = 'lowpass'; lpf.frequency.value = 200;
       const ne = this.#ctx.createGain();
       ne.gain.setValueAtTime(0.03, t);
       ne.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      noise.connect(nf);
-      nf.connect(ne);
-      ne.connect(this.#masterGain);
-      noise.start(t); noise.stop(t + 0.11);
+      n.connect(lpf); lpf.connect(ne); ne.connect(this.#masterGain);
+      n.start(t); n.stop(t + 0.11);
     }
+  }
+
+  #dangerPulseCrystal(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const freq = 600 + i * 60;
+    const vol = 0.03 + i * 0.01;
+    // Crystal warning hum
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.8, t + 0.25);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(vol, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.26);
+  }
+
+  #dangerPulseMetal(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const freq = 150 + i * 25;
+    const vol = 0.04 + i * 0.012;
+    // Metal stress groan — square wave pulse
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.6, t + 0.25);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(vol, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.29);
+  }
+
+  #dangerPulseIce(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const vol = 0.03 + i * 0.012;
+    // Ice creaking — filtered noise crack
+    const n = this.#ctx.createBufferSource();
+    n.buffer = this.#createNoiseBuffer(0.08);
+    const bpf = this.#ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.value = 1500 + i * 150;
+    bpf.Q.value = 3;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(vol, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    n.connect(bpf); bpf.connect(ne); ne.connect(this.#masterGain);
+    n.start(t); n.stop(t + 0.09);
+    // Sub creak
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(100 + i * 10, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + 0.15);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(vol * 0.8, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.16);
   }
 
   // ─── Row Highlight Sound — theme-aware anticipation ──────────────────
