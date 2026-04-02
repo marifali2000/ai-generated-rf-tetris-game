@@ -1117,6 +1117,10 @@ class Renderer {
       case 'crystal':  this.#drawCellCrystal(ctx, px, py, inset, w, color); break;
       case 'metal':    this.#drawCellMetal(ctx, px, py, inset, w, color); break;
       case 'ice':      this.#drawCellIce(ctx, px, py, inset, w, color); break;
+      case 'wood':     this.#drawCellWood(ctx, px, py, inset, w, color); break;
+      case 'plastic':  this.#drawCellPlastic(ctx, px, py, inset, w, color); break;
+      case 'gold':     this.#drawCellGold(ctx, px, py, inset, w, color); break;
+      case 'silver':   this.#drawCellSilver(ctx, px, py, inset, w, color); break;
       default:         this.#drawCellGlass(ctx, px, py, inset, w, color); break;
     }
 
@@ -1382,6 +1386,130 @@ class Renderer {
     ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
   }
 
+  /** Wood theme — warm grain lines, natural matte finish */
+  #drawCellWood(ctx, px, py, inset, w, color) {
+    const r = 2;
+    // Warm wood base gradient
+    const grad = ctx.createLinearGradient(px, py, px, py + CELL_SIZE);
+    grad.addColorStop(0, lightenColor(color, 18));
+    grad.addColorStop(0.3, color);
+    grad.addColorStop(0.7, darkenColor(color, 12));
+    grad.addColorStop(1, darkenColor(color, 20));
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.fill();
+    // Horizontal wood grain lines
+    ctx.save(); ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.clip();
+    ctx.strokeStyle = 'rgba(0,0,0,0.10)'; ctx.lineWidth = 0.6;
+    const seed = (px * 7 + py * 13) & 0xFFFF;
+    for (let i = 0; i < 5; i++) {
+      const gy = py + inset + 3 + i * 5 + ((seed >> (i * 2)) & 3);
+      ctx.beginPath();
+      ctx.moveTo(px + inset, gy);
+      ctx.quadraticCurveTo(px + inset + w * 0.5, gy + ((seed >> i) & 1 ? 1.5 : -1.5), px + inset + w, gy);
+      ctx.stroke();
+    }
+    ctx.restore();
+    // Top bevel
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
+    // Bottom/right shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.20)';
+    ctx.fillRect(px + inset + 2, py + CELL_SIZE - 3, w - 4, 1.5);
+    ctx.fillRect(px + CELL_SIZE - 3, py + inset + 2, 1.5, w - 4);
+  }
+
+  /** Plastic theme — bright, shiny, round, toy-like */
+  #drawCellPlastic(ctx, px, py, inset, w, color) {
+    const r = 6;
+    // Bright smooth base
+    const grad = ctx.createLinearGradient(px, py, px, py + CELL_SIZE);
+    grad.addColorStop(0, lightenColor(color, 25));
+    grad.addColorStop(0.4, color);
+    grad.addColorStop(1, darkenColor(color, 15));
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.fill();
+    // Big glossy highlight (plastic sheen)
+    const gloss = ctx.createRadialGradient(px + w * 0.4, py + w * 0.35, 0, px + w * 0.4, py + w * 0.35, w * 0.6);
+    gloss.addColorStop(0, 'rgba(255,255,255,0.50)');
+    gloss.addColorStop(0.4, 'rgba(255,255,255,0.15)');
+    gloss.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gloss;
+    ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.fill();
+    // Small circular bump (stud like LEGO)
+    ctx.fillStyle = 'rgba(255,255,255,0.20)';
+    ctx.beginPath();
+    ctx.arc(px + CELL_SIZE / 2, py + CELL_SIZE / 2, w * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.10)'; ctx.lineWidth = 0.5;
+    ctx.stroke();
+    // Bottom shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(px + inset + 3, py + CELL_SIZE - 3, w - 6, 2);
+  }
+
+  /** Gold theme — rich warm metallic with strong specular highlight */
+  #drawCellGold(ctx, px, py, inset, w, color) {
+    const r = 2;
+    // Rich gold multi-stop gradient
+    const grad = ctx.createLinearGradient(px, py, px, py + CELL_SIZE);
+    grad.addColorStop(0, '#ffeaa0');
+    grad.addColorStop(0.15, '#ffe070');
+    grad.addColorStop(0.3, '#d4a520');
+    grad.addColorStop(0.5, '#ffd700');
+    grad.addColorStop(0.7, '#d4a520');
+    grad.addColorStop(0.85, '#b8860b');
+    grad.addColorStop(1, '#8b6914');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.fill();
+    // Bright specular band
+    const spec = ctx.createLinearGradient(px, py + 5, px, py + 14);
+    spec.addColorStop(0, 'rgba(255,255,255,0)');
+    spec.addColorStop(0.5, 'rgba(255,255,220,0.45)');
+    spec.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = spec; ctx.fillRect(px + inset + 2, py + 5, w - 4, 9);
+    // Top highlight edge
+    ctx.fillStyle = 'rgba(255,255,200,0.35)'; ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
+    // Bottom/right shadow
+    ctx.fillStyle = 'rgba(100,60,0,0.35)';
+    ctx.fillRect(px + inset + 2, py + CELL_SIZE - 3, w - 4, 2);
+    ctx.fillRect(px + CELL_SIZE - 3, py + inset + 2, 2, w - 4);
+  }
+
+  /** Silver theme — cool metallic with polished mirror-like finish */
+  #drawCellSilver(ctx, px, py, inset, w, color) {
+    const r = 2;
+    // Silver gradient
+    const grad = ctx.createLinearGradient(px, py, px, py + CELL_SIZE);
+    grad.addColorStop(0, '#e8e8e8');
+    grad.addColorStop(0.15, '#d0d0d0');
+    grad.addColorStop(0.3, '#a8a8a8');
+    grad.addColorStop(0.5, '#c8c8c8');
+    grad.addColorStop(0.7, '#a0a0a0');
+    grad.addColorStop(0.85, '#909090');
+    grad.addColorStop(1, '#787878');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.fill();
+    // Polished mirror spec band
+    const spec = ctx.createLinearGradient(px, py + 4, px, py + 13);
+    spec.addColorStop(0, 'rgba(255,255,255,0)');
+    spec.addColorStop(0.5, 'rgba(255,255,255,0.40)');
+    spec.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = spec; ctx.fillRect(px + inset + 2, py + 4, w - 4, 9);
+    // Subtle brush-line pattern
+    ctx.save(); ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+    for (let i = 0; i < w; i += 3) {
+      ctx.beginPath(); ctx.moveTo(px + inset, py + inset + i); ctx.lineTo(px + inset + w, py + inset + i); ctx.stroke();
+    }
+    ctx.restore();
+    // Top highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
+    // Bottom shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.fillRect(px + inset + 2, py + CELL_SIZE - 3, w - 4, 2);
+    ctx.fillRect(px + CELL_SIZE - 3, py + inset + 2, 2, w - 4);
+  }
+
   /** Simplified theme-aware cell for small preview canvases */
   #drawMiniCell(ctx, px, py, inset, w, s, color) {
     switch (this.#visualTheme) {
@@ -1428,6 +1556,49 @@ class Renderer {
         ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 2); ctx.fill();
         ctx.fillStyle = 'rgba(220,240,255,0.25)';
         ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 2); ctx.fill();
+        break;
+      }
+      case 'wood': {
+        const grad = ctx.createLinearGradient(px, py, px, py + s);
+        grad.addColorStop(0, lightenColor(color, 18));
+        grad.addColorStop(0.5, color);
+        grad.addColorStop(1, darkenColor(color, 20));
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fillRect(px + 2, py + s - 2, w - 2, 1);
+        break;
+      }
+      case 'plastic': {
+        const grad = ctx.createLinearGradient(px, py, px, py + s);
+        grad.addColorStop(0, lightenColor(color, 25));
+        grad.addColorStop(1, darkenColor(color, 15));
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 4); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.40)';
+        ctx.fillRect(px + 2, py + inset, w - 3, 1);
+        break;
+      }
+      case 'gold': {
+        const grad = ctx.createLinearGradient(px, py, px, py + s);
+        grad.addColorStop(0, '#ffeaa0');
+        grad.addColorStop(0.5, '#d4a520');
+        grad.addColorStop(1, '#8b6914');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,220,0.30)';
+        ctx.fillRect(px + 2, py + inset, w - 3, 1);
+        break;
+      }
+      case 'silver': {
+        const grad = ctx.createLinearGradient(px, py, px, py + s);
+        grad.addColorStop(0, '#e8e8e8');
+        grad.addColorStop(0.5, '#a8a8a8');
+        grad.addColorStop(1, '#787878');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.fillRect(px + 2, py + inset, w - 3, 1);
         break;
       }
       default: {
@@ -1591,6 +1762,56 @@ class Renderer {
               shine.addColorStop(1, 'rgba(255,255,255,0)');
               ctx.fillStyle = shine;
               ctx.fillRect(px + 3, py + 2, w - 4, w * 0.35);
+              break;
+            }
+            case 'wood': {
+              const grad = ctx.createLinearGradient(px, py, px, py + s);
+              grad.addColorStop(0, lightenColor(color, 18));
+              grad.addColorStop(0.5, color);
+              grad.addColorStop(1, darkenColor(color, 20));
+              ctx.fillStyle = grad;
+              ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
+              ctx.fillStyle = 'rgba(255,255,255,0.10)';
+              ctx.fillRect(px + 3, py + inset, w - 4, 1);
+              ctx.fillStyle = 'rgba(0,0,0,0.18)';
+              ctx.fillRect(px + 3, py + s - 2, w - 4, 1);
+              break;
+            }
+            case 'plastic': {
+              const grad = ctx.createLinearGradient(px, py, px, py + s);
+              grad.addColorStop(0, lightenColor(color, 25));
+              grad.addColorStop(0.5, color);
+              grad.addColorStop(1, darkenColor(color, 15));
+              ctx.fillStyle = grad;
+              ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 4); ctx.fill();
+              ctx.fillStyle = 'rgba(255,255,255,0.40)';
+              ctx.fillRect(px + 3, py + inset, w - 4, 1);
+              break;
+            }
+            case 'gold': {
+              const grad = ctx.createLinearGradient(px, py, px, py + s);
+              grad.addColorStop(0, '#ffeaa0');
+              grad.addColorStop(0.5, '#d4a520');
+              grad.addColorStop(1, '#8b6914');
+              ctx.fillStyle = grad;
+              ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
+              ctx.fillStyle = 'rgba(255,255,220,0.35)';
+              ctx.fillRect(px + 3, py + inset, w - 4, 1.5);
+              ctx.fillStyle = 'rgba(100,60,0,0.30)';
+              ctx.fillRect(px + 3, py + s - 3, w - 4, 2);
+              break;
+            }
+            case 'silver': {
+              const grad = ctx.createLinearGradient(px, py, px, py + s);
+              grad.addColorStop(0, '#e8e8e8');
+              grad.addColorStop(0.5, '#a8a8a8');
+              grad.addColorStop(1, '#787878');
+              ctx.fillStyle = grad;
+              ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
+              ctx.fillStyle = 'rgba(255,255,255,0.30)';
+              ctx.fillRect(px + 3, py + inset, w - 4, 1.5);
+              ctx.fillStyle = 'rgba(0,0,0,0.30)';
+              ctx.fillRect(px + 3, py + s - 3, w - 4, 2);
               break;
             }
             default: {

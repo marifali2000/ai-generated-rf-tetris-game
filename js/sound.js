@@ -10,7 +10,7 @@
  * - Multiple sound themes: glass, concrete, crystal, metal, ice
  */
 
-const SOUND_THEMES = Object.freeze(['glass', 'concrete', 'crystal', 'metal', 'ice']);
+const SOUND_THEMES = Object.freeze(['glass', 'concrete', 'crystal', 'metal', 'ice', 'wood', 'plastic', 'gold', 'silver']);
 
 class SoundEngine {
   #ctx = null;
@@ -133,6 +133,10 @@ class SoundEngine {
       case 'crystal': this.#spawnCrystal(); break;
       case 'metal': this.#spawnMetal(); break;
       case 'ice': this.#spawnIce(); break;
+      case 'wood': this.#spawnWood(); break;
+      case 'plastic': this.#spawnPlastic(); break;
+      case 'gold': this.#spawnGold(); break;
+      case 'silver': this.#spawnSilver(); break;
     }
   }
 
@@ -257,6 +261,38 @@ class SoundEngine {
     osc.start(t); osc.stop(t + 0.07);
   }
 
+  #spawnWood() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Wooden knock
+    this.#ping(t, 400 * pf, 0.05, 0.18);
+    this.#crackBurst(t, 800, 2, 0.008, 0.10);
+  }
+
+  #spawnPlastic() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Plastic click-pop
+    this.#ping(t, 1400 * pf, 0.04, 0.15);
+    this.#ping(t + 0.01, 2800 * pf, 0.02, 0.06);
+  }
+
+  #spawnGold() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Rich bell chime
+    this.#ping(t, 800 * pf, 0.12, 0.14);
+    this.#ping(t, 1200 * pf, 0.08, 0.06);
+  }
+
+  #spawnSilver() {
+    const t = this.#now();
+    const pf = 0.96 + Math.random() * 0.08;
+    // Bright silver ting
+    this.#ping(t, 3000 * pf, 0.06, 0.12);
+    this.#ping(t, 4500 * pf, 0.04, 0.05);
+  }
+
   // ─── Rotate — Theme-aware piece rotation ─────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -268,6 +304,10 @@ class SoundEngine {
       case 'crystal': this.#rotateCrystal(); break;
       case 'metal': this.#rotateMetal(); break;
       case 'ice': this.#rotateIce(); break;
+      case 'wood': this.#rotateWood(); break;
+      case 'plastic': this.#rotatePlastic(); break;
+      case 'gold': this.#rotateGold(); break;
+      case 'silver': this.#rotateSilver(); break;
     }
   }
 
@@ -333,6 +373,32 @@ class SoundEngine {
     n.start(t); n.stop(t + 0.03);
   }
 
+  #rotateWood() {
+    const t = this.#now();
+    const p = 0.97 + Math.random() * 0.06;
+    this.#crackBurst(t, 600 * p, 2, 0.006, 0.12);
+  }
+
+  #rotatePlastic() {
+    const t = this.#now();
+    const p = 0.97 + Math.random() * 0.06;
+    this.#ping(t, 2200 * p, 0.025, 0.15);
+  }
+
+  #rotateGold() {
+    const t = this.#now();
+    const p = 0.97 + Math.random() * 0.06;
+    this.#ping(t, 1200 * p, 0.04, 0.14);
+    this.#ping(t, 1800 * p, 0.025, 0.05);
+  }
+
+  #rotateSilver() {
+    const t = this.#now();
+    const p = 0.97 + Math.random() * 0.06;
+    this.#ping(t, 3500 * p, 0.03, 0.13);
+    this.#ping(t, 5250 * p, 0.02, 0.04);
+  }
+
   // ─── Lock — Theme-aware piece lock ────────────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -344,6 +410,10 @@ class SoundEngine {
       case 'crystal': this.#lockCrystal(); break;
       case 'metal': this.#lockMetal(); break;
       case 'ice': this.#lockIce(); break;
+      case 'wood': this.#lockWood(); break;
+      case 'plastic': this.#lockPlastic(); break;
+      case 'gold': this.#lockGold(); break;
+      case 'silver': this.#lockSilver(); break;
     }
   }
 
@@ -433,6 +503,34 @@ class SoundEngine {
     n.start(t); n.stop(t + 0.05);
   }
 
+  #lockWood() {
+    const t = this.#now();
+    // Solid wood thunk
+    this.#ping(t, 180 + Math.random() * 60, 0.04, 0.22);
+    this.#crackBurst(t, 500, 1.5, 0.005, 0.15);
+  }
+
+  #lockPlastic() {
+    const t = this.#now();
+    // Plastic snap-click
+    this.#crackBurst(t, 2800 + Math.random() * 400, 3, 0.004, 0.20);
+    this.#ping(t, 1000, 0.02, 0.08);
+  }
+
+  #lockGold() {
+    const t = this.#now();
+    // Gold coin clink
+    this.#ping(t, 800, 0.06, 0.18);
+    this.#ping(t + 0.005, 1200, 0.04, 0.08);
+  }
+
+  #lockSilver() {
+    const t = this.#now();
+    // Silver clink
+    this.#ping(t, 2800, 0.04, 0.16);
+    this.#crackBurst(t, 4000, 8, 0.004, 0.08);
+  }
+
   // ─── Hard Drop — Theme-aware impact ───────────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -444,6 +542,10 @@ class SoundEngine {
       case 'crystal': this.#hardDropCrystal(); break;
       case 'metal': this.#hardDropMetal(); break;
       case 'ice': this.#hardDropIce(); break;
+      case 'wood': this.#hardDropWood(); break;
+      case 'plastic': this.#hardDropPlastic(); break;
+      case 'gold': this.#hardDropGold(); break;
+      case 'silver': this.#hardDropSilver(); break;
     }
   }
 
@@ -563,6 +665,38 @@ class SoundEngine {
     sub.start(t); sub.stop(t + 0.13);
   }
 
+  #hardDropWood() {
+    const t = this.#now();
+    // Heavy wood slam
+    this.#ping(t, 80, 0.1, 0.35);
+    this.#ping(t, 160, 0.06, 0.15);
+    this.#crackBurst(t, 400, 1.5, 0.02, 0.18);
+  }
+
+  #hardDropPlastic() {
+    const t = this.#now();
+    // Hollow plastic impact
+    this.#ping(t, 120, 0.08, 0.30);
+    this.#crackBurst(t, 1500, 2, 0.015, 0.15);
+    this.#ping(t + 0.01, 600, 0.04, 0.10);
+  }
+
+  #hardDropGold() {
+    const t = this.#now();
+    // Heavy gold thud with ring
+    this.#ping(t, 70, 0.12, 0.40);
+    this.#ping(t + 0.02, 500, 0.10, 0.12);
+    this.#ping(t + 0.02, 750, 0.08, 0.06);
+  }
+
+  #hardDropSilver() {
+    const t = this.#now();
+    // Bright silver crash
+    this.#ping(t, 80, 0.10, 0.35);
+    this.#crackBurst(t, 3000, 10, 0.015, 0.15);
+    this.#ping(t + 0.01, 2000, 0.06, 0.10);
+  }
+
   // ─── Line Clear — Theme-based Sound ──────────────────────────────────
 
   /**
@@ -590,6 +724,10 @@ class SoundEngine {
       case 'crystal': this.#playCrystalChime(t, intensity, totalDur, vol, comboShift); break;
       case 'metal': this.#playMetalClang(t, intensity, totalDur, vol, comboShift); break;
       case 'ice': this.#playIceCrack(t, intensity, totalDur, vol, comboShift); break;
+      case 'wood': this.#playWoodSplit(t, intensity, totalDur, vol, comboShift); break;
+      case 'plastic': this.#playPlasticSnap(t, intensity, totalDur, vol, comboShift); break;
+      case 'gold': this.#playGoldCrash(t, intensity, totalDur, vol, comboShift); break;
+      case 'silver': this.#playSilverShatter(t, intensity, totalDur, vol, comboShift); break;
       default: this.#playGlassShatter(t, intensity, totalDur, vol, comboShift); break;
     }
   }
@@ -1261,6 +1399,80 @@ class SoundEngine {
     revSrc.stop(t + 0.075);
   }
 
+  // ── LINE CLEAR: WOOD — splintering snap cascade ─────────────────────
+  #playWoodSplit(t, intensity, totalDur, vol, comboShift) {
+    const dur = totalDur;
+    // Initial snap
+    this.#crackBurst(t, 400, 2, 0.012, vol * 0.6);
+    this.#ping(t, 100, 0.08, vol * 0.4);
+    // Splinter cascade — increasing density with intensity
+    const count = 3 + intensity * 2;
+    for (let i = 0; i < count; i++) {
+      const ct = t + (i / count) * dur * 0.8 + Math.random() * 0.02;
+      const freq = (300 + Math.random() * 600) * (1 + comboShift);
+      this.#crackBurst(ct, freq, 1.5 + Math.random(), 0.008 + Math.random() * 0.006, vol * (0.3 + Math.random() * 0.2));
+      if (Math.random() > 0.5) this.#ping(ct, 150 + Math.random() * 100, 0.03, vol * 0.08);
+    }
+    // Sub-bass thump
+    this.#ping(t, 50, dur * 0.3, vol * 0.35);
+  }
+
+  // ── LINE CLEAR: PLASTIC — hollow snapping pops ──────────────────────
+  #playPlasticSnap(t, intensity, totalDur, vol, comboShift) {
+    const dur = totalDur;
+    // Hollow pop at start
+    this.#ping(t, 300 * (1 + comboShift), 0.05, vol * 0.5);
+    this.#crackBurst(t, 1800, 3, 0.008, vol * 0.4);
+    // Pop cascade
+    const count = 4 + intensity * 2;
+    for (let i = 0; i < count; i++) {
+      const ct = t + (i / count) * dur * 0.8 + Math.random() * 0.015;
+      const freq = (1200 + Math.random() * 2000) * (1 + comboShift);
+      this.#crackBurst(ct, freq, 3 + Math.random() * 2, 0.005 + Math.random() * 0.004, vol * (0.2 + Math.random() * 0.15));
+      this.#ping(ct + 0.003, 800 + Math.random() * 600, 0.02, vol * 0.06);
+    }
+    this.#ping(t, 60, dur * 0.2, vol * 0.25);
+  }
+
+  // ── LINE CLEAR: GOLD — majestic bell crash ──────────────────────────
+  #playGoldCrash(t, intensity, totalDur, vol, comboShift) {
+    const dur = totalDur;
+    const base = 400 * (1 + comboShift);
+    // Big bell impact
+    this.#ping(t, base, dur * 0.7, vol * 0.4);
+    this.#ping(t, base * 1.5, dur * 0.5, vol * 0.2);
+    this.#ping(t, base * 2, dur * 0.3, vol * 0.12);
+    // Crash texture
+    this.#crackBurst(t, 600, 2, 0.02, vol * 0.3);
+    // Cascading harmonics
+    const harmonics = [1, 1.25, 1.5, 2, 2.5, 3];
+    const count = Math.min(intensity + 2, harmonics.length);
+    for (let i = 0; i < count; i++) {
+      const ct = t + (i / count) * dur * 0.5 + Math.random() * 0.01;
+      const g = this.#ping(ct, base * harmonics[i], dur * 0.4, vol * 0.08);
+      this.#addReverb(g, dur * 0.3, 0.2, 0.06);
+    }
+    this.#ping(t, 50, dur * 0.25, vol * 0.3);
+  }
+
+  // ── LINE CLEAR: SILVER — bright shimmering crash ────────────────────
+  #playSilverShatter(t, intensity, totalDur, vol, comboShift) {
+    const dur = totalDur;
+    const base = 2000 * (1 + comboShift);
+    // Bright initial hit
+    this.#crackBurst(t, base, 12, 0.008, vol * 0.5);
+    this.#ping(t, base * 0.5, 0.08, vol * 0.3);
+    // Silver tinkle cascade
+    const count = 4 + intensity * 2;
+    for (let i = 0; i < count; i++) {
+      const ct = t + (i / count) * dur * 0.75 + Math.random() * 0.015;
+      const freq = (2000 + Math.random() * 3000) * (1 + comboShift);
+      this.#crackBurst(ct, freq, 10 + Math.random() * 8, 0.005 + Math.random() * 0.004, vol * (0.15 + Math.random() * 0.1));
+      this.#ping(ct + 0.002, freq * 0.7, 0.04, vol * 0.06);
+    }
+    this.#ping(t, 60, dur * 0.2, vol * 0.25);
+  }
+
   // ─── Level Up — Theme-aware celebration ─────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -1272,6 +1484,10 @@ class SoundEngine {
       case 'crystal': this.#levelUpCrystal(); break;
       case 'metal': this.#levelUpMetal(); break;
       case 'ice': this.#levelUpIce(); break;
+      case 'wood': this.#levelUpWood(); break;
+      case 'plastic': this.#levelUpPlastic(); break;
+      case 'gold': this.#levelUpGold(); break;
+      case 'silver': this.#levelUpSilver(); break;
     }
   }
 
@@ -1404,6 +1620,44 @@ class SoundEngine {
     osc.start(t + 0.28); osc.stop(t + 0.41);
   }
 
+  #levelUpWood() {
+    const t = this.#now();
+    // Ascending wooden knocks
+    for (let i = 0; i < 4; i++) {
+      this.#ping(t + i * 0.07, 300 + i * 150, 0.06, 0.16);
+      this.#crackBurst(t + i * 0.07, 500 + i * 100, 1.5, 0.005, 0.08);
+    }
+  }
+
+  #levelUpPlastic() {
+    const t = this.#now();
+    // Bouncy ascending pops
+    for (let i = 0; i < 4; i++) {
+      this.#ping(t + i * 0.06, 600 + i * 300, 0.05, 0.14);
+      this.#ping(t + i * 0.06, 1200 + i * 600, 0.03, 0.06);
+    }
+  }
+
+  #levelUpGold() {
+    const t = this.#now();
+    // Majestic ascending chime — C major arpeggio
+    const freqs = [523, 659, 784, 1047];
+    for (let i = 0; i < 4; i++) {
+      const g = this.#ping(t + i * 0.08, freqs[i], 0.25, 0.16);
+      this.#ping(t + i * 0.08, freqs[i] * 1.5, 0.15, 0.06);
+      this.#addReverb(g, 0.3, 0.25, 0.08);
+    }
+  }
+
+  #levelUpSilver() {
+    const t = this.#now();
+    // Bright ascending tinkles
+    for (let i = 0; i < 4; i++) {
+      this.#ping(t + i * 0.06, 3000 + i * 800, 0.08, 0.12);
+      this.#crackBurst(t + i * 0.06, 4000 + i * 500, 10, 0.004, 0.06);
+    }
+  }
+
   // ─── Game Over — Theme-aware collapse ─────────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -1415,6 +1669,10 @@ class SoundEngine {
       case 'crystal': this.#gameOverCrystal(); break;
       case 'metal': this.#gameOverMetal(); break;
       case 'ice': this.#gameOverIce(); break;
+      case 'wood': this.#gameOverWood(); break;
+      case 'plastic': this.#gameOverPlastic(); break;
+      case 'gold': this.#gameOverGold(); break;
+      case 'silver': this.#gameOverSilver(); break;
     }
   }
 
@@ -1566,6 +1824,52 @@ class SoundEngine {
     sub.start(t + 0.3); sub.stop(t + 2.6);
   }
 
+  #gameOverWood() {
+    const t = this.#now();
+    // Wood collapsing — descending thuds
+    for (let i = 0; i < 6; i++) {
+      const s = t + i * 0.3;
+      this.#crackBurst(s, 300 - i * 30, 1.5, 0.02, 0.20 - i * 0.02);
+      this.#ping(s, 120 - i * 10, 0.15, 0.15);
+    }
+    this.#ping(t, 40, 2.0, 0.10);
+  }
+
+  #gameOverPlastic() {
+    const t = this.#now();
+    // Plastic crumbling apart
+    for (let i = 0; i < 6; i++) {
+      const s = t + i * 0.25;
+      this.#crackBurst(s, 1500 - i * 150, 3, 0.015, 0.18 - i * 0.02);
+      this.#ping(s, 500 - i * 50, 0.10, 0.12);
+    }
+    this.#ping(t, 45, 1.8, 0.08);
+  }
+
+  #gameOverGold() {
+    const t = this.#now();
+    // Gold tower falling — descending rich bells
+    const freqs = [784, 659, 523, 440, 349, 262];
+    for (let i = 0; i < 6; i++) {
+      const s = t + i * 0.3;
+      const g = this.#ping(s, freqs[i], 0.4, 0.18 - i * 0.02);
+      this.#ping(s, freqs[i] * 1.5, 0.25, 0.06);
+      this.#addReverb(g, 0.5, 0.2, 0.08);
+    }
+    this.#ping(t, 35, 2.0, 0.12);
+  }
+
+  #gameOverSilver() {
+    const t = this.#now();
+    // Silver shattering cascade
+    for (let i = 0; i < 6; i++) {
+      const s = t + i * 0.28;
+      this.#crackBurst(s, 3000 - i * 300, 12, 0.012, 0.18 - i * 0.02);
+      this.#ping(s, 2000 - i * 200, 0.12, 0.10);
+    }
+    this.#ping(t, 40, 2.0, 0.10);
+  }
+
   // ─── Move — Theme-aware nudge ─────────────────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -1577,6 +1881,10 @@ class SoundEngine {
       case 'crystal': this.#moveCrystal(); break;
       case 'metal': this.#moveMetal(); break;
       case 'ice': this.#moveIce(); break;
+      case 'wood': this.#moveWood(); break;
+      case 'plastic': this.#movePlastic(); break;
+      case 'gold': this.#moveGold(); break;
+      case 'silver': this.#moveSilver(); break;
     }
   }
 
@@ -1639,6 +1947,26 @@ class SoundEngine {
     n.start(t); n.stop(t + 0.02);
   }
 
+  #moveWood() {
+    const t = this.#now();
+    this.#crackBurst(t, 500 + Math.random() * 200, 1.5, 0.004, 0.04);
+  }
+
+  #movePlastic() {
+    const t = this.#now();
+    this.#ping(t, 1800 + Math.random() * 400, 0.015, 0.04);
+  }
+
+  #moveGold() {
+    const t = this.#now();
+    this.#ping(t, 900 + Math.random() * 200, 0.02, 0.04);
+  }
+
+  #moveSilver() {
+    const t = this.#now();
+    this.#ping(t, 3200 + Math.random() * 400, 0.015, 0.04);
+  }
+
   // ─── Hold — Theme-aware swap ──────────────────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -1650,6 +1978,10 @@ class SoundEngine {
       case 'crystal': this.#holdCrystal(); break;
       case 'metal': this.#holdMetal(); break;
       case 'ice': this.#holdIce(); break;
+      case 'wood': this.#holdWood(); break;
+      case 'plastic': this.#holdPlastic(); break;
+      case 'gold': this.#holdGold(); break;
+      case 'silver': this.#holdSilver(); break;
     }
   }
 
@@ -1738,6 +2070,34 @@ class SoundEngine {
     n.start(t); n.stop(t + 0.09);
   }
 
+  #holdWood() {
+    const t = this.#now();
+    // Wood slide
+    this.#crackBurst(t, 600, 1.5, 0.015, 0.10);
+    this.#ping(t + 0.02, 350, 0.04, 0.08);
+  }
+
+  #holdPlastic() {
+    const t = this.#now();
+    // Plastic slide snap
+    this.#crackBurst(t, 2000, 3, 0.01, 0.10);
+    this.#ping(t + 0.01, 1200, 0.03, 0.06);
+  }
+
+  #holdGold() {
+    const t = this.#now();
+    // Gold coin flip
+    this.#ping(t, 700, 0.08, 0.10);
+    this.#ping(t + 0.03, 1050, 0.06, 0.06);
+  }
+
+  #holdSilver() {
+    const t = this.#now();
+    // Silver ting-slide
+    this.#ping(t, 2500, 0.06, 0.10);
+    this.#ping(t + 0.02, 3750, 0.04, 0.05);
+  }
+
   // ─── Pause — "Tape Stop" ─────────────────────────────────────────────
 
   /**
@@ -1800,6 +2160,10 @@ class SoundEngine {
       case 'crystal': this.#comboHitCrystal(combo); break;
       case 'metal': this.#comboHitMetal(combo); break;
       case 'ice': this.#comboHitIce(combo); break;
+      case 'wood': this.#comboHitWood(combo); break;
+      case 'plastic': this.#comboHitPlastic(combo); break;
+      case 'gold': this.#comboHitGold(combo); break;
+      case 'silver': this.#comboHitSilver(combo); break;
     }
   }
 
@@ -1926,6 +2290,39 @@ class SoundEngine {
     osc.start(t); osc.stop(t + 0.09);
   }
 
+  #comboHitWood(combo) {
+    const t = this.#now();
+    const semi = Math.min(combo - 2, 12);
+    const freq = 300 * Math.pow(2, semi / 12);
+    this.#crackBurst(t, freq, 2, 0.01, 0.15);
+    this.#ping(t, freq * 0.5, 0.06, 0.12);
+  }
+
+  #comboHitPlastic(combo) {
+    const t = this.#now();
+    const semi = Math.min(combo - 2, 12);
+    const freq = 1000 * Math.pow(2, semi / 12);
+    this.#ping(t, freq, 0.05, 0.15);
+    this.#ping(t, freq * 2, 0.03, 0.06);
+  }
+
+  #comboHitGold(combo) {
+    const t = this.#now();
+    const semi = Math.min(combo - 2, 12);
+    const freq = 500 * Math.pow(2, semi / 12);
+    const g = this.#ping(t, freq, 0.15, 0.16);
+    this.#ping(t, freq * 1.5, 0.10, 0.07);
+    this.#addReverb(g, 0.2, 0.2, 0.05);
+  }
+
+  #comboHitSilver(combo) {
+    const t = this.#now();
+    const semi = Math.min(combo - 2, 12);
+    const freq = 2500 * Math.pow(2, semi / 12);
+    this.#ping(t, freq, 0.06, 0.14);
+    this.#crackBurst(t, freq * 1.5, 10, 0.004, 0.06);
+  }
+
   // ─── T-Spin — Theme-aware dramatic effect ────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -1937,6 +2334,10 @@ class SoundEngine {
       case 'crystal': this.#tSpinCrystal(type); break;
       case 'metal': this.#tSpinMetal(type); break;
       case 'ice': this.#tSpinIce(type); break;
+      case 'wood': this.#tSpinWood(type); break;
+      case 'plastic': this.#tSpinPlastic(type); break;
+      case 'gold': this.#tSpinGold(type); break;
+      case 'silver': this.#tSpinSilver(type); break;
     }
   }
 
@@ -2096,6 +2497,43 @@ class SoundEngine {
     }
   }
 
+  #tSpinWood(type) {
+    const t = this.#now();
+    const isFull = type === 'full';
+    const vol = isFull ? 0.22 : 0.14;
+    this.#crackBurst(t, 400, 2, 0.02, vol);
+    this.#ping(t + 0.01, 250, 0.08, vol * 0.6);
+    if (isFull) this.#crackBurst(t + 0.03, 600, 1.5, 0.015, vol * 0.5);
+  }
+
+  #tSpinPlastic(type) {
+    const t = this.#now();
+    const isFull = type === 'full';
+    const vol = isFull ? 0.22 : 0.14;
+    this.#crackBurst(t, 2000, 4, 0.012, vol);
+    this.#ping(t, 800, 0.06, vol * 0.5);
+    if (isFull) this.#ping(t + 0.03, 1600, 0.05, vol * 0.4);
+  }
+
+  #tSpinGold(type) {
+    const t = this.#now();
+    const isFull = type === 'full';
+    const vol = isFull ? 0.22 : 0.14;
+    const g = this.#ping(t, 600, 0.15, vol);
+    this.#ping(t, 900, 0.10, vol * 0.4);
+    this.#addReverb(g, 0.2, 0.2, 0.06);
+    if (isFull) this.#ping(t + 0.03, 1200, 0.10, vol * 0.3);
+  }
+
+  #tSpinSilver(type) {
+    const t = this.#now();
+    const isFull = type === 'full';
+    const vol = isFull ? 0.22 : 0.14;
+    this.#crackBurst(t, 3000, 12, 0.008, vol);
+    this.#ping(t + 0.005, 2500, 0.06, vol * 0.4);
+    if (isFull) this.#crackBurst(t + 0.03, 4000, 10, 0.006, vol * 0.4);
+  }
+
   // ─── Perfect Clear — Theme-aware celebration ─────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -2107,6 +2545,10 @@ class SoundEngine {
       case 'crystal': this.#perfectClearCrystal(); break;
       case 'metal': this.#perfectClearMetal(); break;
       case 'ice': this.#perfectClearIce(); break;
+      case 'wood': this.#perfectClearWood(); break;
+      case 'plastic': this.#perfectClearPlastic(); break;
+      case 'gold': this.#perfectClearGold(); break;
+      case 'silver': this.#perfectClearSilver(); break;
     }
   }
 
@@ -2243,6 +2685,46 @@ class SoundEngine {
     sub.start(t + 0.1); sub.stop(t + 0.51);
   }
 
+  #perfectClearWood() {
+    const t = this.#now();
+    // Big wood split + ascending knocks
+    this.#crackBurst(t, 350, 2, 0.02, 0.30);
+    for (let i = 0; i < 4; i++) {
+      this.#ping(t + i * 0.08, 250 + i * 100, 0.10, 0.14);
+      this.#crackBurst(t + i * 0.08, 400 + i * 80, 1.5, 0.008, 0.10);
+    }
+  }
+
+  #perfectClearPlastic() {
+    const t = this.#now();
+    // Cascading plastic snaps
+    for (let i = 0; i < 5; i++) {
+      this.#crackBurst(t + i * 0.06, 1500 + i * 400, 4, 0.006, 0.18);
+      this.#ping(t + i * 0.06, 800 + i * 200, 0.05, 0.10);
+    }
+  }
+
+  #perfectClearGold() {
+    const t = this.#now();
+    // Grand bell cascade — ascending major chord
+    const freqs = [523, 659, 784, 1047, 1319];
+    for (let i = 0; i < 5; i++) {
+      const g = this.#ping(t + i * 0.08, freqs[i], 0.3, 0.18);
+      this.#ping(t + i * 0.08, freqs[i] * 1.5, 0.2, 0.06);
+      this.#addReverb(g, 0.4, 0.25, 0.08);
+    }
+    this.#ping(t, 50, 0.5, 0.15);
+  }
+
+  #perfectClearSilver() {
+    const t = this.#now();
+    // Bright silver cascade
+    for (let i = 0; i < 5; i++) {
+      this.#ping(t + i * 0.06, 3000 + i * 600, 0.12, 0.15);
+      this.#crackBurst(t + i * 0.06, 4000 + i * 500, 12, 0.005, 0.08);
+    }
+  }
+
   // ─── Back-to-Back — Theme-aware emphatic hit ─────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -2254,6 +2736,10 @@ class SoundEngine {
       case 'crystal': this.#backToBackCrystal(); break;
       case 'metal': this.#backToBackMetal(); break;
       case 'ice': this.#backToBackIce(); break;
+      case 'wood': this.#backToBackWood(); break;
+      case 'plastic': this.#backToBackPlastic(); break;
+      case 'gold': this.#backToBackGold(); break;
+      case 'silver': this.#backToBackSilver(); break;
     }
   }
 
@@ -2363,6 +2849,40 @@ class SoundEngine {
     osc.start(t); osc.stop(t + 0.21);
   }
 
+  #backToBackWood() {
+    const t = this.#now();
+    // Emphatic wood crack
+    this.#crackBurst(t, 350, 2, 0.02, 0.28);
+    this.#ping(t, 200, 0.10, 0.20);
+    this.#crackBurst(t + 0.04, 500, 1.5, 0.012, 0.15);
+  }
+
+  #backToBackPlastic() {
+    const t = this.#now();
+    // Emphatic plastic snap
+    this.#crackBurst(t, 2200, 4, 0.012, 0.25);
+    this.#ping(t, 800, 0.08, 0.18);
+    this.#crackBurst(t + 0.03, 3000, 3, 0.008, 0.12);
+  }
+
+  #backToBackGold() {
+    const t = this.#now();
+    // Emphatic gold crash
+    this.#ping(t, 500, 0.20, 0.22);
+    this.#ping(t, 750, 0.15, 0.10);
+    this.#crackBurst(t, 600, 2, 0.015, 0.18);
+    const g = this.#ping(t + 0.03, 1000, 0.12, 0.10);
+    this.#addReverb(g, 0.25, 0.2, 0.06);
+  }
+
+  #backToBackSilver() {
+    const t = this.#now();
+    // Emphatic silver crash
+    this.#crackBurst(t, 3500, 15, 0.01, 0.25);
+    this.#ping(t, 2500, 0.10, 0.18);
+    this.#crackBurst(t + 0.03, 4500, 12, 0.008, 0.12);
+  }
+
   // ─── Danger Pulse — Theme-aware warning ──────────────────────────────
 
   /** Dispatches to active sound theme. */
@@ -2374,6 +2894,10 @@ class SoundEngine {
       case 'crystal': this.#dangerPulseCrystal(intensity); break;
       case 'metal': this.#dangerPulseMetal(intensity); break;
       case 'ice': this.#dangerPulseIce(intensity); break;
+      case 'wood': this.#dangerPulseWood(intensity); break;
+      case 'plastic': this.#dangerPulsePlastic(intensity); break;
+      case 'gold': this.#dangerPulseGold(intensity); break;
+      case 'silver': this.#dangerPulseSilver(intensity); break;
     }
   }
 
@@ -2484,6 +3008,38 @@ class SoundEngine {
     osc.start(t); osc.stop(t + 0.16);
   }
 
+  #dangerPulseWood(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const vol = 0.03 + i * 0.012;
+    this.#ping(t, 80 + i * 10, 0.08, vol);
+    this.#crackBurst(t, 200 + i * 30, 1.5, 0.006, vol * 0.5);
+  }
+
+  #dangerPulsePlastic(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const vol = 0.03 + i * 0.012;
+    this.#ping(t, 600 + i * 60, 0.05, vol);
+    this.#crackBurst(t, 1500 + i * 100, 3, 0.005, vol * 0.4);
+  }
+
+  #dangerPulseGold(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const vol = 0.03 + i * 0.012;
+    this.#ping(t, 300 + i * 30, 0.10, vol);
+    this.#ping(t, 450 + i * 45, 0.06, vol * 0.3);
+  }
+
+  #dangerPulseSilver(intensity) {
+    const t = this.#now();
+    const i = Math.min(intensity, 10);
+    const vol = 0.03 + i * 0.012;
+    this.#ping(t, 2000 + i * 150, 0.06, vol);
+    this.#crackBurst(t, 3000 + i * 200, 10, 0.004, vol * 0.4);
+  }
+
   // ─── Row Highlight Sound — theme-aware anticipation ──────────────────
 
   /**
@@ -2500,6 +3056,10 @@ class SoundEngine {
       case 'crystal':  this.#rowHighlightCrystal(t, rowIndex, pitch, ds); break;
       case 'metal':    this.#rowHighlightMetal(t, rowIndex, pitch, ds); break;
       case 'ice':      this.#rowHighlightIce(t, rowIndex, pitch, ds); break;
+      case 'wood':     this.#rowHighlightWood(t, rowIndex, pitch, ds); break;
+      case 'plastic':  this.#rowHighlightPlastic(t, rowIndex, pitch, ds); break;
+      case 'gold':     this.#rowHighlightGold(t, rowIndex, pitch, ds); break;
+      case 'silver':   this.#rowHighlightSilver(t, rowIndex, pitch, ds); break;
       default:         this.#rowHighlightGlass(t, rowIndex, pitch, ds); break;
     }
   }
@@ -2677,6 +3237,68 @@ class SoundEngine {
     sub.start(t); sub.stop(t + dur + 0.05);
   }
 
+  #rowHighlightWood(t, rowIndex, pitch, ds) {
+    // Wood stress — creaking + quiet snaps
+    const dur = 0.5 * ds;
+    // Creaking oscillator (low sawtooth through lowpass)
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime((60 + rowIndex * 15) * pitch, t);
+    osc.frequency.linearRampToValueAtTime((45 + rowIndex * 10) * pitch, t + dur);
+    const filter = this.#ctx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 250;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.12, t + 0.1 * ds);
+    env.gain.linearRampToValueAtTime(0, t + dur);
+    osc.connect(filter); filter.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + dur + 0.05);
+    // A couple stress cracks
+    for (let i = 0; i < 2; i++) {
+      this.#crackBurst(t + Math.random() * dur * 0.6, 400 + Math.random() * 300, 1.5, 0.005, 0.06);
+    }
+  }
+
+  #rowHighlightPlastic(t, rowIndex, pitch, ds) {
+    // Plastic stress — creaking + quiet clicks
+    const dur = 0.5 * ds;
+    // Quiet sine wobble
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime((300 + rowIndex * 50) * pitch, t);
+    osc.frequency.linearRampToValueAtTime((250 + rowIndex * 40) * pitch, t + dur);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.08, t + 0.1 * ds);
+    env.gain.linearRampToValueAtTime(0, t + dur);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + dur + 0.05);
+    // Stress clicks
+    for (let i = 0; i < 2; i++) {
+      this.#crackBurst(t + Math.random() * dur * 0.6, 1500 + Math.random() * 1000, 3, 0.003, 0.05);
+    }
+  }
+
+  #rowHighlightGold(t, rowIndex, pitch, ds) {
+    // Gold stress — swelling bell tone
+    const dur = 0.5 * ds;
+    const base = [523, 659, 784, 1047][Math.min(rowIndex, 3)] * pitch;
+    const g = this.#ping(t, base, dur * 0.8, 0.08);
+    this.#ping(t + 0.05 * ds, base * 1.5, dur * 0.6, 0.03);
+    this.#addReverb(g, dur * 0.5, 0.2, 0.05);
+  }
+
+  #rowHighlightSilver(t, rowIndex, pitch, ds) {
+    // Silver stress — bright discrete plinks
+    const dur = 0.5 * ds;
+    const cracks = 3 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < cracks; i++) {
+      const ct = t + (i / cracks) * dur * 0.7 + Math.random() * 0.02 * ds;
+      this.#crackBurst(ct, 3000 + Math.random() * 2000, 10 + Math.random() * 6, 0.004, 0.06);
+    }
+    this.#ping(t, 2000 * pitch, dur * 0.5, 0.04);
+  }
+
   // ─── Per-Cell Pop Sound — theme-aware sweep ──────────────────────────
 
   /**
@@ -2694,6 +3316,10 @@ class SoundEngine {
       case 'crystal':  this.#cellPopCrystal(t, progress, pitch, ds); break;
       case 'metal':    this.#cellPopMetal(t, progress, pitch, ds); break;
       case 'ice':      this.#cellPopIce(t, progress, pitch, ds); break;
+      case 'wood':     this.#cellPopWood(t, progress, pitch, ds); break;
+      case 'plastic':  this.#cellPopPlastic(t, progress, pitch, ds); break;
+      case 'gold':     this.#cellPopGold(t, progress, pitch, ds); break;
+      case 'silver':   this.#cellPopSilver(t, progress, pitch, ds); break;
       default:         this.#cellPopGlass(t, progress, pitch, ds); break;
     }
   }
@@ -2897,6 +3523,58 @@ class SoundEngine {
     ring.start(t + 0.005); ring.stop(t + 0.09 * ds);
   }
 
+  #cellPopWood(t, colIndex, freq, ds) {
+    // Wood chip pop — dry crack + low knock
+    this.#crackBurst(t, freq * 0.4, 2, 0.008 * ds, 0.15);
+    // Hollow knock body
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(180 + colIndex * 15, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.04 * ds);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.12, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.05 * ds);
+    osc.connect(env); env.connect(this.#masterGain);
+    osc.start(t); osc.stop(t + 0.06 * ds);
+  }
+
+  #cellPopPlastic(t, colIndex, freq, ds) {
+    // Plastic pop — bright hollow snap
+    this.#crackBurst(t, freq * 1.5, 4, 0.005 * ds, 0.12);
+    this.#ping(t, 1200 + colIndex * 100, 0.03 * ds, 0.08);
+  }
+
+  #cellPopGold(t, colIndex, freq, ds) {
+    // Gold ring pop — warm chime
+    const base = freq * 0.8;
+    this.#ping(t, base, 0.06 * ds, 0.12);
+    this.#ping(t + 0.01 * ds, base * 1.5, 0.04 * ds, 0.06);
+    // Sub ring
+    const sub = this.#ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.value = base * 0.25;
+    const se = this.#ctx.createGain();
+    se.gain.setValueAtTime(0.06, t);
+    se.gain.exponentialRampToValueAtTime(0.001, t + 0.05 * ds);
+    sub.connect(se); se.connect(this.#masterGain);
+    sub.start(t); sub.stop(t + 0.06 * ds);
+  }
+
+  #cellPopSilver(t, colIndex, freq, ds) {
+    // Silver tinkle pop — bright metallic burst
+    this.#crackBurst(t, freq * 2, 12, 0.004 * ds, 0.1);
+    this.#ping(t, 3000 + colIndex * 200, 0.04 * ds, 0.07);
+    // Modulated ring
+    const ring = this.#ctx.createOscillator();
+    ring.type = 'sine';
+    ring.frequency.value = freq * 0.7;
+    const re = this.#ctx.createGain();
+    re.gain.setValueAtTime(0.04, t + 0.005);
+    re.gain.exponentialRampToValueAtTime(0.001, t + 0.08 * ds);
+    ring.connect(re); re.connect(this.#masterGain);
+    ring.start(t + 0.005); ring.stop(t + 0.09 * ds);
+  }
+
   // ─── Row Cleared Sound — theme-aware completion ──────────────────────
 
   /**
@@ -2913,6 +3591,10 @@ class SoundEngine {
       case 'crystal':  this.#rowClearedCrystal(t, rowIndex, pitch, ds); break;
       case 'metal':    this.#rowClearedMetal(t, rowIndex, pitch, ds); break;
       case 'ice':      this.#rowClearedIce(t, rowIndex, pitch, ds); break;
+      case 'wood':     this.#rowClearedWood(t, rowIndex, pitch, ds); break;
+      case 'plastic':  this.#rowClearedPlastic(t, rowIndex, pitch, ds); break;
+      case 'gold':     this.#rowClearedGold(t, rowIndex, pitch, ds); break;
+      case 'silver':   this.#rowClearedSilver(t, rowIndex, pitch, ds); break;
       default:         this.#rowClearedGlass(t, rowIndex, pitch, ds); break;
     }
   }
@@ -3143,6 +3825,137 @@ class SoundEngine {
       const st = t + dur * 0.4 + Math.random() * dur * 0.4;
       this.#ping(st, (8000 + Math.random() * 6000) * pitch,
         0.015 + Math.random() * 0.02, 0.02 + Math.random() * 0.02);
+    }
+  }
+
+  #rowClearedWood(t, rowIndex, pitch, ds) {
+    // Wood breaking — splintering cascade L→R with body creaks
+    const dur = 0.5 * ds;
+    const cells = 10;
+    for (let i = 0; i < cells; i++) {
+      const ct = t + (i / cells) * dur * 0.8;
+      // Dry splitting crack
+      this.#crackBurst(ct, (300 + Math.random() * 400) * pitch,
+        2 + Math.random() * 2, 0.008 + Math.random() * 0.005,
+        0.2 + Math.random() * 0.15);
+      // Body knock
+      const osc = this.#ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime((120 + i * 20) * pitch, ct);
+      osc.frequency.exponentialRampToValueAtTime(60 * pitch, ct + 0.04 * ds);
+      const env = this.#ctx.createGain();
+      env.gain.setValueAtTime(0.1, ct);
+      env.gain.exponentialRampToValueAtTime(0.001, ct + 0.06 * ds);
+      osc.connect(env); env.connect(this.#masterGain);
+      osc.start(ct); osc.stop(ct + 0.07 * ds);
+      // Occasional splinter ping
+      if (Math.random() > 0.5) {
+        this.#ping(ct + 0.01, (600 + Math.random() * 400) * pitch,
+          0.02, 0.04 + Math.random() * 0.03);
+      }
+    }
+    // Final creak
+    const creak = this.#ctx.createOscillator();
+    creak.type = 'sawtooth';
+    creak.frequency.setValueAtTime(40 * pitch, t + dur * 0.7);
+    creak.frequency.linearRampToValueAtTime(25 * pitch, t + dur);
+    const cf = this.#ctx.createBiquadFilter();
+    cf.type = 'lowpass'; cf.frequency.value = 200;
+    const ce = this.#ctx.createGain();
+    ce.gain.setValueAtTime(0.08, t + dur * 0.7);
+    ce.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    creak.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
+    creak.start(t + dur * 0.7); creak.stop(t + dur + 0.05);
+  }
+
+  #rowClearedPlastic(t, rowIndex, pitch, ds) {
+    // Plastic snapping — bright pops cascade L→R
+    const dur = 0.5 * ds;
+    const cells = 10;
+    for (let i = 0; i < cells; i++) {
+      const ct = t + (i / cells) * dur * 0.8;
+      // Snap crack
+      this.#crackBurst(ct, (1500 + Math.random() * 1500) * pitch,
+        4 + Math.random() * 3, 0.005 + Math.random() * 0.003,
+        0.18 + Math.random() * 0.1);
+      // Pop ping
+      this.#ping(ct, (1000 + i * 150) * pitch,
+        0.025 + Math.random() * 0.015, 0.06 + Math.random() * 0.04);
+      // Bouncy aftermath (30% chance)
+      if (Math.random() > 0.7) {
+        this.#ping(ct + 0.03 * ds, (2000 + Math.random() * 1000) * pitch,
+          0.02, 0.03);
+      }
+    }
+    // Final hollow rattle
+    for (let i = 0; i < 4; i++) {
+      const rt = t + dur * 0.6 + Math.random() * dur * 0.3;
+      this.#crackBurst(rt, (800 + Math.random() * 600) * pitch,
+        3, 0.003, 0.05);
+    }
+  }
+
+  #rowClearedGold(t, rowIndex, pitch, ds) {
+    // Gold disintegrating — rich warm chimes cascade with reverb tails
+    const dur = 0.5 * ds;
+    const cells = 10;
+    // Pentatonic scale for majestic sound
+    const scale = [1, 1.125, 1.25, 1.5, 1.667, 1.875, 2, 2.25, 2.5, 3];
+    for (let i = 0; i < cells; i++) {
+      const ct = t + (i / cells) * dur * 0.75;
+      const freq = 400 * scale[i] * pitch;
+      // Warm chime
+      const g = this.#ping(ct, freq, 0.08 * ds, 0.12 + Math.random() * 0.05);
+      // Fifth harmonic
+      this.#ping(ct + 0.01 * ds, freq * 1.5, 0.06 * ds, 0.04);
+      // Sub warmth
+      const sub = this.#ctx.createOscillator();
+      sub.type = 'sine';
+      sub.frequency.value = freq * 0.25;
+      const se = this.#ctx.createGain();
+      se.gain.setValueAtTime(0.05, ct);
+      se.gain.exponentialRampToValueAtTime(0.001, ct + 0.07 * ds);
+      sub.connect(se); se.connect(this.#masterGain);
+      sub.start(ct); sub.stop(ct + 0.08 * ds);
+    }
+    // Reverberant tail
+    for (let i = 0; i < 6; i++) {
+      const rt = t + dur * 0.5 + Math.random() * dur * 0.4;
+      this.#ping(rt, (500 + Math.random() * 800) * pitch,
+        0.05 + Math.random() * 0.04, 0.03);
+    }
+  }
+
+  #rowClearedSilver(t, rowIndex, pitch, ds) {
+    // Silver shattering — bright metallic fracture cascade with tinkles
+    const dur = 0.5 * ds;
+    const cells = 10;
+    for (let i = 0; i < cells; i++) {
+      const ct = t + (i / cells) * dur * 0.8;
+      // High-Q metallic crack
+      this.#crackBurst(ct, (3000 + Math.random() * 3000) * pitch,
+        10 + Math.random() * 8, 0.004 + Math.random() * 0.003,
+        0.2 + Math.random() * 0.12, 'bandpass');
+      // Bright tinkle
+      this.#ping(ct, (3500 + i * 300) * pitch,
+        0.03 + Math.random() * 0.02, 0.07 + Math.random() * 0.04);
+      // Resonant ring (40% chance)
+      if (Math.random() > 0.6) {
+        const ring = this.#ctx.createOscillator();
+        ring.type = 'sine';
+        ring.frequency.value = (2500 + Math.random() * 2000) * pitch;
+        const re = this.#ctx.createGain();
+        re.gain.setValueAtTime(0.04, ct + 0.005);
+        re.gain.exponentialRampToValueAtTime(0.001, ct + 0.06 * ds);
+        ring.connect(re); re.connect(this.#masterGain);
+        ring.start(ct + 0.005); ring.stop(ct + 0.07 * ds);
+      }
+    }
+    // Silver dust tinkles after fracture
+    for (let i = 0; i < 6; i++) {
+      const st = t + dur * 0.4 + Math.random() * dur * 0.4;
+      this.#ping(st, (5000 + Math.random() * 5000) * pitch,
+        0.015 + Math.random() * 0.02, 0.03 + Math.random() * 0.02);
     }
   }
 }
