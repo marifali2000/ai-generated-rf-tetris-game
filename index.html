@@ -2,13 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tetris</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div id="game-title">TETRIS</div>
+  <div id="mobile-stats">
+    <div class="mobile-stat"><span class="mobile-stat-label">SCORE</span><span id="mobile-score">0</span></div>
+    <div class="mobile-stat"><span class="mobile-stat-label">LVL</span><span id="mobile-level">1</span></div>
+    <div class="mobile-stat"><span class="mobile-stat-label">LINES</span><span id="mobile-lines">0</span></div>
+  </div>
   <div id="game-container">
     <div id="left-panel">
       <div id="hold-section">
@@ -56,7 +61,7 @@
     <div id="center-panel">
       <canvas id="game-canvas" width="384" height="768"></canvas>
       <div id="overlay" class="visible">
-        <div id="overlay-text">PRESS ENTER TO START</div>
+        <div id="overlay-text">TAP TO START</div>
       </div>
     </div>
 
@@ -86,7 +91,19 @@
     </div>
   </div>
 
-
+  <!-- Mobile touch controls -->
+  <div id="touch-controls">
+    <div id="touch-top-row">
+      <button class="touch-btn" data-action="hold">HOLD</button>
+      <button class="touch-btn" data-action="hardDrop">DROP</button>
+      <button class="touch-btn" data-action="rotateCW">↻</button>
+    </div>
+    <div id="touch-bottom-row">
+      <button class="touch-btn touch-arrow" data-action="left">◀</button>
+      <button class="touch-btn touch-arrow" data-action="softDrop">▼</button>
+      <button class="touch-btn touch-arrow" data-action="right">▶</button>
+    </div>
+  </div>
 
   <script type="module" src="js/game.js"></script>
 </body>

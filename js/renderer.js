@@ -118,6 +118,9 @@ class Renderer {
   #linesEl;
   #overlayEl;
   #overlayTextEl;
+  #mobileScoreEl;
+  #mobileLevelEl;
+  #mobileLinesEl;
   #particles = [];
   #shakeAmount = 0;
   #shakeDecay = 0.9;
@@ -193,6 +196,9 @@ class Renderer {
     this.#linesEl = document.getElementById('lines-value');
     this.#overlayEl = document.getElementById('overlay');
     this.#overlayTextEl = document.getElementById('overlay-text');
+    this.#mobileScoreEl = document.getElementById('mobile-score');
+    this.#mobileLevelEl = document.getElementById('mobile-level');
+    this.#mobileLinesEl = document.getElementById('mobile-lines');
   }
 
   /**
@@ -1026,9 +1032,14 @@ class Renderer {
     // Smooth score tween
     this.#displayScore += (score - this.#displayScore) * 0.15;
     this.#displayLines += (lines - this.#displayLines) * 0.2;
-    this.#scoreEl.textContent = Math.round(this.#displayScore);
+    const roundedScore = Math.round(this.#displayScore);
+    const roundedLines = Math.round(this.#displayLines);
+    this.#scoreEl.textContent = roundedScore;
     this.#levelEl.textContent = level;
-    this.#linesEl.textContent = Math.round(this.#displayLines);
+    this.#linesEl.textContent = roundedLines;
+    if (this.#mobileScoreEl) this.#mobileScoreEl.textContent = roundedScore;
+    if (this.#mobileLevelEl) this.#mobileLevelEl.textContent = level;
+    if (this.#mobileLinesEl) this.#mobileLinesEl.textContent = roundedLines;
     const hsEl = document.getElementById('high-score');
     if (hsEl) hsEl.textContent = highScore || 0;
   }

@@ -341,27 +341,186 @@ kbd {
   color: #ffe060;
 }
 
+/* Touch controls — hidden on desktop */
+#touch-controls {
+  display: none;
+}
 
+/* Mobile stats bar — hidden on desktop */
+#mobile-stats {
+  display: none;
+}
 
-@media (max-width: 600px) {
-  #game-container {
-    gap: 8px;
-    transform: scale(0.55);
-    transform-origin: top center;
-  }
-
-  #left-panel,
-  #right-panel {
-    width: 130px;
+/* ─── Mobile / Touch ──────────────────────────────── */
+@media (max-width: 768px) {
+  body {
+    padding: 8px 0 0;
+    justify-content: flex-start;
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
   }
 
   #game-title {
-    font-size: 22px;
-    margin-bottom: 12px;
+    font-size: 20px;
+    letter-spacing: 8px;
+    margin-bottom: 4px;
   }
 
-  #controls-info {
-    font-size: 8px;
+  /* Hide side panels on mobile */
+  #left-panel {
+    display: none;
+  }
+
+  #right-panel {
+    display: none;
+  }
+
+  /* Mobile stats bar */
+  #mobile-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto 4px;
+    padding: 4px 8px;
+    background: linear-gradient(180deg, rgba(13, 27, 46, 0.8), rgba(8, 16, 30, 0.9));
+    border: 1px solid rgba(40, 80, 130, 0.35);
+    border-radius: 8px;
+  }
+
+  .mobile-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  .mobile-stat-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #5a8eb8;
+    text-transform: uppercase;
+  }
+
+  .mobile-stat span:last-child {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Courier New', 'Consolas', monospace;
+    text-shadow: 0 0 8px rgba(90, 176, 255, 0.35);
+  }
+
+  #game-container {
+    gap: 0;
+    justify-content: center;
+    flex: 1;
+    min-height: 0;
+  }
+
+  #center-panel {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  #game-canvas {
+    width: min(100vw - 16px, 55vh);
+    height: auto;
+    max-height: calc(100dvh - 200px);
+    object-fit: contain;
+  }
+
+  #overlay-text {
+    font-size: 16px;
+    letter-spacing: 3px;
+  }
+
+  /* Touch controls */
+  #touch-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    padding: 6px 12px 12px;
+  }
+
+  #touch-top-row,
+  #touch-bottom-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .touch-btn {
+    flex: 1;
+    max-width: 110px;
+    padding: 14px 8px;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    letter-spacing: 1px;
+    color: #c0d8f0;
+    background: linear-gradient(180deg, rgba(20, 45, 75, 0.85), rgba(10, 25, 45, 0.95));
+    border: 2px solid rgba(60, 120, 190, 0.5);
+    border-radius: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  }
+
+  .touch-btn.touch-active {
+    background: linear-gradient(180deg, rgba(40, 80, 140, 0.95), rgba(20, 50, 90, 0.95));
+    border-color: rgba(90, 176, 255, 0.8);
+    color: #e8f4ff;
+    box-shadow: 0 0 16px rgba(90, 176, 255, 0.3);
+    transform: scale(0.95);
+  }
+
+  .touch-arrow {
+    font-size: 22px;
+    padding: 16px 8px;
+  }
+
+  #keys-section {
+    display: none;
+  }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  #game-title {
+    font-size: 16px;
+    letter-spacing: 6px;
+    margin-bottom: 2px;
+  }
+
+  .touch-btn {
+    padding: 12px 6px;
+    font-size: 14px;
+  }
+
+  .touch-arrow {
+    font-size: 18px;
+    padding: 14px 6px;
+  }
+
+  #touch-controls {
+    padding: 4px 8px 8px;
+    gap: 6px;
+  }
+
+  #touch-top-row,
+  #touch-bottom-row {
     gap: 6px;
   }
 }

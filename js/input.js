@@ -46,6 +46,9 @@ class InputHandler {
   // Soft drop held state
   #softDropHeld = false;
 
+  // Touch state
+  #touchRepeatInterval = null;
+
   constructor() {
     this.#boundKeyDown = (e) => this.#onKeyDown(e);
     this.#boundKeyUp = (e) => this.#onKeyUp(e);
@@ -61,6 +64,7 @@ class InputHandler {
   attach() {
     document.addEventListener('keydown', this.#boundKeyDown);
     document.addEventListener('keyup', this.#boundKeyUp);
+    this.#attachTouchControls();
   }
 
   detach() {
@@ -102,6 +106,57 @@ class InputHandler {
         }
       }
     }
+  }
+
+  #attachTouchControls() {
+    const buttons = document.querySelectorAll('.touch-btn');
+    for (const btn of buttons) {
+      const action = btn.dataset.action;
+      if (!action) continue;
+
+      const isRepeatable = action === 'left' || action === 'right' || action === 'softDrop';
+
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        btn.classList.add('touch-active');
+        this.#callbacks[action]?.();
+
+        if (action === 'softDrop') this.#softDropHeld = true;
+
+        if (isRepeatable) {
+          clearInterval(this.#touchRepeatInterval);
+          this.#touchRepeatInterval = setInterval(() => {
+            this.#callbacks[action]?.();
+          }, action === 'softDrop' ? 50 : 80);
+        }
+      }, { passive: false });
+
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        btn.classList.remove('touch-active');
+        if (action === 'softDrop') this.#softDropHeld = false;
+        if (isRepeatable) {
+          clearInterval(this.#touchRepeatInterval);
+          this.#touchRepeatInterval = null;
+        }
+      }, { passive: false });
+
+      btn.addEventListener('touchcancel', () => {
+        btn.classList.remove('touch-active');
+        if (action === 'softDrop') this.#softDropHeld = false;
+        if (isRepeatable) {
+          clearInterval(this.#touchRepeatInterval);
+          this.#touchRepeatInterval = null;
+        }
+      });
+    }
+
+    // Also handle tap on overlay to start
+    const overlay = document.getElementById('overlay');
+    overlay?.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.#callbacks['start']?.();
+    }, { passive: false });
   }
 
   #onKeyDown(e) {
