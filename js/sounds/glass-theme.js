@@ -317,28 +317,15 @@ export const glassTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Glass stress — intermittent micro-cracks as pressure builds
+  // Glass stress — short micro-cracks only, no sustained elements
   const dur = 0.5 * ds;
-
-  // 4-6 intermittent stress cracks — like glass about to shatter
-  const cracks = 4 + Math.floor(Math.random() * 3);
+  const cracks = 3 + Math.floor(Math.random() * 2);
   for (let i = 0; i < cracks; i++) {
     const ct = t + (i / cracks) * dur * 0.85 + Math.random() * 0.02 * ds;
     sc.crackBurst(ct, 3000 + rowIndex * 800 + Math.random() * 2000,
       4 + Math.random() * 4, 0.003 + Math.random() * 0.003,
-      0.08 + Math.random() * 0.06);
+      0.06 + Math.random() * 0.04);
   }
-
-  // Subtle high-freq crinkle — 2-3 very quiet short bursts
-  const crinkles = 2 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < crinkles; i++) {
-    const ct = t + Math.random() * dur * 0.7;
-    sc.crackBurst(ct, 6000 + Math.random() * 3000, 3,
-      0.002, 0.03 + Math.random() * 0.02, 'highpass');
-  }
-
-  // Sub-bass tension
-  sc.ping(t, 45 + rowIndex * 8, dur, 0.08);
     },
 
   cellPop(sc, t, progress, pitch, ds) {

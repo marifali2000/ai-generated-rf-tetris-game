@@ -308,26 +308,8 @@ export const metalTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Metal stress — bending beam + discrete metallic plinks
+  // Metal stress — discrete metallic plinks only, no sustained grind
   const dur = 0.5 * ds;
-  const freq = (80 + rowIndex * 30) * pitch;
-
-  // Deep metallic groan (oscillator through resonant filter)
-  const osc = sc.ctx.createOscillator();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(freq, t);
-  osc.frequency.linearRampToValueAtTime(freq * 1.3, t + dur);
-  const filter = sc.ctx.createBiquadFilter();
-  filter.type = 'bandpass'; filter.frequency.value = freq * 2; filter.Q.value = 6;
-  const env = sc.ctx.createGain();
-  env.gain.setValueAtTime(0, t);
-  env.gain.linearRampToValueAtTime(0.12, t + 0.1 * ds);
-  env.gain.setValueAtTime(0.12, t + 0.35 * ds);
-  env.gain.linearRampToValueAtTime(0, t + dur);
-  osc.connect(filter); filter.connect(env); env.connect(sc.gain);
-  osc.start(t); osc.stop(t + dur + 0.05);
-
-  // Metallic plinks — discrete high-Q noise bursts (not continuous rattle)
   const plinks = 3 + Math.floor(Math.random() * 3);
   for (let i = 0; i < plinks; i++) {
     const pt = t + (i / plinks) * dur * 0.7 + Math.random() * 0.03 * ds;
@@ -335,9 +317,6 @@ export const metalTheme = {
       12 + Math.random() * 8, 0.008 + Math.random() * 0.005,
       0.04 + Math.random() * 0.03);
   }
-
-  // Sub vibration
-  sc.ping(t, 40 * pitch, dur, 0.08);
     },
 
   cellPop(sc, t, progress, pitch, ds) {

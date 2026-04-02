@@ -323,36 +323,17 @@ export const iceTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Ice stress — sharp discrete stress cracks + sub rumble
+  // Ice stress — sharp discrete cracks only, no sustained rumble
   const dur = 0.5 * ds;
-
-  // Short sharp crack burst at start
-  sc.crackBurst(t, 4000 + rowIndex * 500, 6, 0.004,
-    0.12, 'highpass');
-
-  // Second crack after a gap
+  sc.crackBurst(t, 4000 + rowIndex * 500, 6, 0.004, 0.10, 'highpass');
   sc.crackBurst(t + 0.15 * ds, 5000 + Math.random() * 2000, 5,
-    0.003, 0.10, 'highpass');
-
-  // 2-3 additional stress cracks spread across duration
+    0.003, 0.08, 'highpass');
   const extras = 2 + Math.floor(Math.random() * 2);
   for (let i = 0; i < extras; i++) {
     const ct = t + 0.1 * ds + (i / extras) * dur * 0.7 + Math.random() * 0.03 * ds;
     sc.crackBurst(ct, 3000 + Math.random() * 3000, 4 + Math.random() * 4,
-      0.003, 0.05 + Math.random() * 0.04);
+      0.003, 0.04 + Math.random() * 0.03);
   }
-
-  // Low sub-ice rumble (frozen lake groaning)
-  const sub = sc.ctx.createOscillator();
-  sub.type = 'sine';
-  sub.frequency.setValueAtTime(40 * pitch, t);
-  sub.frequency.linearRampToValueAtTime(30 * pitch, t + dur);
-  const se = sc.ctx.createGain();
-  se.gain.setValueAtTime(0, t);
-  se.gain.linearRampToValueAtTime(0.08, t + 0.08 * ds);
-  se.gain.linearRampToValueAtTime(0, t + dur);
-  sub.connect(se); se.connect(sc.gain);
-  sub.start(t); sub.stop(t + dur + 0.05);
     },
 
   cellPop(sc, t, progress, pitch, ds) {

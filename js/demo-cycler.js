@@ -10,10 +10,7 @@ const SETTLE_DURATION = 1000;    // ms to show applied setting before resuming
 /** Maps setting type → demo panel element IDs to highlight. */
 const HIGHLIGHT_IDS = {
   theme:  ['demo-theme'],
-  volume: ['demo-volume'],
   speed:  ['demo-speed'],
-  mute:   ['demo-mute-btn'],
-  unmute: ['demo-mute-btn'],
 };
 
 /** Maps theme value → display label for old→new indicator. */
@@ -34,22 +31,16 @@ const SPEED_INDEX_LABELS = { '0': '0.5×', '1': '1×', '2': '2×', '3': '4×' };
 
 const DEMO_SEQUENCE = [
   { type: 'theme', value: 'concrete', label: '🧱 Concrete Break' },
-  { type: 'volume', value: 40, label: '🔊 Volume: 40%' },
   { type: 'theme', value: 'crystal', label: '💎 Crystal Chime' },
   { type: 'speed', value: '1', label: '⚡ Speed: 1×' },
   { type: 'theme', value: 'metal', label: '⚙️ Metal Clang' },
-  { type: 'mute', label: '🔇 Sound: Muted' },
   { type: 'theme', value: 'ice', label: '❄️ Ice Crack' },
-  { type: 'unmute', label: '🔊 Sound: On' },
-  { type: 'volume', value: 90, label: '🔊 Volume: 90%' },
   { type: 'theme', value: 'wood', label: '🪵 Wood Snap' },
   { type: 'speed', value: '2', label: '⚡ Speed: 2×' },
   { type: 'theme', value: 'plastic', label: '🧩 Plastic Pop' },
-  { type: 'volume', value: 60, label: '🔊 Volume: 60%' },
   { type: 'theme', value: 'gold', label: '🥇 Gold Ring' },
   { type: 'speed', value: '3', label: '⚡ Speed: 4×' },
   { type: 'theme', value: 'silver', label: '🥈 Silver Chime' },
-  { type: 'volume', value: 70, label: '🔊 Volume: 70%' },
   { type: 'speed', value: '1', label: '⚡ Speed: 1×' },
   { type: 'theme', value: 'glass', label: '🔮 Glass Shatter' },
 ];
@@ -199,18 +190,10 @@ export class DemoCycler {
         const val = document.getElementById('demo-theme')?.value || 'glass';
         return THEME_LABELS[val] || val;
       }
-      case 'volume': {
-        const val = document.getElementById('demo-volume')?.value || '70';
-        return `🔊 Volume: ${val}%`;
-      }
       case 'speed': {
         const val = document.getElementById('demo-speed')?.value || '2';
         return `⚡ Speed: ${SPEED_INDEX_LABELS[val] || val}`;
       }
-      case 'mute':
-        return '🔊 Sound: On';
-      case 'unmute':
-        return '🔇 Sound: Muted';
       default:
         return '';
     }

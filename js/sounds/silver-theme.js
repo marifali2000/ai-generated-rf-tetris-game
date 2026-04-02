@@ -126,14 +126,13 @@ export const silverTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Silver stress — bright discrete plinks
+  // Silver stress — bright discrete plinks only
   const dur = 0.5 * ds;
   const cracks = 3 + Math.floor(Math.random() * 2);
   for (let i = 0; i < cracks; i++) {
     const ct = t + (i / cracks) * dur * 0.7 + Math.random() * 0.02 * ds;
     sc.crackBurst(ct, 3000 + Math.random() * 2000, 10 + Math.random() * 6, 0.004, 0.06);
   }
-  sc.ping(t, 2000 * pitch, dur * 0.5, 0.04);
     },
 
   cellPop(sc, t, progress, pitch, ds) {

@@ -124,22 +124,12 @@ export const plasticTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Plastic stress — creaking + quiet clicks
+  // Plastic stress — short clicks only, no sustained wobble
   const dur = 0.5 * ds;
-  // Quiet sine wobble
-  const osc = sc.ctx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime((300 + rowIndex * 50) * pitch, t);
-  osc.frequency.linearRampToValueAtTime((250 + rowIndex * 40) * pitch, t + dur);
-  const env = sc.ctx.createGain();
-  env.gain.setValueAtTime(0, t);
-  env.gain.linearRampToValueAtTime(0.08, t + 0.1 * ds);
-  env.gain.linearRampToValueAtTime(0, t + dur);
-  osc.connect(env); env.connect(sc.gain);
-  osc.start(t); osc.stop(t + dur + 0.05);
-  // Stress clicks
-  for (let i = 0; i < 2; i++) {
-    sc.crackBurst(t + Math.random() * dur * 0.6, 1500 + Math.random() * 1000, 3, 0.003, 0.05);
+  const clicks = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < clicks; i++) {
+    const ct = t + (i / clicks) * dur * 0.6 + Math.random() * 0.02 * ds;
+    sc.crackBurst(ct, 1500 + Math.random() * 1000, 3, 0.003, 0.05);
   }
     },
 

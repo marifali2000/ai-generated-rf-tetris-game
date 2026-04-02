@@ -495,9 +495,9 @@ kbd {
 /* Demo settings indicator (floating old → new transition) */
 #demo-setting-indicator {
   position: fixed;
-  top: 60px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 100;
   background: rgba(10, 25, 50, 0.92);
   border: 1px solid rgba(90, 176, 255, 0.5);
@@ -539,8 +539,8 @@ kbd {
 }
 
 @keyframes indicatorFade {
-  0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-  20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  0% { opacity: 0; transform: translate(-50%, -50%) translateY(10px); }
+  20% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
   80% { opacity: 1; }
   100% { opacity: 0; }
 }

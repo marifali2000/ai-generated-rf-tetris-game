@@ -376,6 +376,7 @@ class Game {
     // Eagerly init + resume audio context — avoids mobile delay
     this.#sound.init();
     this.#sound.warmUp();
+    this.#demoFrozen = false;
     this.#board.reset();
     this.#scoring.reset();
     this.#holdType = null;
@@ -861,6 +862,7 @@ class Game {
 
   /** Freeze blocks during demo setting changes — keeps rendering. */
   #demoFreeze() {
+    if (this.#state !== 'playing') return;
     this.#demoFrozen = true;
     this.#lastDropTime = performance.now();
     this.#lastAutoTime = performance.now();

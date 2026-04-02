@@ -126,24 +126,12 @@ export const woodTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Wood stress — creaking + quiet snaps
+  // Wood stress — short dry cracks, no sustained creak
   const dur = 0.5 * ds;
-  // Creaking oscillator (low sawtooth through lowpass)
-  const osc = sc.ctx.createOscillator();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime((60 + rowIndex * 15) * pitch, t);
-  osc.frequency.linearRampToValueAtTime((45 + rowIndex * 10) * pitch, t + dur);
-  const filter = sc.ctx.createBiquadFilter();
-  filter.type = 'lowpass'; filter.frequency.value = 250;
-  const env = sc.ctx.createGain();
-  env.gain.setValueAtTime(0, t);
-  env.gain.linearRampToValueAtTime(0.12, t + 0.1 * ds);
-  env.gain.linearRampToValueAtTime(0, t + dur);
-  osc.connect(filter); filter.connect(env); env.connect(sc.gain);
-  osc.start(t); osc.stop(t + dur + 0.05);
-  // A couple stress cracks
-  for (let i = 0; i < 2; i++) {
-    sc.crackBurst(t + Math.random() * dur * 0.6, 400 + Math.random() * 300, 1.5, 0.005, 0.06);
+  const cracks = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < cracks; i++) {
+    const ct = t + (i / cracks) * dur * 0.6 + Math.random() * 0.02 * ds;
+    sc.crackBurst(ct, 400 + Math.random() * 300, 1.5, 0.005, 0.06);
   }
     },
 

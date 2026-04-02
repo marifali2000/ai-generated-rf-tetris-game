@@ -140,12 +140,11 @@ export const goldTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Gold stress — swelling bell tone
+  // Gold stress — short metallic taps, no sustained bell
   const dur = 0.5 * ds;
   const base = [523, 659, 784, 1047][Math.min(rowIndex, 3)] * pitch;
-  const g = sc.ping(t, base, dur * 0.8, 0.08);
-  sc.ping(t + 0.05 * ds, base * 1.5, dur * 0.6, 0.03);
-  sc.addReverb(g, dur * 0.5, 0.2, 0.05);
+  sc.ping(t, base, 0.03, 0.06);
+  sc.ping(t + 0.08 * ds, base * 1.5, 0.025, 0.03);
     },
 
   cellPop(sc, t, progress, pitch, ds) {

@@ -349,45 +349,14 @@ export const concreteTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Concrete stress — deep structural groan + discrete pre-fracture snaps
+  // Concrete stress — short dry cracks only, no sustained groan
   const dur = 0.5 * ds;
-  const freq = (40 + rowIndex * 12) * pitch;
-
-  // Deep structural groan (oscillator, not noise — no "water" quality)
-  const osc = sc.ctx.createOscillator();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(freq, t);
-  osc.frequency.linearRampToValueAtTime(freq * 0.7, t + dur);
-  const filter = sc.ctx.createBiquadFilter();
-  filter.type = 'lowpass'; filter.frequency.value = 200;
-  const env = sc.ctx.createGain();
-  env.gain.setValueAtTime(0, t);
-  env.gain.linearRampToValueAtTime(0.15, t + 0.1 * ds);
-  env.gain.setValueAtTime(0.15, t + 0.3 * ds);
-  env.gain.linearRampToValueAtTime(0, t + dur);
-  osc.connect(filter); filter.connect(env); env.connect(sc.gain);
-  osc.start(t); osc.stop(t + dur + 0.05);
-
-  // 3-4 pre-fracture stress cracks
   const cracks = 3 + Math.floor(Math.random() * 2);
   for (let i = 0; i < cracks; i++) {
     const ct = t + (i / cracks) * dur * 0.8 + Math.random() * 0.03 * ds;
-    sc.crackBurst(ct, 200 + Math.random() * 200, 2,
+    sc.crackBurst(ct, 200 + Math.random() * 300, 2,
       0.008 + Math.random() * 0.006, 0.08 + Math.random() * 0.05);
   }
-
-  // Rebar stress tone
-  const rebar = sc.ctx.createOscillator();
-  rebar.type = 'square';
-  rebar.frequency.value = 120 * pitch;
-  const rf = sc.ctx.createBiquadFilter();
-  rf.type = 'bandpass'; rf.frequency.value = 150; rf.Q.value = 8;
-  const re = sc.ctx.createGain();
-  re.gain.setValueAtTime(0, t);
-  re.gain.linearRampToValueAtTime(0.04, t + 0.15 * ds);
-  re.gain.linearRampToValueAtTime(0, t + 0.45 * ds);
-  rebar.connect(rf); rf.connect(re); re.connect(sc.gain);
-  rebar.start(t); rebar.stop(t + dur);
     },
 
   cellPop(sc, t, progress, pitch, ds) {

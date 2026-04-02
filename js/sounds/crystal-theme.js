@@ -273,43 +273,16 @@ export const crystalTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Crystal resonance building — like a wine glass being rubbed
-  const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+  // Crystal stress — short crystalline ticks, no sustained tones
+  const dur = 0.5 * ds;
+  const notes = [523, 659, 784, 1047];
   const base = notes[Math.min(rowIndex, 3)] * pitch;
-  // Layer 1: Swelling pure tone
-  const osc = sc.ctx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.value = base;
-  const env = sc.ctx.createGain();
-  env.gain.setValueAtTime(0, t);
-  env.gain.linearRampToValueAtTime(0.12, t + 0.2 * ds);
-  env.gain.setValueAtTime(0.12, t + 0.3 * ds);
-  env.gain.exponentialRampToValueAtTime(0.001, t + 0.6 * ds);
-  osc.connect(env); env.connect(sc.gain);
-  sc.addReverb(env, 0.8 * ds, 0.3, 0.15);
-  osc.start(t); osc.stop(t + 0.65 * ds);
-
-  // Layer 2: Perfect fifth harmonic
-  const h5 = sc.ctx.createOscillator();
-  h5.type = 'sine';
-  h5.frequency.value = base * 1.5;
-  const h5e = sc.ctx.createGain();
-  h5e.gain.setValueAtTime(0, t + 0.05 * ds);
-  h5e.gain.linearRampToValueAtTime(0.05, t + 0.2 * ds);
-  h5e.gain.exponentialRampToValueAtTime(0.001, t + 0.55 * ds);
-  h5.connect(h5e); h5e.connect(sc.gain);
-  h5.start(t + 0.05 * ds); h5.stop(t + 0.6 * ds);
-
-  // Layer 3: High shimmer
-  const shim = sc.ctx.createOscillator();
-  shim.type = 'sine';
-  shim.frequency.value = base * 3;
-  const se = sc.ctx.createGain();
-  se.gain.setValueAtTime(0, t + 0.1 * ds);
-  se.gain.linearRampToValueAtTime(0.025, t + 0.25 * ds);
-  se.gain.exponentialRampToValueAtTime(0.001, t + 0.5 * ds);
-  shim.connect(se); se.connect(sc.gain);
-  shim.start(t + 0.1 * ds); shim.stop(t + 0.55 * ds);
+  // 2-3 short crystal ticks at harmonic frequencies
+  const ticks = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < ticks; i++) {
+    const ct = t + (i / ticks) * dur * 0.7 + Math.random() * 0.02 * ds;
+    sc.ping(ct, base * (1 + i * 0.5), 0.03, 0.06);
+  }
     },
 
   cellPop(sc, t, progress, pitch, ds) {
