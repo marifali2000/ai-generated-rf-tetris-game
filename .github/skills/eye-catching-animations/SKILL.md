@@ -1,18 +1,18 @@
 ---
 name: eye-catching-animations
-description: "Create dramatic, eye-catching game animations in canvas. Use for: line clear animations, row sweep effects, dissolve effects, shockwave, explosion particles, screen shake, hard drop impact, lock flash, level up celebration, game over collapse, cascade chain animations, combo visuals, visual drama, slow-motion effect, freeze frames, row highlight before clear, staggered cell removal, piece lock bounce."
+description: "Create dramatic, eye-catching game animations in canvas. Use for: clear/match animations, row sweep effects, dissolve effects, shockwave, explosion particles, screen shake, impact effects, lock flash, level up celebration, game over collapse, cascade chain animations, combo visuals, visual drama, slow-motion effect, freeze frames, row highlight before clear, staggered cell removal, element placement bounce."
 ---
 
 # Eye-Catching Animations Skill
 
 ## When to Use
-- Making line clears more dramatic and visible
-- Adding impact animations for hard drop or piece lock
-- Creating celebration effects for Tetris (4-line), combos, or level ups
+- Making clear/match events more dramatic and visible
+- Adding impact animations for drops, slams, or element placement
+- Creating celebration effects for big clears, combos, or level ups
 - Adding staggered / sequenced animation timing for visual drama
 - Implementing dissolve, sweep, shockwave, or explosion effects
 - Adding freeze-frames or slow-motion pauses for big moments
-- Enhancing cascade chain visuals (Block Blast gravity clears)
+- Enhancing cascade chain visuals (gravity/chain clears)
 - Polishing game over collapse animation
 
 ## Architecture
@@ -20,50 +20,50 @@ description: "Create dramatic, eye-catching game animations in canvas. Use for: 
 | File | Animation Role |
 |------|---------------|
 | `js/renderer.js` | All canvas effects — particles, flashes, row highlights, shockwaves, cell dissolve |
-| `js/game.js` | Triggers effects via `this.#renderer.triggerLineClearEffect()` and similar methods |
+| `js/game.js` | Triggers effects via renderer methods (e.g., `triggerClearEffect()`) |
 | `js/sound.js` | Audio must sync with visual beats (called alongside renderer triggers in game.js) |
 
-### Current Animation System
-| Effect | Trigger | Current Implementation |
+### Recommended Animation System
+| Effect | Trigger | Implementation |
 |--------|---------|----------------------|
-| Line clear | `triggerLineClearEffect()` | Particles from each cell + screen shake + blue-tinted flash |
-| Screen shake | Part of line clear | Random translate, decays at 0.9× per frame |
-| Flash overlay | Part of line clear | Blue-tinted `#c8d8ff`, alpha decays at 0.8× per frame |
-| Particles | Part of line clear | Round particles, gravity, life decay, MAX 250 |
-| Active piece glow | Every frame | `shadowBlur = 18` on active piece |
-| Ghost piece | Every frame | Dashed outline + faint fill |
-| Stars | Every frame | 60 twinkling background stars |
+| Row/match clear | `triggerClearEffect()` | Particles from each cell + screen shake + tinted flash |
+| Screen shake | Part of clear events | Random translate, decays at 0.9× per frame |
+| Flash overlay | Part of clear events | Tinted fill (e.g., `#c8d8ff`), alpha decays at 0.8× per frame |
+| Particles | Part of clear events | Round particles, gravity, life decay, MAX 250 |
+| Active element glow | Every frame | `shadowBlur` on active game element |
+| Ghost/preview | Every frame | Dashed outline + faint fill |
+| Background stars/particles | Every frame | Twinkling ambient background |
 | Score tween | Every frame | Smooth ease-out toward target value |
 
 ### Rendering Pipeline (draw order)
 ```
 1. Background gradient
-2. Twinkling stars
+2. Ambient effects (stars, particles, etc.)
 3. Vignette overlay
 4. Grid lines
-5. Locked board cells       ← row highlight/dissolve effects go HERE
-6. Ghost piece
-7. Active piece (with glow)
-8. Flash overlay            ← shockwave rings go HERE
-9. Particles                ← explosion particles go HERE
+5. Locked/placed board cells       ← row highlight/dissolve effects go HERE
+6. Ghost/preview elements
+7. Active game element (with glow)
+8. Flash overlay                   ← shockwave rings go HERE
+9. Particles                       ← explosion particles go HERE
 ```
 
 ## Design Principles
 
 1. **Visibility** — The player must SEE what happened. A cleared line should be visually obvious even in peripheral vision. Use bright flashes, expanding effects, and high contrast.
 2. **Timing & anticipation** — Don't just delete rows instantly. Show: highlight → pause briefly → dissolve/sweep → particles. This "wind-up → hit" pattern makes effects feel impactful.
-3. **Escalation** — Single line = subtle. Double = bigger. Triple = dramatic. Tetris = spectacular. Every effect should scale with the magnitude of the event.
+3. **Escalation** — Single clear = subtle. Double = bigger. Triple = dramatic. Max clear = spectacular. Every effect should scale with the magnitude of the event.
 4. **Screen-space impact** — Big events should affect the WHOLE screen (shockwaves, full-screen flash, heavy shake), not just the cleared row. This makes them feel important.
 5. **Performance budget** — Cap particles at 250–300. Use simple math (no per-pixel operations). Prefer `globalAlpha` fades over filter effects. Keep effects under 60 frames duration.
 6. **Rhythm** — Stagger effects over 3–8 frames rather than triggering all at once. This creates a visual "beat" that feels satisfying.
 
-## Line Clear — The Core Animation
+## Line/Row Clear — The Core Animation
 
-The most important animation in the game. Must be dramatic, visible, and feel rewarding.
+The most important animation in grid-based games. Must be dramatic, visible, and feel rewarding.
 
-### Recipe: Dramatic Line Clear (Full Implementation)
+### Recipe: Dramatic Clear (Full Implementation)
 
-This replaces the basic particle+flash with a multi-phase animation:
+This replaces a basic particle+flash with a multi-phase animation:
 
 **Phase 1 — Highlight (frames 0–8):** Cleared rows glow bright white, cells pulse  
 **Phase 2 — Sweep (frames 8–20):** A bright horizontal beam sweeps across each row  
@@ -71,7 +71,7 @@ This replaces the basic particle+flash with a multi-phase animation:
 **Phase 4 — Shockwave (frames 4–25):** Expanding ring radiates outward from center  
 **Phase 5 — Particles (frames 8+):** Explosion particles burst from cell positions  
 
-See [Line Clear Effects Reference](./references/line-clear-effects.md) for complete drop-in code.
+See [Clear Effects Reference](./references/line-clear-effects.md) for complete drop-in code.
 
 ### Quick Upgrade: Row Flash Before Clear
 
@@ -128,17 +128,17 @@ this.#shockwaves = this.#shockwaves.filter(sw => sw.alpha > 0.01);
 
 | Event | Flash | Shake | Particles/cell | Shockwave | Extra |
 |-------|-------|-------|----------------|-----------|-------|
-| Single (1 line) | 0.25 α | 4px | 4–6 | 1 small | — |
-| Double (2 lines) | 0.40 α | 8px | 6–8 | 1 medium | — |
-| Triple (3 lines) | 0.55 α | 12px | 8–10 | 2 staggered | Screen tint |
-| Tetris (4 lines) | 0.70 α | 18px | 10–14 | 2 large | Freeze frame (3f) + golden flash |
-| Cascade chain | +0.10 α/wave | +4px/wave | +2/wave | 1 per wave | Pitch-shifted ring color |
+| Single (1 row/match) | 0.25 α | 4px | 4–6 | 1 small | — |
+| Double (2 rows) | 0.40 α | 8px | 6–8 | 1 medium | — |
+| Triple (3 rows) | 0.55 α | 12px | 8–10 | 2 staggered | Screen tint |
+| Max clear (4+ rows) | 0.70 α | 18px | 10–14 | 2 large | Freeze frame (3f) + golden flash |
+| Cascade/chain | +0.10 α/wave | +4px/wave | +2/wave | 1 per wave | Escalating ring color |
 
 ## Other Game Event Animations
 
 See [Game Event Animations Reference](./references/game-event-animations.md) for:
 - **Hard drop impact** — Vertical slam lines + dust particles + directional shake
-- **Piece lock pulse** — Brief scale-up to 1.08x then snap back
+- **Element lock pulse** — Brief scale-up to 1.08x then snap back
 - **Level up celebration** — Ascending sparkle column + golden flash
 - **Game over collapse** — Row-by-row top-down dissolve with falling debris
 - **Combo counter** — Floating "+N COMBO" text that rises and fades
@@ -156,10 +156,10 @@ See [Particle Systems Reference](./references/particle-systems.md) for:
 ## Procedure
 
 1. **Identify the target event** — Which game moment needs more drama?
-2. **Read current renderer code** — Check `triggerLineClearEffect()` and `drawFrame()` in `js/renderer.js`
+2. **Read current renderer code** — Check the clear/event effect methods and `drawFrame()` in `js/renderer.js`
 3. **Choose effects** — Pick from recipes above. Layer multiple effects for big events.
 4. **Add state fields** — New effects need tracking arrays/numbers on the `Renderer` class (e.g., `#shockwaves = []`, `#rowFlashData = []`)
-5. **Trigger in game.js** — Call new renderer methods from `#lockPiece()` or other game events
+5. **Trigger in game.js** — Call new renderer methods from game event handlers (e.g., after row clears, drops, or placements)
 6. **Insert in draw pipeline** — Add rendering at the correct z-order position (see pipeline above)
 7. **Scale with magnitude** — Use the event count/type to vary intensity
 8. **Test at 60fps** — Verify no frame drops with DevTools Performance panel

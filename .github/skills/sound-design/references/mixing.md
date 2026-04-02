@@ -1,6 +1,6 @@
 # Mixing & Mastering Reference
 
-Volume balance, dynamic range, and overall audio polish for the Tetris game.
+Volume balance, dynamic range, and overall audio polish for browser-based canvas games.
 
 ## Volume Hierarchy
 
@@ -20,7 +20,7 @@ Not all sounds are equal. Frequent quiet sounds + rare loud sounds = balanced mi
 | Pause/unpause | Rare | 0.10–0.15 | State change |
 | Game over (collapse) | Rare | 0.50–0.70 | Dramatic |
 
-**Rule**: Frequent sounds (move, rotate) are quiet. Rare rewards (level up, tetris) are louder. This prevents fatigue and makes rewards feel special.
+**Rule**: Frequent sounds (move, rotate) are quiet. Rare rewards (level up, max clear) are louder. This prevents fatigue and makes rewards feel special.
 
 ## Master Volume Setup
 

@@ -1,6 +1,6 @@
 # Layout & Responsive Design Reference
 
-## Current Layout Structure
+## Recommended Layout Structure
 
 ```
 body (flex column, centered)
@@ -10,13 +10,13 @@ body (flex column, centered)
 │   │       ├── h3 "HOLD"
 │   │       └── canvas#hold-canvas (120×90)
 │   ├── #center-panel (relative positioned)
-│   │   ├── canvas#game-canvas (384×768 = 16cols × 32rows × 24px)
+│   │   ├── canvas#game-canvas (cols × rows × cellSize)
 │   │   └── #overlay (absolute, inset 0)
 │   │       └── #overlay-text
 │   └── #right-panel (140px wide)
-│       ├── #next-section
+│       ├── #preview-section
 │       │   ├── h3 "NEXT"
-│       │   └── canvas#next-canvas (120×270)
+│       │   └── canvas#preview-canvas (120×270)
 │       └── #score-section
 │           ├── SCORE → #score-value
 │           ├── LEVEL → #level-value
@@ -24,13 +24,13 @@ body (flex column, centered)
 └── #controls-info (flex row, wrapped)
 ```
 
-## Canvas Dimensions
+## Canvas Dimensions (Example)
 
 | Canvas | Width | Height | Purpose |
 |--------|-------|--------|---------|
-| `#game-canvas` | 384px | 768px | Main game board (16×32 cells at 24px) |
-| `#hold-canvas` | 120px | 90px | Hold piece preview |
-| `#next-canvas` | 120px | 270px | Next 3 pieces preview (3 × 90px slots) |
+| `#game-canvas` | 384px | 768px | Main game board (configurable cols×rows at cellSize px) |
+| `#hold-canvas` | 120px | 90px | Hold/swap element preview |
+| `#preview-canvas` | 120px | 270px | Next elements preview (3 × 90px slots) |
 
 ## Responsive Breakpoint
 

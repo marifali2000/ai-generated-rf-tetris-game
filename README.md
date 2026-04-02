@@ -143,7 +143,7 @@ js/
 
 This entire game was built using **GitHub Copilot** with custom skills and instructions:
 
-1. **Scaffolded** the project structure with a prompt file that defined the full Tetris specification
+1. **Scaffolded** the project structure with a prompt file that defined the full game specification
 2. **Generated** all game logic (board, pieces, SRS rotation, collision, scoring) through AI-assisted coding
 3. **Designed** procedural sound effects using a dedicated sound design skill with Web Audio API recipes
 4. **Created** dramatic animations using an eye-catching animations skill with particle systems and multi-phase effects
@@ -151,6 +151,48 @@ This entire game was built using **GitHub Copilot** with custom skills and instr
 6. **Added** mobile touch controls and responsive CSS for phone/tablet play
 7. **Refactored** to enforce coding guidelines — max 1,000 lines/file, max 50 lines/function, SOLID principles throughout
 8. **Extended** with 9 visual + sound themes using Strategy pattern and dispatch tables
+
+## Reusable GitHub Copilot Skills
+
+This repo includes a full set of **GitHub Copilot custom skills, instructions, and prompts** designed to be reusable for building any browser-based canvas game — not just Tetris. If you're building a falling-block game, match-3 puzzle, grid-based arcade game, or any HTML5 Canvas project, you can copy the `.github/` folder into your own repo and Copilot will use these skills automatically.
+
+### Skills (`.github/skills/`)
+
+| Skill | Description |
+|-------|-------------|
+| **eye-catching-animations** | Multi-phase clear animations, shockwaves, screen shake, dissolve effects, freeze frames, particle bursts, level-up celebrations, game-over collapse |
+| **next-level-game** | Comprehensive enhancement guide: DAS/ARR controls, combo systems, back-to-back bonuses, settings panel, high scores, input buffering, touch controls, statistics |
+| **sound-design** | Addictive audio design: layered sounds, harmonic tuning, reverb, pitch randomization, combo escalation, mixing/mastering, psychoacoustic tricks |
+| **sound-effects** | Web Audio API fundamentals: oscillators, noise buffers, filters, envelopes, procedural impact/shatter/click/chime sounds, volume control |
+| **canvas-game** | Core game development: grid systems, collision detection, element definitions, rotation/wall kicks, scoring templates, gravity progression, game loop patterns |
+| **ui-ux-enhancement** | Visual polish: gradient cells, glow effects, dark themes, responsive layout, overlay transitions, HUD design, ghost/preview elements, background effects |
+
+Each skill includes a `SKILL.md` with recipes and a `references/` folder with drop-in code snippets.
+
+### Instructions (`.github/instructions/`)
+
+| File | Applies To | Purpose |
+|------|-----------|---------|
+| `canvas.instructions.md` | `js/renderer.js` | Canvas rendering pipeline, grid layout, animation patterns, HUD guidelines |
+| `javascript.instructions.md` | `**/*.js` | ES module conventions, class patterns, code quality standards |
+| `sound.instructions.md` | `js/sound.js` | Web Audio API setup, audio node types, sound design patterns, mixing rules |
+
+### Prompts (`.github/prompts/`)
+
+| Prompt | Purpose |
+|--------|---------|
+| `scaffold-game.prompt.md` | Generate a complete game skeleton (board, elements, loop, input, renderer, scoring) |
+| `add-sound-effects.prompt.md` | Add procedural Web Audio API sounds with theme support |
+| `add-particles.prompt.md` | Add particle system for clear/shatter animations |
+| `fix-or-enhance.prompt.md` | Debug or add features following project conventions |
+
+### How to Use in Your Own Project
+
+1. Copy the `.github/` folder into your canvas game repository
+2. Copilot will automatically apply instructions based on `applyTo` patterns
+3. Skills activate when your request matches their description keywords
+4. Use `@workspace /scaffold-game` to generate a game skeleton from scratch
+5. Adapt the `copilot-instructions.md` game design template to your specific game
 
 ### Tech Stack
 

@@ -70,7 +70,7 @@ class SparkParticle {
 
 ## Debris Chunk (Shattering, Heavy Effects)
 
-Larger rectangular pieces that tumble with rotation:
+Larger rectangular chunks that tumble with rotation:
 
 ```javascript
 class DebrisParticle {
@@ -162,7 +162,7 @@ class ConfettiParticle {
 }
 ```
 
-**Use for:** Tetris clear celebrations, level up, high scores.
+**Use for:** Max clear celebrations, level up, high scores.
 
 ## Emission Patterns
 

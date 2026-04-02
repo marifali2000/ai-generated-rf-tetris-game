@@ -366,47 +366,31 @@ export const glassTheme = {
     },
 
   rowCleared(sc, t, rowIndex, pitch, ds) {
-  // Glass pane shattering L→R: sharp discrete cracks only, no continuous noise
-  const dur = 0.8 * ds;
+  // Glass rod shattering L→R — broadband noise, no metallic tones
+  // Visual sweep: 0.15*ds seconds across 10 cells
+  const sweepDur = 0.15 * ds;
+  const ctx = sc.ctx;
 
-  // Initial impact crack at left edge — loud, sharp
-  sc.crackBurst(t, 4500 * pitch, 8, 0.004, 0.45);
-  sc.ping(t, 3200 * pitch, 0.06, 0.08);
+  // Initial crack — broadband high-freq snap
+  _glassSnap(ctx, sc, t, 0.005, 0.45);
 
-  // Sub-bass thud at impact point
-  sc.ping(t, 55 + rowIndex * 8, dur * 0.25, 0.15);
-
-  // 10-cell fracture cascade L→R — each cell is a discrete crack
+  // 10-cell shatter cascade L→R — each cell is a burst of glass noise
   for (let i = 0; i < 10; i++) {
-    const ct = t + ((i + 1) / 11) * dur * 0.7 + (Math.random() - 0.5) * 0.006 * ds;
-    const freq = (3000 + Math.random() * 5000) * pitch;
-    // Main crack: short noise burst through high-Q bandpass
-    sc.crackBurst(ct, freq, 6 + Math.random() * 6,
-      0.003 + Math.random() * 0.003, 0.22 + Math.random() * 0.18);
-    // Glass resonance ring from each crack point
-    sc.ping(ct + 0.002, freq * 0.8,
-      0.03 + Math.random() * 0.03, 0.04 + Math.random() * 0.03);
-    // Secondary micro-crack (60% chance)
-    if (Math.random() > 0.4) {
-      const mt = ct + 0.004 + Math.random() * 0.008;
-      sc.crackBurst(mt, (5000 + Math.random() * 4000) * pitch,
-        8, 0.002, 0.10 + Math.random() * 0.08);
-    }
+    const ct = t + (i / 9) * sweepDur;
+    const vol = 0.20 + Math.random() * 0.10;
+    // Broadband shatter fragment — highpass noise, wide spectrum
+    _glassShardNoise(ctx, sc, ct, 0.015 + Math.random() * 0.01, vol);
   }
 
-  // Shard tinkles trailing behind fracture front
-  const shards = 6 + Math.floor(Math.random() * 4);
+  // Final break at right edge
+  _glassSnap(ctx, sc, t + sweepDur, 0.006, 0.35);
+
+  // 3-4 falling shard tinkles after — very short high-freq noise puffs
+  const shards = 3 + Math.floor(Math.random() * 2);
   for (let i = 0; i < shards; i++) {
-    const st = t + (i / shards) * dur * 0.7 + 0.02 * ds + Math.random() * 0.015;
-    sc.ping(st, (5000 + Math.random() * 6000) * pitch,
-      0.03 + Math.random() * 0.04, 0.03 + Math.random() * 0.03);
-  }
-
-  // Late falling debris — quiet tinkles
-  for (let i = 0; i < 4; i++) {
-    const dt = t + dur * 0.55 + Math.random() * dur * 0.35;
-    sc.ping(dt, (6000 + Math.random() * 6000) * pitch,
-      0.015 + Math.random() * 0.02, 0.015 + Math.random() * 0.015);
+    const st = t + sweepDur + 0.01 + Math.random() * 0.06 * ds;
+    _glassShardNoise(ctx, sc, st, 0.008 + Math.random() * 0.006,
+      0.04 + Math.random() * 0.03);
   }
     },
 };
@@ -561,5 +545,43 @@ function _glassReverbTail(sc, t, intensity, totalDur, vol, comboShift) {
   reverbEnv.connect(sc.gain);
   reverbSrc.start(t + 0.02);
   reverbSrc.stop(t + 0.1);
+}
+
+// ─── rowCleared helpers ────────────────────────────────────────────
+
+/** Sharp initial crack — very short broadband highpass noise burst. */
+function _glassSnap(ctx, sc, t, len, vol) {
+  const src = ctx.createBufferSource();
+  src.buffer = sc.createNoiseBuffer(len);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 3000 + Math.random() * 2000;
+  hp.Q.value = 0.7;
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(vol, t);
+  env.gain.exponentialRampToValueAtTime(0.001, t + len);
+  src.connect(hp);
+  hp.connect(env);
+  env.connect(sc.gain);
+  src.start(t);
+  src.stop(t + len + 0.002);
+}
+
+/** Glass fragment burst — short highpass noise with randomised cutoff. */
+function _glassShardNoise(ctx, sc, t, len, vol) {
+  const src = ctx.createBufferSource();
+  src.buffer = sc.createNoiseBuffer(len);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 4000 + Math.random() * 5000;
+  hp.Q.value = 0.5;
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(vol, t);
+  env.gain.exponentialRampToValueAtTime(0.001, t + len);
+  src.connect(hp);
+  hp.connect(env);
+  env.connect(sc.gain);
+  src.start(t);
+  src.stop(t + len + 0.002);
 }
 

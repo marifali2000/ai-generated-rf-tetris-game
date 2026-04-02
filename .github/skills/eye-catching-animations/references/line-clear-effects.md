@@ -1,8 +1,8 @@
-# Line Clear Effects — Drop-in Code
+# Clear Effects — Drop-in Code
 
-Complete implementation for dramatic, multi-phase line clear animations.
+Complete implementation for dramatic, multi-phase row/match clear animations.
 
-## Full Dramatic Line Clear
+## Full Dramatic Clear
 
 ### Step 1: Add State Fields to Renderer
 
@@ -17,26 +17,26 @@ Add these private fields to the `Renderer` class:
 #freezeFrames = 0;         // Skip N frames of game logic (visual pause)
 ```
 
-### Step 2: Replace `triggerLineClearEffect()`
+### Step 2: Replace `triggerClearEffect()`
 
 ```javascript
-triggerLineClearEffect(clearedRows, clearedRowColors) {
+triggerClearEffect(clearedRows, clearedRowColors) {
   const count = clearedRows.length;
-  const isTetris = count >= 4;
+  const isMaxClear = count >= 4;
 
   // Screen shake — scales with count
   this.#shakeAmount = 3 + count * 4;
 
   // Flash — brighter for bigger clears
   this.#flashAlpha = 0.2 + count * 0.12;
-  if (isTetris) this.#flashAlpha = 0.7;
+  if (isMaxClear) this.#flashAlpha = 0.7;
 
   // Phase 1: Row highlight flashes
   for (let i = 0; i < clearedRows.length; i++) {
     this.#rowFlashData.push({
       row: clearedRows[i],
       alpha: 1.0,
-      color: isTetris ? '#ffe080' : '#ffffff',
+      color: isMaxClear ? '#ffe080' : '#ffffff',
     });
   }
 
@@ -49,7 +49,7 @@ triggerLineClearEffect(clearedRows, clearedRowColors) {
       width: CELL_SIZE * 3,
       alpha: 0.8,
       delay: i * 2,   // stagger frames
-      color: isTetris ? '#ffe080' : '#80c0ff',
+      color: isMaxClear ? '#ffe080' : '#80c0ff',
     });
   }
 
@@ -83,12 +83,12 @@ triggerLineClearEffect(clearedRows, clearedRowColors) {
     radius: 5,
     maxRadius: 280 + count * 40,
     alpha: 0.5 + count * 0.08,
-    color: isTetris ? '#ffe080' : '#80c0ff',
+    color: isMaxClear ? '#ffe080' : '#80c0ff',
     lineWidth: 2 + count,
   });
 
-  if (isTetris) {
-    // Second shockwave offset for Tetris
+  if (isMaxClear) {
+    // Second shockwave offset for max clear
     this.#shockwaves.push({
       cx: (COLS * CELL_SIZE) / 2,
       cy: centerY,
@@ -215,7 +215,7 @@ if (this.#shockwaves.length > 0) {
 In `game.js`, add a freeze frame check. Before applying gravity in `#gameLoop()`:
 
 ```javascript
-// Check for visual freeze frames (dramatic pause on Tetris)
+// Check for visual freeze frames (dramatic pause on max clear)
 if (this.#renderer.freezeFrames > 0) {
   this.#renderer.freezeFrames--;
   this.#render();
@@ -230,9 +230,9 @@ get freezeFrames() { return this.#freezeFrames; }
 set freezeFrames(v) { this.#freezeFrames = v; }
 ```
 
-## Tetris-Specific Golden Flash
+## Max Clear Golden Flash
 
-For 4-line clears, use a golden color palette instead of blue:
+For maximum clears (4+ rows), use a golden color palette instead of blue:
 
 ```javascript
 // In triggerLineClearEffect, when count >= 4:
@@ -245,13 +245,13 @@ ctx.fillStyle = flashColor;
 
 ## Cascade Chain Visuals
 
-When Block Blast gravity causes chain clears, each wave should escalate:
+When gravity causes chain clears, each wave should escalate:
 
 ```javascript
-// Track cascade wave count in triggerLineClearEffect
+// Track cascade wave count in triggerClearEffect
 #cascadeWave = 0;
 
-triggerLineClearEffect(clearedRows, clearedRowColors, cascadeWave = 0) {
+triggerClearEffect(clearedRows, clearedRowColors, cascadeWave = 0) {
   // Escalate colors per wave
   const waveColors = ['#80c0ff', '#80ffb0', '#ffe080', '#ff8080'];
   const ringColor = waveColors[Math.min(cascadeWave, waveColors.length - 1)];

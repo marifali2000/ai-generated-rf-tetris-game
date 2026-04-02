@@ -85,9 +85,9 @@ if (this.#slamLines.length > 0) {
 }
 ```
 
-## Piece Lock Pulse
+## Element Lock Pulse
 
-Brief scale-up to 1.08× then snap back when a piece locks. Creates a satisfying "thud" feel.
+Brief scale-up to 1.08× then snap back when an element locks. Creates a satisfying "thud" feel.
 
 ```javascript
 // Add to Renderer:
@@ -110,7 +110,7 @@ triggerLockPulse(piece) {
   this.#lockPulse = { cells, scale: 1.12, alpha: 0.7 };
 }
 
-// In drawFrame(), after drawing active piece:
+// In drawFrame(), after drawing active element:
 if (this.#lockPulse) {
   const lp = this.#lockPulse;
   ctx.save();

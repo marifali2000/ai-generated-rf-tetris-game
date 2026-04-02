@@ -6,11 +6,11 @@ The `drawFrame()` method in `js/renderer.js` draws in this strict order:
 
 1. **Background fill** — Solid or gradient canvas fill
 2. **Grid lines** — Subtle cell dividers
-3. **Locked board cells** — Previously placed pieces
-4. **Ghost piece** — Drop preview (30% alpha or dashed outline)
-5. **Active piece** — Currently falling piece
-6. **Flash overlay** — White flash on line clear (decays per frame)
-7. **Particles** — Scatter effects from cleared lines
+3. **Locked/placed board cells** — Previously placed elements
+4. **Ghost/preview element** — Drop/placement preview (30% alpha or dashed outline)
+5. **Active element** — Currently active game element
+6. **Flash overlay** — White flash on clear events (decays per frame)
+7. **Particles** — Scatter effects from cleared rows/matches
 
 New effects must be inserted at the correct position in this pipeline.
 
@@ -45,8 +45,8 @@ decay = 0.9                           (multiplied per frame)
 Apply as `ctx.translate(randomX, randomY)` before drawing. Higher decay values = longer shake.
 
 ### Enhancements
-- Scale shake with game events: Tetris (4 lines) = strongest, single line = subtle
-- Hard drop shake: Brief, directional (mostly vertical)
+- Scale shake with game events: Max clear (4+ rows) = strongest, single = subtle
+- Hard drop/slam shake: Brief, directional (mostly vertical)
 - Game over: Long rumble with slow decay (0.95)
 
 ## Common Animation Techniques
@@ -76,7 +76,7 @@ if (this.#flashAlpha > 0.01) {
 ```
 
 ### Spin/Scale on Lock
-Briefly scale the piece to 1.05x then back to 1.0x when it locks:
+Briefly scale the element to 1.05x then back to 1.0x when it locks:
 ```javascript
 ctx.save();
 ctx.translate(centerX, centerY);

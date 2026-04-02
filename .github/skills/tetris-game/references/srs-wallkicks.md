@@ -1,5 +1,7 @@
 # SRS Wall Kick Offset Data
 
+Reference data for Super Rotation System (SRS) wall kicks, commonly used in falling-block puzzle games.
+
 ## Standard Pieces (J, L, S, T, Z)
 
 ### Rotation State → 0=spawn, 1=CW, 2=180°, 3=CCW

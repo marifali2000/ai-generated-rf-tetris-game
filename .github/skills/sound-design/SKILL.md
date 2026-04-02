@@ -21,15 +21,15 @@ description: "Design and refine addictive, satisfying game sounds using Web Audi
 | `js/sound.js` | `SoundEngine` class — all procedural audio via Web Audio API |
 | `js/game.js` | Calls sound methods at game events (spawn, lock, clear, drop, rotate, game over, level up) |
 
-### Current Sound Events
-| Method | Event | Current Style |
+### Typical Sound Events
+| Method | Event | Style |
 |--------|-------|---------------|
-| `playSpawn()` | Piece enters from top | Bouncy sine sweep "poing" |
-| `playRotate()` | Piece rotates | Crystalline sine click |
-| `playLock()` | Piece locks to board | Short bandpass noise snap |
-| `playLineClear(count)` | Lines cleared (1–4) | Multi-layered: rumble + crunch + glass shatter + debris |
-| `playHardDrop()` | Piece hard drops | Low sine thud + noise burst |
-| `playLevelUp()` | Level advances | Two ascending tones + noise crack |
+| `playSpawn()` | Element enters play area | Bouncy sine sweep |
+| `playRotate()` | Element rotates/transforms | Crystalline sine click |
+| `playLock()` | Element locks/places | Short bandpass noise snap |
+| `playLineClear(count)` | Rows/matches cleared (1–4+) | Multi-layered: rumble + crunch + shatter + debris |
+| `playHardDrop()` | Element fast drops | Low sine thud + noise burst |
+| `playLevelUp()` | Level advances | Ascending tones + noise crack |
 | `playGameOver()` | Game ends | Descending sine sweep + long noise decay |
 
 ### Audio Graph Basics
@@ -44,7 +44,7 @@ description: "Design and refine addictive, satisfying game sounds using Web Audi
 1. **Instant feedback** — Sound must trigger within 1-2ms of the action. No perceptible delay.
 2. **Musical intervals** — Use harmonically related frequencies (octaves, fifths, major thirds). Random frequencies feel chaotic; musical ones feel intentional and satisfying.
 3. **Layering** — Every great game sound has 2-4 layers: a body (fundamental), a transient (attack click), a texture (noise/shimmer), and a tail (reverb/decay).
-4. **Positive reinforcement escalation** — Bigger achievements = richer, higher-pitched, longer sounds. Single clear < Double < Triple < Tetris should be an audible progression.
+4. **Positive reinforcement escalation** — Bigger achievements = richer, higher-pitched, longer sounds. Single clear < Double < Triple < Max clear should be an audible progression.
 5. **Micro-variation** — Randomize pitch ±5%, timing ±10ms, filter Q slightly. Prevents listener fatigue and makes sounds feel alive.
 6. **Satisfying envelopes** — Sharp attack (< 5ms) + smooth decay. Snappy sounds feel responsive. Mushy attacks feel laggy.
 7. **Harmonic sweetness** — Add subtle octave overtones or fifth harmonics to tonal sounds. A 440Hz tone with a quiet 880Hz and 1320Hz layer sounds rich and warm.

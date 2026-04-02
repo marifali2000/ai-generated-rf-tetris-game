@@ -1,9 +1,9 @@
-# Piece Color Reference
+# Element Color Reference
 
-## Base Piece Colors
+## Base Element Colors (Example: Falling-Block Game)
 
-| Piece | Color Name | Hex | RGB |
-|-------|-----------|-----|-----|
+| Element | Color Name | Hex | RGB |
+|---------|-----------|-----|-----|
 | I | Cyan | `#00f0f0` | `0, 240, 240` |
 | O | Yellow | `#f0f000` | `240, 240, 0` |
 | T | Purple | `#a000f0` | `160, 0, 240` |
@@ -15,8 +15,8 @@
 ## Derived Colors for Visual Effects
 
 ### Highlight (lighter, for top/left bevel or glow)
-| Piece | Highlight Hex | Usage |
-|-------|-------------|-------|
+| Element | Highlight Hex | Usage |
+|---------|-------------|-------|
 | I | `#66ffff` | Top/left edge, glow |
 | O | `#ffff66` | Top/left edge, glow |
 | T | `#cc66ff` | Top/left edge, glow |
@@ -26,8 +26,8 @@
 | L | `#ffcc66` | Top/left edge, glow |
 
 ### Shadow (darker, for bottom/right bevel)
-| Piece | Shadow Hex | Usage |
-|-------|-----------|-------|
+| Element | Shadow Hex | Usage |
+|---------|-----------|-------|
 | I | `#009090` | Bottom/right edge |
 | O | `#909000` | Bottom/right edge |
 | T | `#600090` | Bottom/right edge |

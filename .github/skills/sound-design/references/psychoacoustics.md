@@ -29,10 +29,10 @@ Higher pitch unconsciously signals "things are getting better":
 
 | Event | Pitch Strategy |
 |-------|---------------|
-| Single line clear | C5 (523 Hz) |
+| Single clear | C5 (523 Hz) |
 | Double | D5 (587 Hz) |
 | Triple | E5 (659 Hz) |
-| Tetris (4-line) | G5 (784 Hz) |
+| Max clear (4+) | G5 (784 Hz) |
 | Consecutive clears | +8% per combo |
 | Level up | Full ascending arpeggio |
 
@@ -87,7 +87,7 @@ subGain.gain.setValueAtTime(0.15, t); // subtle volume
 subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
 ```
 
-Use for: hard drop, piece lock, game over rumble.
+Use for: hard drop, element placement, game over rumble.
 
 ## 6. Layered Transient Design
 
@@ -136,7 +136,7 @@ onLineClear(count) {
 A sound in silence is less impactful than a sound preceded by a tiny gap.
 
 - Before a big impact (hard drop), briefly duck other audio by 50% for 20ms
-- After line clear, leave 50-100ms of relative quiet before spawn sound
+- After a clear event, leave 50-100ms of relative quiet before spawn sound
 - Game over: brief silence (50ms) before the collapse begins
 
 ```javascript
@@ -145,13 +145,13 @@ this.#masterGain.gain.setValueAtTime(this.#volume * 0.5, t - 0.02);
 this.#masterGain.gain.setValueAtTime(this.#volume, t + 0.05);
 ```
 
-## 9. The "Tetris Clear" Special Treatment
+## 9. The "Max Clear" Special Treatment
 
-A 4-line clear (Tetris) is the peak achievement. Its sound should be noticeably different and more rewarding than a single/double/triple:
+A maximum clear (e.g., 4-line clear) is the peak achievement. Its sound should be noticeably different and more rewarding than smaller clears:
 
 - 2x longer duration
 - Major chord (not just a tone)
 - Brighter filter (higher Q, higher cutoff)
 - Screen shake reinforces the sound
 - Brief "impact silence" before the celebration sound
-- Layered shatter from all 4 rows cascading
+- Layered shatter from all cleared rows cascading

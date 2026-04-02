@@ -1,16 +1,16 @@
-# Tetris Game — Project Guidelines
+# Browser-Based Canvas Game — Project Guidelines
 
 ## Overview
-Browser-based Tetris game with breaking/shattering sound effects. Must work in all modern browsers (Chrome, Firefox, Safari, Edge) with zero dependencies — pure HTML5, CSS3, and vanilla JavaScript only.
+Browser-based game built with HTML5 Canvas, CSS3, and vanilla JavaScript. Must work in all modern browsers (Chrome, Firefox, Safari, Edge) with zero dependencies. Uses Web Audio API for procedural sound effects — no external audio files needed.
 
 ## Architecture
 - **Single-page app**: One `index.html` with embedded or linked CSS/JS
-- **Canvas rendering**: Use `<canvas>` element for the game board (10 columns × 20 rows)
-- **Web Audio API**: Generate sound effects procedurally — no external audio files needed
+- **Canvas rendering**: Use `<canvas>` element for the game board (configurable grid: e.g., 10 columns × 20 rows)
+- **Web Audio API**: Generate sound effects procedurally using oscillators and noise buffers
 - **Module pattern**: Use ES modules (`type="module"`) for code organization
 
 ### File Structure
-This is the recommended file structure for the project. However I would like to see if you can suggest any improvements to it. Also these can be the parent classes for the project, but feel free to add more classes or modules as needed to keep the code organized and maintainable. The main goal is to ensure that each file has a clear responsibility and that the overall structure is easy to navigate. No file should be more than 1000 lines, and no function should be longer than 50 lines — break into smaller helper functions as needed. Follow SOLID principles where applicable, and ensure that the code is modular and reusable. SOLID principles include:
+Recommended modular file structure. Each file should have a clear responsibility. The main goal is to ensure that the overall structure is easy to navigate. No file should be more than 1000 lines, and no function should be longer than 50 lines — break into smaller helper functions as needed. Follow SOLID principles where applicable, and ensure that the code is modular and reusable. SOLID principles include:
 - Single Responsibility Principle: Each class or module should have one responsibility or reason to change.
 - Open/Closed Principle: Software entities (classes, modules, functions) should be open for extension but closed for modification.
 - Liskov Substitution Principle: Objects of a superclass should be replaceable with objects of a subclass without affecting the correctness of the program.
@@ -20,37 +20,40 @@ This is the recommended file structure for the project. However I would like to 
 ```
 index.html          — Entry point, canvas element, minimal UI
 css/style.css       — Game styling, responsive layout, dark theme
-js/game.js          — Main game loop, state management
-js/board.js         — Board grid, collision detection, line clearing
-js/piece.js         — Tetromino definitions, rotation (SRS)
-js/input.js         — Keyboard input handling
-js/sound.js         — Web Audio API sound effects (breaking, drop, rotate, clear)
-js/renderer.js      — Canvas drawing, animations, particle effects
-js/scoring.js       — Score, level, lines tracking
+js/game.js          — Main game loop, state management, event orchestration
+js/board.js         — Board/grid data structure, collision detection, row/match clearing
+js/piece.js         — Game element definitions, shapes, rotation systems
+js/input.js         — Keyboard (and optional touch) input handling
+js/sound.js         — Web Audio API sound effects engine, theme support
+js/renderer.js      — Canvas drawing, animations, particle effects, visual feedback
+js/scoring.js       — Score calculation, level progression, statistics tracking
 ```
+Feel free to add more modules as needed (e.g., `js/autoplay.js` for AI/demo mode, `js/particles.js` for complex particle systems, `js/sounds/` directory for multiple sound themes).
 
-## Tetris Specification (Guideline-compliant)
-- **Grid**: 10 wide × 20 tall (plus 2 hidden rows above)
-- **Pieces**: I, O, T, S, Z, J, L with standard colors (cyan, yellow, purple, green, red, blue, orange)
-- **Rotation**: Super Rotation System (SRS) with wall kicks
-- **Randomizer**: 7-bag random generator (one of each piece per bag)
-- **Gravity**: Pieces fall faster as level increases
-- **Lock delay**: 0.5 seconds after landing before piece locks
-- **Scoring**: Single=10, Double=30, Triple=70, Tetris=150 (multiplied by level)
-- **Levels**: Advance every 10 lines cleared
-- **Hold piece**: Player can hold one piece (swap once per drop)
-- **Next piece preview**: Show next 3 pieces
-- **Ghost piece**: Show where piece will land (translucent)
+## Game Design Template
+Adapt these parameters to your specific game:
+- **Grid**: Configurable width × height (e.g., 10×20 for Tetris, 8×8 for match-3, custom for puzzle games)
+- **Game elements**: Define shapes, colors, and behaviors for your game pieces/tiles
+- **Rotation/Transformation**: Implement appropriate transformation systems (e.g., SRS wall kicks for falling-block games, match detection for puzzle games)
+- **Randomizer**: Use fair randomization (e.g., bag system, weighted random) to ensure balanced gameplay
+- **Gravity/Physics**: Configure speed progression tied to level/difficulty
+- **Lock/Placement delay**: Add a brief delay before committing placement (allows last-second adjustments)
+- **Scoring**: Define clear, escalating point values that reward skill (bigger combos = higher multipliers)
+- **Levels**: Advance based on score, lines, time, or other game-specific metrics
+- **Preview**: Show upcoming elements so players can plan ahead
+- **Ghost/Shadow**: Show where elements will land or what will happen next
 
-## Sound Design — "Breaking Off" Theme
+## Sound Design — Procedural Audio Theme
 All sounds use Web Audio API oscillators and noise buffers:
-- **Line clear**: Glass shattering / cracking sound with descending frequency sweep
-- **Hard drop**: Impact thud with crumble aftermath
-- **Piece lock**: Short crack/snap sound
-- **Tetris (4 lines)**: Extended shatter with reverb, louder and more dramatic
-- **Rotation**: Quick crystalline click
+- **Row/match clear**: Shattering/breaking sound with descending frequency sweep
+- **Hard drop/slam**: Impact thud with crumble aftermath
+- **Element placement**: Short crack/snap/click sound
+- **Big clear (multi-row/combo)**: Extended shatter with reverb, louder and more dramatic
+- **Rotation/action**: Quick crystalline click
 - **Game over**: Slow crumbling/collapse cascade
 - **Level up**: Ascending chime then crack
+- **Combo chains**: Escalating pitch with each consecutive clear
+- Support multiple sound themes for variety (glass, metal, crystal, concrete, ice, etc.)
 
 ## Code Style
 - Use `const` and `let`, never `var`
@@ -62,13 +65,12 @@ All sounds use Web Audio API oscillators and noise buffers:
 - No file should be more than 1000 lines — split into modules as needed
 - No functions longer than 50 lines — break into smaller helper functions
 - Use descriptive variable and function names
-- Comment complex logic, especially for rotation and collision detection
+- Comment complex logic, especially for collision detection, rotation, and animation timing
 - Use consistent indentation (2 spaces) and spacing
 - Use template literals for string concatenation
 - Avoid global variables — encapsulate in modules or classes
 - Use feature detection for Web Audio API, with graceful fallback if unavailable (game should still work silently)
 - Ensure all code runs without transpilation in modern browsers supporting ES2020+ features
-- 
 
 ## Build and Test
 - No build step — open `index.html` directly in browser

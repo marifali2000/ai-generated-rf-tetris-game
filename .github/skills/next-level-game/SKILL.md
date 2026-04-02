@@ -1,13 +1,13 @@
 ---
 name: next-level-game
-description: "Comprehensive guide for elevating the Tetris game to professional quality across ALL dimensions: gameplay mechanics, animations, sound, UI/UX, visual polish, drama, performance, and player psychology. Use for: any request to improve, enhance, upgrade, polish, or take the game to the next level. Covers T-spins, back-to-back, combos, DAS/ARR, settings panel, stats, high scores, volume slider, touch controls, level-up celebrations, perfect clears, juice, feel, polish, game feel, player retention, addictiveness."
+description: "Comprehensive guide for elevating a browser-based canvas game to professional quality across ALL dimensions: gameplay mechanics, animations, sound, UI/UX, visual polish, drama, performance, and player psychology. Use for: any request to improve, enhance, upgrade, polish, or take the game to the next level. Covers advanced mechanics, combos, DAS/ARR, settings panel, stats, high scores, volume slider, touch controls, level-up celebrations, juice, feel, polish, game feel, player retention, addictiveness."
 ---
 
 # Next-Level Game Skill — Complete Enhancement Guide
 
 ## When to Use
 - Any request to "make the game better", "next level", "more polished", "more addictive"
-- Adding advanced Tetris mechanics (T-spins, combos, back-to-back)
+- Adding advanced game mechanics (combos, chains, special actions)
 - Improving player controls (DAS/ARR, input buffering, touch)
 - Enhancing UI beyond basic layout (settings, stats, menus)
 - Making animations more satisfying or dramatic
@@ -17,39 +17,37 @@ description: "Comprehensive guide for elevating the Tetris game to professional 
 
 ## Current State Audit
 
-### What's Already Excellent
-| Feature | Quality | File |
+### What Makes a Canvas Game Excellent
+| Feature | Quality Target | File |
 |---------|---------|------|
-| 7-layer line clear sounds | ⭐⭐⭐⭐⭐ | `js/sound.js` |
-| 5 sound themes (glass, concrete, crystal, metal, ice) | ⭐⭐⭐⭐⭐ | `js/sound.js` |
-| Multi-phase line clear animation | ⭐⭐⭐⭐⭐ | `js/renderer.js` |
-| Glass shard particle system | ⭐⭐⭐⭐⭐ | `js/renderer.js` |
-| Block Blast cascade gravity | ⭐⭐⭐⭐ | `js/board.js` |
-| SRS rotation with wall kicks | ⭐⭐⭐⭐ | `js/piece.js` |
+| Multi-layered clear/event sounds | ⭐⭐⭐⭐⭐ | `js/sound.js` |
+| Multiple sound themes | ⭐⭐⭐⭐⭐ | `js/sound.js` |
+| Multi-phase clear animation | ⭐⭐⭐⭐⭐ | `js/renderer.js` |
+| Particle system | ⭐⭐⭐⭐⭐ | `js/renderer.js` |
+| Cascade/gravity mechanics | ⭐⭐⭐⭐ | `js/board.js` |
+| Rotation/transformation system | ⭐⭐⭐⭐ | `js/piece.js` |
 | AI demo mode | ⭐⭐⭐⭐ | `js/autoplay.js` |
-| Dark blue visual theme | ⭐⭐⭐⭐ | `css/style.css` |
+| Dark visual theme | ⭐⭐⭐⭐ | `css/style.css` |
 
-### What Needs Work (Priority Order)
+### Common Enhancement Gaps (Priority Order)
 
 | Gap | Impact | Effort | Category |
 |-----|--------|--------|----------|
 | DAS/ARR for movement | Critical — game "feel" | Medium | Controls |
 | Combo display on screen | High — player feedback | Easy | UI/UX |
-| T-spin detection & scoring | High — depth | Medium | Gameplay |
+| Advanced mechanic detection | High — depth | Medium | Gameplay |
 | Back-to-back bonus | High — strategy | Easy | Gameplay |
 | Volume slider (not just mute) | High — usability | Easy | UI/UX |
 | Level-up celebration effect | High — drama | Easy | Animation |
 | Settings panel | High — customization | Medium | UI/UX |
 | High score persistence | High — retention | Easy | Feature |
-| Perfect clear detection | Medium — wow moments | Easy | Gameplay |
 | Combo scoring multiplier | Medium — depth | Easy | Gameplay |
 | Input buffering | Medium — responsiveness | Medium | Controls |
 | Touch controls | Medium — mobile reach | Medium | Controls |
 | Game over animation | Medium — drama | Easy | Animation |
 | Sound preview on theme change | Medium — polish | Easy | Sound |
 | Statistics screen | Medium — engagement | Medium | UI/UX |
-| Mini-T-spin indicator | Medium — feedback | Easy | UI/UX |
-| Piece lock squash/bounce | Low — juice | Easy | Animation |
+| Element placement bounce | Low — juice | Easy | Animation |
 
 ---
 
@@ -57,13 +55,13 @@ description: "Comprehensive guide for elevating the Tetris game to professional 
 
 ### 1.1 DAS/ARR — Delayed Auto Shift & Auto Repeat Rate
 
-**Why it matters**: Without DAS/ARR, holding left/right either does nothing (key repeat disabled) or fires at the OS repeat rate (inconsistent). Competitive Tetris players NEED configurable DAS/ARR. This single change makes the game feel 10× more responsive.
+**Why it matters**: Without DAS/ARR, holding left/right either does nothing (key repeat disabled) or fires at the OS repeat rate (inconsistent). Fast-paced game players NEED configurable DAS/ARR. This single change makes the game feel 10× more responsive.
 
 **Implementation in `js/input.js`:**
 
 ```javascript
 class InputHandler {
-  #das = 133;     // ms before auto-repeat starts (Tetris Guideline default)
+  #das = 133;     // ms before auto-repeat starts (common guideline default)
   #arr = 10;      // ms between auto-repeats (0 = instant)
   #sdf = 5;       // soft drop factor (cells per gravity tick, Infinity = instant)
 
@@ -107,11 +105,11 @@ class InputHandler {
 |---------|---------|-------|-------------|
 | DAS | 133ms | 50–300ms | Delay before repeat starts |
 | ARR | 10ms | 0–100ms | Interval between repeats (0 = instant) |
-| SDF | 5× | 1–40× or Infinity | Soft drop speed multiplier |
+| SDF | 5× | 1–40× or Infinity | Soft drop / fast move speed multiplier |
 
 ### 1.2 Input Buffering
 
-Buffer one action during lock delay or line clear animation so it fires instantly when the game resumes. Without this, inputs during animations feel "swallowed."
+Buffer one action during lock delay or clear animation so it fires instantly when the game resumes. Without this, inputs during animations feel "swallowed."
 
 ```javascript
 // In game.js
@@ -134,7 +132,7 @@ Buffer one action during lock delay or line clear animation so it fires instantl
 
 ### 1.3 Lock Delay Improvements
 
-Modern Tetris uses "infinity" or "extended" lock delay:
+Modern falling-block games use "extended" lock delay:
 - **15 move/rotate resets max** before force-lock (prevents infinite stalling)
 - Track `#lockMoveCount` — reset to 0 on each new piece, increment on each move/rotate that resets lock timer
 - Force-lock when count hits 15 regardless of timer
@@ -156,9 +154,11 @@ if (this.#lockTimer !== null && this.#lockMoveCount < this.#maxLockResets) {
 
 ## TIER 2: Advanced Gameplay Mechanics
 
-### 2.1 T-Spin Detection
+### 2.1 Special Move Detection (Example: T-Spin in Tetris)
 
-**Algorithm**: After a T-piece locks via rotation, check the 4 diagonal corners. If 3+ corners are occupied, it's a T-spin.
+Many games have advanced mechanics that reward skilled play. Detect and reward them.
+
+**Tetris T-Spin Algorithm**: After a T-piece locks via rotation, check the 4 diagonal corners. If 3+ corners are occupied, it's a T-spin.
 
 ```javascript
 // In board.js
@@ -188,21 +188,21 @@ detectTSpin(piece, lastActionWasRotation) {
 }
 ```
 
-**Scoring** (add to `js/scoring.js`):
+**Scoring** (add to `js/scoring.js` — adapt values to your game):
 | Action | Points |
 |--------|--------|
-| T-Spin (no lines) | 400 × level |
-| T-Spin Single | 800 × level |
-| T-Spin Double | 1200 × level |
-| T-Spin Triple | 1600 × level |
-| Mini T-Spin | 100 × level |
-| Mini T-Spin Single | 200 × level |
+| Special move (no clear) | 400 × level |
+| Special + Single | 800 × level |
+| Special + Double | 1200 × level |
+| Special + Triple | 1600 × level |
+| Mini special | 100 × level |
+| Mini special + Single | 200 × level |
 
-**Visual indicator**: Flash "T-SPIN!" text on screen using `triggerFloatingText()`.
+**Visual indicator**: Flash a label (e.g., "T-SPIN!") on screen using `triggerFloatingText()`.
 
 ### 2.2 Back-to-Back Bonus
 
-Consecutive "difficult" clears (Tetris or any T-Spin clear) earn a 50% bonus.
+Consecutive "difficult" clears (max clears or special moves) earn a 50% bonus.
 
 ```javascript
 // In scoring.js
@@ -227,7 +227,7 @@ addLineClear(count, tSpinType = 'none') {
 
 ### 2.3 Combo System (Scoring Integration)
 
-The sound engine already tracks combos — now make scoring match:
+Track consecutive clears and reward combo chains:
 
 ```javascript
 // In scoring.js
@@ -244,11 +244,11 @@ onNoLineClear() {
 }
 ```
 
-**Display**: Trigger `renderer.triggerComboText(combo, row)` — this method already exists but isn't called.
+**Display**: Trigger `renderer.triggerComboText(combo, row)` to show the combo count.
 
 ### 2.4 Perfect Clear (All Clear)
 
-When the entire board is empty after a line clear:
+When the entire board is empty after a clear:
 
 ```javascript
 // In board.js
@@ -335,14 +335,14 @@ triggerGameOverCollapse(grid) {
 }
 ```
 
-### 3.3 Piece Lock Squash & Bounce
+### 3.3 Element Lock Squash & Bounce
 
-When a piece locks, briefly squash it vertically then spring back — classic "juice" technique:
+When an element locks/places, briefly squash it vertically then spring back — classic "juice" technique:
 
 ```javascript
 triggerLockBounce(piece) {
   this.#lockBounce = {
-    cells: this.#getPieceCells(piece),
+    cells: this.#getElementCells(piece),
     scaleY: 0.7,     // Start squashed
     scaleX: 1.15,     // Wider during squash
     targetY: 1,
@@ -360,13 +360,13 @@ triggerLockBounce(piece) {
 // Scale cell height/width accordingly
 ```
 
-### 3.4 T-Spin Visual Indicator
+### 3.4 Special Move Visual Indicator
 
-Flash a stylized "T-SPIN!" or "MINI T-SPIN!" label when detected:
+Flash a stylized label when a special move is detected:
 
 ```javascript
 triggerTSpinText(type, row) {
-  const label = type === 'full' ? 'T-SPIN!' : 'MINI T-SPIN';
+  const label = type === 'full' ? 'SPECIAL!' : 'MINI SPECIAL';
   const color = type === 'full' ? '#a000f0' : '#d080ff';
   this.#floatingTexts.push({
     text: label,
@@ -382,10 +382,10 @@ triggerTSpinText(type, row) {
 
 ### 3.5 Combo Text Enhancement
 
-The `triggerComboText()` method exists but is never called. Wire it in `game.js#lockPiece()`:
+Wire the `triggerComboText()` method in `game.js` after successful clears:
 
 ```javascript
-// After successful line clear in #lockPiece():
+// After successful clear in the game loop:
 if (this.#scoring.combo > 1) {
   const midRow = clearedRows[Math.floor(clearedRows.length / 2)];
   this.#renderer.triggerComboText(this.#scoring.combo, midRow);
@@ -394,7 +394,7 @@ if (this.#scoring.combo > 1) {
 
 ### 3.6 Row Pre-Highlight (Anticipation)
 
-Before the destruction animation begins, briefly highlight rows as solid white for 4-6 frames. This "wind-up" makes the following explosion feel more impactful. Already implemented via `#addRowFlashes()` — ensure the alpha starts high (1.2+) and the pulse is visible.
+Before the destruction animation begins, briefly highlight affected rows as solid white for 4-6 frames. This "wind-up" makes the following explosion feel more impactful. Ensure the alpha starts high (1.2+) and the pulse is visible.
 
 ### 3.7 Background Reactivity
 
@@ -425,10 +425,10 @@ Add sounds for events that currently play silently:
 |-------|-------------|----------|
 | Combo (×2, ×3, …) | Ascending pitch with each combo | High |
 | Back-to-back | Emphatic power chord | High |
-| T-Spin | Dramatic whoosh + chime | High |
-| Perfect clear | Triumphant fanfare (2s) | Medium |
+| Special moves | Dramatic whoosh + chime | High |
+| Perfect/all clear | Triumphant fanfare (2s) | Medium |
 | Board almost full | Low heartbeat rumble | Medium |
-| Near-miss (close to top) | Tension drone | Low |
+| Near-loss tension | Tension drone | Low |
 
 ### 4.2 Sound Preview
 
@@ -439,7 +439,7 @@ Play a short preview clip when the user changes sound theme:
 themeSelect?.addEventListener('change', (e) => {
   this.#sound.init();
   this.#sound.setSoundTheme(e.target.value);
-  this.#sound.playLineClear(2); // Preview the theme with a double-clear
+  this.#sound.playLineClear(2); // Preview the theme with a sample sound
 });
 ```
 
@@ -511,7 +511,7 @@ Add an expandable settings panel (slide-out or modal):
 
 ```javascript
 class HighScoreManager {
-  #key = 'tetris-highscores';
+  #key = 'game-highscores';
 
   save(score, level, lines) {
     const scores = this.getAll();
@@ -539,8 +539,8 @@ class HighScoreManager {
 ### 5.3 Statistics Tracking
 
 Track per-session and lifetime stats:
-- Total lines, pieces placed, Tetrises, T-spins, combos
-- Lines per minute, pieces per second
+- Total clears, elements placed, max clears, special moves, combos
+- Clears per minute, elements per second
 - Best combo chain, longest survival time
 
 ```javascript
@@ -549,8 +549,8 @@ class GameStats {
   singles = 0;
   doubles = 0;
   triples = 0;
-  tetrises = 0;
-  tSpins = 0;
+  maxClears = 0;
+  specialMoves = 0;
   maxCombo = 0;
   startTime = 0;
   perfectClears = 0;
@@ -570,13 +570,13 @@ Show real-time feedback above the board:
 ┌─────── GAME BOARD ────────┐
 │  COMBO ×3       B2B ×2    │  ← floating indicators
 │                            │
-│     ▓▓▓▓ falling piece     │
+│     ▓▓▓▓ active element    │
 │                            │
 │  ███████████ ← full row    │
 │                            │
-│  ░░░ ghost position ░░░    │
+│  ░░░ ghost/preview ░░░     │
 │                            │
-│        T-SPIN!             │  ← action labels
+│        SPECIAL!            │  ← action labels
 └────────────────────────────┘
 ```
 
@@ -769,12 +769,12 @@ const DEFAULTS = Object.freeze({
 
 function loadSettings() {
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('tetris-settings')) };
+    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('game-settings')) };
   } catch { return { ...DEFAULTS }; }
 }
 
 function saveSettings(settings) {
-  localStorage.setItem('tetris-settings', JSON.stringify(settings));
+  localStorage.setItem('game-settings', JSON.stringify(settings));
 }
 ```
 
@@ -788,7 +788,7 @@ Each successive line clear should feel MORE rewarding:
 - **Sound**: Combo pitch increases (already done in sound.js)
 - **Visual**: Particles increase, shake increases, colors intensify
 - **Score**: Combo multiplier gets visually larger
-- **Text**: "DOUBLE!", "TRIPLE!", "TETRIS!!!", "INSANE ×5 COMBO!"
+- **Text**: "DOUBLE!", "TRIPLE!", "MAX CLEAR!!!", "INSANE ×5 COMBO!"
 
 ### 8.2 Near-Miss Feedback
 
@@ -804,7 +804,7 @@ When the player ALMOST clears a line (only 1-2 gaps), briefly flash the incomple
 ### 8.4 Session Milestone Rewards
 
 Track and celebrate mini-achievements:
-- "First Tetris!" — special animation on first 4-line clear
+- "First Max Clear!" — special animation on first maximum clear
 - "10 Lines!" — milestone text
 - "100 Combo!" — achievement flash
 - "Speed Demon" — survive 60 seconds at level 15+
