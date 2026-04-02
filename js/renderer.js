@@ -188,7 +188,7 @@ class Renderer {
 
   /** True while line clear animation is playing — game logic should pause. */
   get isAnimating() {
-    return this.#clearAnimTimer > 0 || this.#vanishPhase || this.#fallingCells.length > 0;
+    return this.#vanishPhase;
   }
 
   constructor() {
@@ -539,7 +539,7 @@ class Renderer {
         currentY: fc.fromRow,
         color: fc.color,
         velocity: 0,
-        gravity: (0.016 + Math.random() * 0.006) * this.#animSpeed, // visible falling
+        gravity: (0.08 + Math.random() * 0.04) * this.#animSpeed, // fast snap into place
         bounces: 0,
         delay: 0,
         started: false,
@@ -812,7 +812,7 @@ class Renderer {
     for (const fc of this.#fallingCells) {
       // Cell has landed — show landing glow then mark truly done
       if (fc.landed) {
-        fc.landGlow -= 0.02;
+        fc.landGlow -= 0.08;
         // Draw landed cell solidly at final position
         this.#drawCell(ctx, fc.col, fc.toY, fc.color, 1);
         // Landing glow overlay

@@ -111,12 +111,11 @@ class Game {
       this.#sound.setVolume(Number(e.target.value) / 100);
     });
 
-    // Speed slider (desktop)
+    // Speed slider (desktop) — controls animation speed only
     const speedSlider = document.getElementById('speed-slider');
     const speedLabel = document.getElementById('speed-label');
     speedSlider?.addEventListener('input', (e) => {
       const mult = Number(e.target.value) / 100;
-      this.#scoring.setSpeedMultiplier(mult);
       this.#renderer.setAnimSpeed(mult);
       if (speedLabel) speedLabel.textContent = mult.toFixed(1) + '×';
       // Sync mobile slider
@@ -197,7 +196,6 @@ class Game {
     const mobileSpdLabel = document.getElementById('mobile-speed-label');
     mobileSpeed?.addEventListener('input', (e) => {
       const mult = Number(e.target.value) / 100;
-      this.#scoring.setSpeedMultiplier(mult);
       this.#renderer.setAnimSpeed(mult);
       if (mobileSpdLabel) mobileSpdLabel.textContent = mult.toFixed(1) + '×';
       // Sync desktop slider

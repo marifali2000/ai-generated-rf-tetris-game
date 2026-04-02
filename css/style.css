@@ -669,3 +669,60 @@ kbd {
     font-size: 11px;
   }
 }
+
+/* ─── Mobile Landscape ──────────────────────────── */
+@media (max-width: 768px) and (orientation: landscape) {
+  #mobile-stats {
+    top: 2px;
+    padding: 2px 12px;
+  }
+
+  .mobile-stat span:last-child {
+    font-size: 13px;
+  }
+
+  #mobile-hold {
+    top: 24px;
+    left: 4px;
+  }
+
+  #mobile-next {
+    top: 24px;
+    right: 4px;
+  }
+
+  #mobile-menu-toggle {
+    top: 2px;
+    right: 4px;
+    font-size: 16px;
+    padding: 4px 8px;
+  }
+
+  #mobile-drawer {
+    padding: 8px 16px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  #drawer-content {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 600px;
+  }
+
+  .drawer-row {
+    flex: 1 1 45%;
+    min-width: 0;
+  }
+
+  .drawer-btn {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  #drawer-gestures {
+    font-size: 10px;
+    padding-top: 4px;
+    flex-basis: 100%;
+  }
+}
