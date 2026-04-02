@@ -184,7 +184,7 @@ class Renderer {
   #animSpeed = 2;
 
   /** Set animation speed multiplier. */
-  setAnimSpeed(m) { this.#animSpeed = Math.max(0.5, Math.min(4, m)); }
+  setAnimSpeed(m) { this.#animSpeed = Math.max(0.25, Math.min(4, m)); }
 
   /** True while line clear animation is playing — game logic should pause. */
   get isAnimating() {
@@ -261,7 +261,6 @@ class Renderer {
           delay: Math.round(c * 2 / this.#animSpeed),
           shrinking: false,
           glowAlpha: 0,
-          popSoundPlayed: false, // per-cell pop sound tracking
         });
       }
       this.#vanishingRows.push({
@@ -285,7 +284,7 @@ class Renderer {
     this.#addShockwaves(clearedRows, count, isTetris);
 
     // Timer for particles and other effects
-    this.#clearAnimDuration = Math.round((30 + count * ROW_STAGGER + 50) / this.#animSpeed) + ROW_STAGGER;
+    this.#clearAnimDuration = count * ROW_STAGGER + Math.round(80 / this.#animSpeed) + ROW_STAGGER;
     this.#clearAnimTimer = this.#clearAnimDuration;
 
     // Background reactivity
@@ -908,6 +907,11 @@ class Renderer {
         if (vr.phaseTimer >= Math.round(15 / this.#animSpeed)) {
           vr.phase = 'shrink';
           vr.phaseTimer = 0;
+          // Play one big line clear sound at start of sweep
+          if (!vr.clearSoundPlayed) {
+            vr.clearSoundPlayed = true;
+            this.#soundCallbacks.onRowCleared(vr.rowIndex);
+          }
         }
         allDone = false;
       } else if (vr.phase === 'shrink') {
@@ -922,10 +926,6 @@ class Renderer {
             continue;
           }
           // Play per-cell pop sound when this cell starts shrinking
-          if (!cell.popSoundPlayed) {
-            cell.popSoundPlayed = true;
-            this.#soundCallbacks.onCellPop(cell.col, COLS);
-          }
           cell.scale *= (1 - 0.10 * this.#animSpeed);
           cell.alpha *= (1 - 0.08 * this.#animSpeed);
           // Spawn particles immediately as cell starts shrinking (simultaneous)
@@ -961,11 +961,6 @@ class Renderer {
         }
         if (rowDone) {
           vr.phase = 'done';
-          // Play row-cleared completion sound
-          if (!vr.clearSoundPlayed) {
-            vr.clearSoundPlayed = true;
-            this.#soundCallbacks.onRowCleared(vr.rowIndex);
-          }
         }
         allDone = allDone && rowDone;
       }

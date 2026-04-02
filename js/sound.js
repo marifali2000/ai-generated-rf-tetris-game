@@ -28,7 +28,7 @@ class SoundEngine {
 
   get soundTheme() { return this.#soundTheme; }
   get animSpeed() { return this.#animSpeed; }
-  setAnimSpeed(m) { this.#animSpeed = Math.max(0.5, Math.min(4, m)); }
+  setAnimSpeed(m) { this.#animSpeed = Math.max(0.25, Math.min(4, m)); }
   setSoundTheme(theme) {
     if (SOUND_THEMES.includes(theme)) {
       this.#soundTheme = theme;

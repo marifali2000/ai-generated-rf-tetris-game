@@ -150,16 +150,19 @@ class Game {
     // Speed slider (desktop) — controls animation speed only
     const speedSlider = document.getElementById('speed-slider');
     const speedLabel = document.getElementById('speed-label');
+    const SPEED_STOPS = [0.25, 1, 2, 4];
+    const SPEED_LABELS = ['0.5×', '1×', '2×', '4×'];
     speedSlider?.addEventListener('input', (e) => {
-      const mult = Number(e.target.value) / 100;
+      const idx = Number(e.target.value);
+      const mult = SPEED_STOPS[idx];
       this.#renderer.setAnimSpeed(mult);
       this.#sound.setAnimSpeed(mult);
-      if (speedLabel) speedLabel.textContent = mult.toFixed(1) + '×';
+      if (speedLabel) speedLabel.textContent = SPEED_LABELS[idx];
       // Sync mobile slider
       const mobileSpeed = document.getElementById('mobile-speed');
       const mobileSpdLabel = document.getElementById('mobile-speed-label');
       if (mobileSpeed) mobileSpeed.value = e.target.value;
-      if (mobileSpdLabel) mobileSpdLabel.textContent = mult.toFixed(1) + '×';
+      if (mobileSpdLabel) mobileSpdLabel.textContent = SPEED_LABELS[idx];
     });
 
     // ── Mobile drawer controls ──
@@ -236,15 +239,16 @@ class Game {
     const mobileSpeed = document.getElementById('mobile-speed');
     const mobileSpdLabel = document.getElementById('mobile-speed-label');
     mobileSpeed?.addEventListener('input', (e) => {
-      const mult = Number(e.target.value) / 100;
+      const idx = Number(e.target.value);
+      const mult = SPEED_STOPS[idx];
       this.#renderer.setAnimSpeed(mult);
       this.#sound.setAnimSpeed(mult);
-      if (mobileSpdLabel) mobileSpdLabel.textContent = mult.toFixed(1) + '×';
+      if (mobileSpdLabel) mobileSpdLabel.textContent = SPEED_LABELS[idx];
       // Sync desktop slider
       const desktopSpeed = document.getElementById('speed-slider');
       const desktopSpdLabel = document.getElementById('speed-label');
       if (desktopSpeed) desktopSpeed.value = e.target.value;
-      if (desktopSpdLabel) desktopSpdLabel.textContent = mult.toFixed(1) + '×';
+      if (desktopSpdLabel) desktopSpdLabel.textContent = SPEED_LABELS[idx];
     });
 
     // Help button — reopen tutorial
@@ -279,19 +283,20 @@ class Game {
     });
 
     demoSpeed?.addEventListener('input', (e) => {
-      const mult = Number(e.target.value) / 100;
+      const idx = Number(e.target.value);
+      const mult = SPEED_STOPS[idx];
       this.#renderer.setAnimSpeed(mult);
       this.#sound.setAnimSpeed(mult);
-      if (demoSpeedLabel) demoSpeedLabel.textContent = mult.toFixed(1) + '×';
+      if (demoSpeedLabel) demoSpeedLabel.textContent = SPEED_LABELS[idx];
       // Sync other sliders
       const ds = document.getElementById('speed-slider');
       const dl = document.getElementById('speed-label');
       const ms = document.getElementById('mobile-speed');
       const ml = document.getElementById('mobile-speed-label');
       if (ds) ds.value = e.target.value;
-      if (dl) dl.textContent = mult.toFixed(1) + '×';
+      if (dl) dl.textContent = SPEED_LABELS[idx];
       if (ms) ms.value = e.target.value;
-      if (ml) ml.textContent = mult.toFixed(1) + '×';
+      if (ml) ml.textContent = SPEED_LABELS[idx];
     });
 
     demoTheme?.addEventListener('change', (e) => {
@@ -795,9 +800,9 @@ class Game {
       const dt = document.getElementById('demo-theme');
       const dl = document.getElementById('demo-speed-label');
       if (dv) dv.value = document.getElementById('volume-slider')?.value || 70;
-      if (ds) ds.value = document.getElementById('speed-slider')?.value || 200;
+      if (ds) ds.value = document.getElementById('speed-slider')?.value || '2';
       if (dt) dt.value = document.getElementById('sound-theme')?.value || 'glass';
-      if (dl) dl.textContent = (Number(ds?.value || 200) / 100).toFixed(1) + '×';
+      if (dl) dl.textContent = ['0.5\u00d7', '1\u00d7', '2\u00d7', '4\u00d7'][Number(ds?.value || 2)];
       if (this.#state !== 'playing') {
         this.#startGame();
       }
