@@ -58,6 +58,13 @@ class Game {
     this.#input.attach();
     this.#renderer.showOverlay('PRESS ENTER TO START');
 
+    // Wire sound callbacks to renderer for animation-synced audio
+    this.#renderer.setSoundCallbacks({
+      onRowHighlight: (rowIndex) => this.#sound.playRowHighlight(rowIndex),
+      onCellPop: (col, totalCols) => this.#sound.playCellPop(col, totalCols),
+      onRowCleared: (rowIndex) => this.#sound.playRowCleared(rowIndex),
+    });
+
     // Button bar
     this.#btnStart = document.getElementById('btn-start');
     this.#btnPause = document.getElementById('btn-pause');
@@ -282,7 +289,6 @@ class Game {
       const cascade = this.#board.clearLines();
       if (cascade.linesCleared > 0) {
         const result = this.#scoring.addLineClear(cascade.linesCleared, 'none');
-        this.#sound.playLineClear(cascade.linesCleared);
         this.#renderer.triggerLineClearEffect(cascade.clearedRows, cascade.clearedRowColors);
         this.#renderer.triggerFallingCells(cascade.fallingCells);
         this.#renderer.triggerComboText(`CASCADE ${cascade.linesCleared}`, cascade.clearedRows[0]);
@@ -466,7 +472,6 @@ class Game {
     const { linesCleared, clearedRows, clearedRowColors, fallingCells } = this.#board.clearLines();
     if (linesCleared > 0) {
       const result = this.#scoring.addLineClear(linesCleared, tSpinType);
-      this.#sound.playLineClear(linesCleared);
       this.#renderer.triggerLineClearEffect(clearedRows, clearedRowColors);
       this.#renderer.triggerFallingCells(fallingCells);
       this.#showClearFeedback(tSpinType, linesCleared, result, clearedRows);

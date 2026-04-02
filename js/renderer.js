@@ -175,6 +175,9 @@ class Renderer {
   // Lock bounce
   #lockBounce = null;
 
+  // Sound callbacks for animation-synced audio
+  #soundCallbacks = null;
+
   /** True while line clear animation is playing — game logic should pause. */
   get isAnimating() {
     return this.#clearAnimTimer > 0 || this.#vanishPhase || this.#fallingCells.length > 0;
@@ -185,6 +188,9 @@ class Renderer {
     gameCanvas.width = COLS * CELL_SIZE;
     gameCanvas.height = ROWS * CELL_SIZE;
     this.#gameCtx = gameCanvas.getContext('2d');
+
+    // Sound callbacks default to no-ops
+    this.#soundCallbacks = { onRowHighlight: () => {}, onCellPop: () => {}, onRowCleared: () => {} };
 
     // Rich multi-stop background gradient
     this.#bgGradient = this.#gameCtx.createLinearGradient(0, 0, 0, ROWS * CELL_SIZE);
@@ -203,6 +209,14 @@ class Renderer {
     this.#mobileScoreEl = document.getElementById('mobile-score');
     this.#mobileLevelEl = document.getElementById('mobile-level');
     this.#mobileLinesEl = document.getElementById('mobile-lines');
+  }
+
+  /**
+   * Set sound callbacks for animation-synced audio.
+   * { onRowHighlight(rowIndex), onCellPop(col, totalCols), onRowCleared(rowIndex) }
+   */
+  setSoundCallbacks(callbacks) {
+    this.#soundCallbacks = { ...this.#soundCallbacks, ...callbacks };
   }
 
   /**
@@ -233,6 +247,7 @@ class Renderer {
           delay: c * 8,
           shrinking: false,
           glowAlpha: 0,
+          popSoundPlayed: false, // per-cell pop sound tracking
         });
       }
       this.#vanishingRows.push({
@@ -242,6 +257,9 @@ class Renderer {
         highlightAlpha: 0,
         phase: 'highlight', // highlight → shrink → done
         phaseTimer: 0,
+        rowIndex: i, // sequence index for sound pitch escalation
+        soundPlayed: false, // whether highlight sound has played
+        clearSoundPlayed: false, // whether row-cleared sound has played
       });
     }
 
@@ -851,6 +869,12 @@ class Renderer {
       if (vr.phase === 'highlight') {
         // Glow highlight ramps up over ~40 frames, using the row's own colors
         vr.highlightAlpha = Math.min(1, vr.phaseTimer / 40);
+
+        // Play highlight sound when this row starts glowing
+        if (!vr.soundPlayed) {
+          vr.soundPlayed = true;
+          this.#soundCallbacks.onRowHighlight(vr.rowIndex);
+        }
         // Draw cells with increasing glow
         for (const cell of vr.cells) {
           this.#drawCell(ctx, cell.col, vr.row, cell.color, 1);
@@ -882,6 +906,11 @@ class Renderer {
             this.#drawCell(ctx, cell.col, vr.row, cell.color, cell.alpha);
             rowDone = false;
             continue;
+          }
+          // Play per-cell pop sound when this cell starts shrinking
+          if (!cell.popSoundPlayed) {
+            cell.popSoundPlayed = true;
+            this.#soundCallbacks.onCellPop(cell.col, COLS);
           }
           cell.scale *= 0.975;
           cell.alpha *= 0.98;
@@ -917,6 +946,11 @@ class Renderer {
         }
         if (rowDone) {
           vr.phase = 'done';
+          // Play row-cleared completion sound
+          if (!vr.clearSoundPlayed) {
+            vr.clearSoundPlayed = true;
+            this.#soundCallbacks.onRowCleared(vr.rowIndex);
+          }
         }
         allDone = allDone && rowDone;
       }

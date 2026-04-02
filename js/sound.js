@@ -1393,6 +1393,155 @@ class SoundEngine {
       noise.start(t); noise.stop(t + 0.11);
     }
   }
+
+  // ─── Row Highlight Sound — building anticipation ─────────────────────
+
+  /**
+   * Low rumble + rising tone when a row starts glowing before clearing.
+   * rowIndex: which row in the sequence (0, 1, 2...) for pitch escalation.
+   */
+  playRowHighlight(rowIndex = 0) {
+    if (!this.#ctx) return;
+    const t = this.#now();
+    const baseFreq = 120 + rowIndex * 40;
+
+    // Deep rumble
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq, t);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 1.5, t + 0.6);
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.15, t + 0.1);
+    env.gain.setValueAtTime(0.15, t + 0.4);
+    env.gain.linearRampToValueAtTime(0, t + 0.8);
+    osc.connect(env);
+    env.connect(this.#masterGain);
+    osc.start(t);
+    osc.stop(t + 0.85);
+
+    // Shimmer overtone
+    const shimmer = this.#ctx.createOscillator();
+    shimmer.type = 'triangle';
+    shimmer.frequency.setValueAtTime(baseFreq * 3, t);
+    shimmer.frequency.linearRampToValueAtTime(baseFreq * 4, t + 0.6);
+    const sEnv = this.#ctx.createGain();
+    sEnv.gain.setValueAtTime(0, t);
+    sEnv.gain.linearRampToValueAtTime(0.04, t + 0.15);
+    sEnv.gain.linearRampToValueAtTime(0, t + 0.7);
+    shimmer.connect(sEnv);
+    sEnv.connect(this.#masterGain);
+    shimmer.start(t);
+    shimmer.stop(t + 0.75);
+  }
+
+  // ─── Per-Cell Pop Sound — satisfying left-to-right sweep ─────────────
+
+  /**
+   * Short crystalline pop that rises in pitch across the row.
+   * col: column index (0–9), used to pitch the sound progressively higher.
+   */
+  playCellPop(col, totalCols = 10) {
+    if (!this.#ctx) return;
+    const t = this.#now();
+    // Rising pitch from left to right: C5 to C6
+    const baseFreq = 523 + (col / totalCols) * 523;
+    const microVar = 1 + (Math.random() - 0.5) * 0.06;
+
+    // Main tone — short, bright
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = baseFreq * microVar;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.18, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(env);
+    env.connect(this.#masterGain);
+    osc.start(t);
+    osc.stop(t + 0.16);
+
+    // Harmonic overtone for sparkle
+    const harm = this.#ctx.createOscillator();
+    harm.type = 'sine';
+    harm.frequency.value = baseFreq * 2 * microVar;
+    const hEnv = this.#ctx.createGain();
+    hEnv.gain.setValueAtTime(0.06, t);
+    hEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    harm.connect(hEnv);
+    hEnv.connect(this.#masterGain);
+    harm.start(t);
+    harm.stop(t + 0.09);
+
+    // Tiny noise click for crispness
+    const click = this.#ctx.createBufferSource();
+    click.buffer = this.#createNoiseBuffer(0.02);
+    const cFilter = this.#ctx.createBiquadFilter();
+    cFilter.type = 'highpass';
+    cFilter.frequency.value = 3000;
+    const cEnv = this.#ctx.createGain();
+    cEnv.gain.setValueAtTime(0.08, t);
+    cEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    click.connect(cFilter);
+    cFilter.connect(cEnv);
+    cEnv.connect(this.#masterGain);
+    click.start(t);
+    click.stop(t + 0.025);
+  }
+
+  // ─── Row Cleared Sound — satisfying completion ───────────────────────
+
+  /**
+   * Completion chime when an entire row finishes vanishing.
+   * rowIndex: row sequence number for pitch escalation.
+   */
+  playRowCleared(rowIndex = 0) {
+    if (!this.#ctx) return;
+    const t = this.#now();
+    // Rising major chord notes per row
+    const chordFreqs = [523, 659, 784, 1047]; // C5, E5, G5, C6
+    const freq = chordFreqs[Math.min(rowIndex, chordFreqs.length - 1)];
+
+    // Main chime
+    const osc = this.#ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const env = this.#ctx.createGain();
+    env.gain.setValueAtTime(0.25, t);
+    env.gain.exponentialRampToValueAtTime(0.08, t + 0.15);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    osc.connect(env);
+    env.connect(this.#masterGain);
+    osc.start(t);
+    osc.stop(t + 0.65);
+
+    // Octave shimmer
+    const oct = this.#ctx.createOscillator();
+    oct.type = 'triangle';
+    oct.frequency.value = freq * 2;
+    const oEnv = this.#ctx.createGain();
+    oEnv.gain.setValueAtTime(0.08, t);
+    oEnv.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    oct.connect(oEnv);
+    oEnv.connect(this.#masterGain);
+    oct.start(t);
+    oct.stop(t + 0.45);
+
+    // Small noise burst for crunch feel
+    const noise = this.#ctx.createBufferSource();
+    noise.buffer = this.#createNoiseBuffer(0.08);
+    const nf = this.#ctx.createBiquadFilter();
+    nf.type = 'bandpass';
+    nf.frequency.value = 2000 + rowIndex * 500;
+    nf.Q.value = 1;
+    const ne = this.#ctx.createGain();
+    ne.gain.setValueAtTime(0.1, t);
+    ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    noise.connect(nf);
+    nf.connect(ne);
+    ne.connect(this.#masterGain);
+    noise.start(t);
+    noise.stop(t + 0.09);
+  }
 }
 
 export { SoundEngine, SOUND_THEMES };
