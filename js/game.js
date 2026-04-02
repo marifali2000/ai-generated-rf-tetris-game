@@ -153,6 +153,7 @@ class Game {
     speedSlider?.addEventListener('input', (e) => {
       const mult = Number(e.target.value) / 100;
       this.#renderer.setAnimSpeed(mult);
+      this.#sound.setAnimSpeed(mult);
       if (speedLabel) speedLabel.textContent = mult.toFixed(1) + '×';
       // Sync mobile slider
       const mobileSpeed = document.getElementById('mobile-speed');
@@ -237,6 +238,7 @@ class Game {
     mobileSpeed?.addEventListener('input', (e) => {
       const mult = Number(e.target.value) / 100;
       this.#renderer.setAnimSpeed(mult);
+      this.#sound.setAnimSpeed(mult);
       if (mobileSpdLabel) mobileSpdLabel.textContent = mult.toFixed(1) + '×';
       // Sync desktop slider
       const desktopSpeed = document.getElementById('speed-slider');
@@ -279,6 +281,7 @@ class Game {
     demoSpeed?.addEventListener('input', (e) => {
       const mult = Number(e.target.value) / 100;
       this.#renderer.setAnimSpeed(mult);
+      this.#sound.setAnimSpeed(mult);
       if (demoSpeedLabel) demoSpeedLabel.textContent = mult.toFixed(1) + '×';
       // Sync other sliders
       const ds = document.getElementById('speed-slider');
