@@ -56,6 +56,12 @@
         <input type="range" id="volume-slider" min="0" max="100" value="70" class="volume-slider">
       </div>
 
+      <div id="speed-section">
+        <h3>SPEED</h3>
+        <input type="range" id="speed-slider" min="50" max="400" value="200" step="25" class="volume-slider">
+        <div id="speed-label" class="speed-label">2.0×</div>
+      </div>
+
       <div id="keys-section">
         <div class="key-row"><kbd>←</kbd><kbd>→</kbd> Move</div>
         <div class="key-row"><kbd>↓</kbd> Soft Drop</div>
@@ -130,6 +136,11 @@
       <div class="drawer-row">
         <label class="drawer-label">VOL</label>
         <input type="range" id="mobile-volume" min="0" max="100" value="70" class="drawer-slider">
+      </div>
+      <div class="drawer-row">
+        <label class="drawer-label">SPEED</label>
+        <input type="range" id="mobile-speed" min="50" max="400" value="200" step="25" class="drawer-slider">
+        <span id="mobile-speed-label" class="drawer-label" style="min-width:35px;text-align:right">2.0×</span>
       </div>
       <div id="drawer-gestures">
         Tap to start/stop · Swipe ←→ move · ↓ drop · Tap rotate · 2-finger hold

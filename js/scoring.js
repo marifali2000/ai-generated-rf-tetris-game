@@ -24,6 +24,7 @@ class Scoring {
   #backToBack = 0;
   #lastClearWasDifficult = false;
   #highScore = 0;
+  #speedMultiplier = 2; // 1 = normal, 2 = 2× faster, etc.
 
   get score() { return this.#score; }
   get level() { return this.#level; }
@@ -108,13 +109,17 @@ class Scoring {
     this.#score += cells * 2;
   }
 
+  /** Set game speed multiplier (1 = normal, 2 = 2× faster, etc). */
+  setSpeedMultiplier(m) { this.#speedMultiplier = Math.max(0.5, Math.min(4, m)); }
+  get speedMultiplier() { return this.#speedMultiplier; }
+
   /**
    * Get the current gravity interval in milliseconds.
    */
   getDropInterval() {
     const idx = Math.min(this.#level - 1, GRAVITY_TABLE.length - 1);
     const frames = GRAVITY_TABLE[idx];
-    return (frames / 60) * 1000;
+    return (frames / 60) * 1000 / this.#speedMultiplier;
   }
 
   #calcBasePoints(count, tSpinType) {

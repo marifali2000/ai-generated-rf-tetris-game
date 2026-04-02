@@ -326,6 +326,14 @@ kbd {
   cursor: pointer;
 }
 
+.speed-label {
+  text-align: center;
+  color: #5ab0ff;
+  font-size: 12px;
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
 /* High score */
 .high-score-stat {
   border-top: 1px solid rgba(60, 120, 190, 0.3);

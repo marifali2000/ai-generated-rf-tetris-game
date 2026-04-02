@@ -111,6 +111,21 @@ class Game {
       this.#sound.setVolume(Number(e.target.value) / 100);
     });
 
+    // Speed slider (desktop)
+    const speedSlider = document.getElementById('speed-slider');
+    const speedLabel = document.getElementById('speed-label');
+    speedSlider?.addEventListener('input', (e) => {
+      const mult = Number(e.target.value) / 100;
+      this.#scoring.setSpeedMultiplier(mult);
+      this.#renderer.setAnimSpeed(mult);
+      if (speedLabel) speedLabel.textContent = mult.toFixed(1) + '×';
+      // Sync mobile slider
+      const mobileSpeed = document.getElementById('mobile-speed');
+      const mobileSpdLabel = document.getElementById('mobile-speed-label');
+      if (mobileSpeed) mobileSpeed.value = e.target.value;
+      if (mobileSpdLabel) mobileSpdLabel.textContent = mult.toFixed(1) + '×';
+    });
+
     // ── Mobile drawer controls ──
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const mobileDrawer = document.getElementById('mobile-drawer');
@@ -175,6 +190,21 @@ class Game {
       // Sync desktop slider
       const desktopSlider = document.getElementById('volume-slider');
       if (desktopSlider) desktopSlider.value = e.target.value;
+    });
+
+    // Mobile speed slider
+    const mobileSpeed = document.getElementById('mobile-speed');
+    const mobileSpdLabel = document.getElementById('mobile-speed-label');
+    mobileSpeed?.addEventListener('input', (e) => {
+      const mult = Number(e.target.value) / 100;
+      this.#scoring.setSpeedMultiplier(mult);
+      this.#renderer.setAnimSpeed(mult);
+      if (mobileSpdLabel) mobileSpdLabel.textContent = mult.toFixed(1) + '×';
+      // Sync desktop slider
+      const desktopSpeed = document.getElementById('speed-slider');
+      const desktopSpdLabel = document.getElementById('speed-label');
+      if (desktopSpeed) desktopSpeed.value = e.target.value;
+      if (desktopSpdLabel) desktopSpdLabel.textContent = mult.toFixed(1) + '×';
     });
 
     // Init sound on first interaction (mobile audio unlock — iOS needs touchend or click)
