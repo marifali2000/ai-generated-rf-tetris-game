@@ -111,6 +111,39 @@
   <!-- Mobile floating menu button -->
   <button id="mobile-menu-toggle">☰</button>
 
+  <!-- Hamburger hint (shown at game start) -->
+  <div id="hamburger-hint">
+    <span class="hint-arrow">⬆</span> Tap here for options
+  </div>
+
+  <!-- Demo floating controls (shown during demo mode) -->
+  <div id="demo-controls" class="demo-controls-hidden">
+    <div class="demo-controls-title">DEMO SETTINGS</div>
+    <div class="demo-row">
+      <label class="demo-label">🔊</label>
+      <input type="range" id="demo-volume" min="0" max="100" value="70" class="demo-slider">
+    </div>
+    <div class="demo-row">
+      <label class="demo-label">⚡</label>
+      <input type="range" id="demo-speed" min="50" max="400" value="200" step="25" class="demo-slider">
+      <span id="demo-speed-label" class="demo-val">2.0×</span>
+    </div>
+    <div class="demo-row">
+      <label class="demo-label">🎵</label>
+      <select id="demo-theme" class="demo-select">
+        <option value="glass">Glass</option>
+        <option value="concrete">Concrete</option>
+        <option value="crystal">Crystal</option>
+        <option value="metal">Metal</option>
+        <option value="ice">Ice</option>
+      </select>
+    </div>
+    <div class="demo-row">
+      <button id="demo-mute-btn" class="demo-btn">🔊 SOUND</button>
+      <button id="demo-stop-btn" class="demo-btn">⏹ STOP</button>
+    </div>
+  </div>
+
   <!-- Mobile settings drawer -->
   <div id="mobile-drawer" class="drawer-hidden">
     <div id="drawer-content">
@@ -122,6 +155,7 @@
       <div class="drawer-row">
         <button class="drawer-btn" id="mobile-btn-demo">⚙ DEMO</button>
         <button class="drawer-btn" id="mobile-btn-mute">🔊 SOUND</button>
+        <button class="drawer-btn" id="mobile-btn-help">📖 HELP</button>
       </div>
       <div class="drawer-row">
         <label class="drawer-label">THEME</label>

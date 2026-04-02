@@ -59,20 +59,36 @@ class Game {
     this.#input.attach();
 
     // Show tutorial on mobile first visit, or regular overlay
-    if (IS_MOBILE && !localStorage.getItem('tetris-tutorial-seen')) {
-      const tutorialOverlay = document.getElementById('tutorial-overlay');
-      const tutorialBtn = document.getElementById('tutorial-start-btn');
-      tutorialOverlay?.classList.add('visible');
-      tutorialBtn?.addEventListener('click', () => {
-        tutorialOverlay?.classList.remove('visible');
-        localStorage.setItem('tetris-tutorial-seen', '1');
-        this.#sound.init();
-        this.#sound.warmUp();
+    const tutorialOverlay = document.getElementById('tutorial-overlay');
+    const tutorialBtn = document.getElementById('tutorial-start-btn');
+    // Tutorial start button always dismisses + starts game
+    tutorialBtn?.addEventListener('click', () => {
+      tutorialOverlay?.classList.remove('visible');
+      localStorage.setItem('tetris-tutorial-seen', '1');
+      this.#sound.init();
+      this.#sound.warmUp();
+      if (this.#state === 'idle' || this.#state === 'gameOver') {
         this.#handleStart();
-      });
+      } else if (this.#state === 'paused') {
+        this.#togglePause();
+      }
+    });
+    if (IS_MOBILE && !localStorage.getItem('tetris-tutorial-seen')) {
+      tutorialOverlay?.classList.add('visible');
       this.#renderer.showOverlay('');
     } else {
       this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
+    }
+
+    // Hamburger highlight hint on mobile (show at start, dismiss on first menu tap)
+    if (IS_MOBILE) {
+      const hint = document.getElementById('hamburger-hint');
+      const toggle = document.getElementById('mobile-menu-toggle');
+      // Show hint after a brief delay
+      setTimeout(() => {
+        toggle?.classList.add('hamburger-highlight');
+        hint?.classList.add('visible');
+      }, 500);
     }
 
     // Landscape detection — pause game in landscape on mobile
@@ -155,9 +171,13 @@ class Game {
     // ── Mobile drawer controls ──
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const mobileDrawer = document.getElementById('mobile-drawer');
+    const hamburgerHint = document.getElementById('hamburger-hint');
     mobileMenuToggle?.addEventListener('click', (e) => {
       e.preventDefault();
       this.#sound.init();
+      // Dismiss hamburger hint on first tap
+      mobileMenuToggle.classList.remove('hamburger-highlight');
+      hamburgerHint?.classList.remove('visible');
       mobileDrawer?.classList.toggle('drawer-hidden');
       if (this.#state === 'playing') this.#togglePause();
     });
@@ -232,6 +252,74 @@ class Game {
       if (desktopSpdLabel) desktopSpdLabel.textContent = mult.toFixed(1) + '×';
     });
 
+    // Help button — reopen tutorial
+    document.getElementById('mobile-btn-help')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tutorialOverlay = document.getElementById('tutorial-overlay');
+      tutorialOverlay?.classList.add('visible');
+      mobileDrawer?.classList.add('drawer-hidden');
+      if (this.#state === 'paused') {
+        // Stay paused, tutorial will dismiss on tap
+      }
+    });
+
+    // ── Demo floating controls ──
+    const demoControls = document.getElementById('demo-controls');
+    const demoVolume = document.getElementById('demo-volume');
+    const demoSpeed = document.getElementById('demo-speed');
+    const demoSpeedLabel = document.getElementById('demo-speed-label');
+    const demoTheme = document.getElementById('demo-theme');
+    const demoMuteBtn = document.getElementById('demo-mute-btn');
+    const demoStopBtn = document.getElementById('demo-stop-btn');
+
+    demoVolume?.addEventListener('input', (e) => {
+      this.#sound.init();
+      const val = Number(e.target.value);
+      this.#sound.setVolume(val / 100);
+      // Sync other sliders
+      const ds = document.getElementById('volume-slider');
+      const ms = document.getElementById('mobile-volume');
+      if (ds) ds.value = val;
+      if (ms) ms.value = val;
+    });
+
+    demoSpeed?.addEventListener('input', (e) => {
+      const mult = Number(e.target.value) / 100;
+      this.#renderer.setAnimSpeed(mult);
+      if (demoSpeedLabel) demoSpeedLabel.textContent = mult.toFixed(1) + '×';
+      // Sync other sliders
+      const ds = document.getElementById('speed-slider');
+      const dl = document.getElementById('speed-label');
+      const ms = document.getElementById('mobile-speed');
+      const ml = document.getElementById('mobile-speed-label');
+      if (ds) ds.value = e.target.value;
+      if (dl) dl.textContent = mult.toFixed(1) + '×';
+      if (ms) ms.value = e.target.value;
+      if (ml) ml.textContent = mult.toFixed(1) + '×';
+    });
+
+    demoTheme?.addEventListener('change', (e) => {
+      this.#sound.init();
+      this.#sound.setSoundTheme(e.target.value);
+      this.#sound.playLineClear(2);
+      // Sync other selects
+      const ds = document.getElementById('sound-theme');
+      const ms = document.getElementById('mobile-sound-theme');
+      if (ds) ds.value = e.target.value;
+      if (ms) ms.value = e.target.value;
+    });
+
+    demoMuteBtn?.addEventListener('click', () => {
+      this.#sound.init();
+      this.#sound.toggleMute();
+      this.#updateMuteButton();
+      demoMuteBtn.textContent = this.#sound.muted ? '🔇 MUTED' : '🔊 SOUND';
+    });
+
+    demoStopBtn?.addEventListener('click', () => {
+      this.#toggleDemo();
+    });
+
     // Init sound on first interaction (mobile audio unlock — iOS needs touchend or click)
     const unlockAudio = () => {
       this.#sound.init();
@@ -281,6 +369,9 @@ class Game {
   #handleStart() {
     // Dismiss tutorial if visible
     document.getElementById('tutorial-overlay')?.classList.remove('visible');
+    // Dismiss hamburger hint
+    document.getElementById('mobile-menu-toggle')?.classList.remove('hamburger-highlight');
+    document.getElementById('hamburger-hint')?.classList.remove('visible');
     if (this.#state === 'idle' || this.#state === 'gameOver') {
       this.#startGame();
     } else if (this.#state === 'paused') {
@@ -674,6 +765,7 @@ class Game {
   }
 
   #toggleDemo() {
+    const demoControls = document.getElementById('demo-controls');
     if (this.#autoPlayer.active) {
       // Stop demo
       this.#autoPlayer.stop();
@@ -686,11 +778,22 @@ class Game {
       this.#render();
       this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
       this.#btnDemo?.classList.remove('active');
+      demoControls?.classList.add('demo-controls-hidden');
       this.#updateButtons();
     } else {
       // Start demo
       this.#autoPlayer.start();
       this.#btnDemo?.classList.add('active');
+      demoControls?.classList.remove('demo-controls-hidden');
+      // Sync demo controls with current values
+      const dv = document.getElementById('demo-volume');
+      const ds = document.getElementById('demo-speed');
+      const dt = document.getElementById('demo-theme');
+      const dl = document.getElementById('demo-speed-label');
+      if (dv) dv.value = document.getElementById('volume-slider')?.value || 70;
+      if (ds) ds.value = document.getElementById('speed-slider')?.value || 200;
+      if (dt) dt.value = document.getElementById('sound-theme')?.value || 'glass';
+      if (dl) dl.textContent = (Number(ds?.value || 200) / 100).toFixed(1) + '×';
       if (this.#state !== 'playing') {
         this.#startGame();
       }
@@ -704,6 +807,7 @@ class Game {
       this.#autoPlayer.stop();
       this.#btnDemo?.classList.remove('active');
     }
+    document.getElementById('demo-controls')?.classList.add('demo-controls-hidden');
     this.#state = 'idle';
     this.#currentPiece = null;
     if (this.#animFrameId) {

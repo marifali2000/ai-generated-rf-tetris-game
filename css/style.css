@@ -349,6 +349,16 @@ kbd {
   color: #ffe060;
 }
 
+/* Hamburger hint — hidden by default */
+#hamburger-hint {
+  display: none;
+}
+
+/* Demo floating controls — hidden by default */
+#demo-controls {
+  display: none;
+}
+
 /* Touch controls — hidden on desktop */
 #touch-controls {
   display: none;
@@ -486,6 +496,185 @@ kbd {
   #mobile-menu-toggle:active {
     background: rgba(90, 176, 255, 0.2);
     border-color: rgba(90, 176, 255, 0.8);
+    color: #fff;
+  }
+
+  /* Hamburger pulse animation for first-time hint */
+  #mobile-menu-toggle.hamburger-highlight {
+    animation: hamburger-pulse 1.2s ease-in-out infinite;
+    border-color: rgba(90, 176, 255, 0.8);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(90, 176, 255, 0.6);
+  }
+
+  @keyframes hamburger-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(90, 176, 255, 0.4); }
+    50% { transform: scale(1.2); box-shadow: 0 0 24px rgba(90, 176, 255, 0.8); }
+  }
+
+  /* Hamburger hint tooltip */
+  #hamburger-hint {
+    display: block;
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 6px) + 42px);
+    right: 8px;
+    z-index: 31;
+    background: rgba(90, 176, 255, 0.15);
+    border: 1px solid rgba(90, 176, 255, 0.5);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #d0e4ff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: hint-bob 1.5s ease-in-out infinite;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  #hamburger-hint.visible {
+    opacity: 1;
+  }
+
+  .hint-arrow {
+    display: inline-block;
+    animation: hint-arrow-bounce 0.8s ease-in-out infinite;
+  }
+
+  @keyframes hint-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+
+  @keyframes hint-arrow-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  /* Demo floating controls */
+  #demo-controls {
+    display: block;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    background: rgba(6, 14, 28, 0.65);
+    border: 1px solid rgba(60, 120, 190, 0.3);
+    border-radius: 14px;
+    padding: 12px 16px;
+    min-width: 260px;
+    max-width: 320px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: auto;
+  }
+
+  #demo-controls.demo-controls-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(20px);
+  }
+
+  .demo-controls-title {
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #5a8eb8;
+    margin-bottom: 8px;
+  }
+
+  .demo-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .demo-label {
+    font-size: 16px;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  .demo-val {
+    font-size: 10px;
+    color: #5ab0ff;
+    min-width: 30px;
+    text-align: right;
+    letter-spacing: 1px;
+  }
+
+  .demo-slider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(40, 80, 130, 0.5);
+    border-radius: 3px;
+    outline: none;
+  }
+
+  .demo-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #5ab0ff;
+    border: 2px solid #1b3a5c;
+  }
+
+  .demo-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #5ab0ff;
+    border: 2px solid #1b3a5c;
+  }
+
+  .demo-select {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #c0d8f0;
+    background: rgba(15, 35, 60, 0.9);
+    border: 1px solid rgba(60, 120, 190, 0.45);
+    border-radius: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  .demo-select option {
+    background: #0c1a2e;
+    color: #c0d8f0;
+  }
+
+  .demo-btn {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    letter-spacing: 1px;
+    color: #c0d8f0;
+    background: linear-gradient(180deg, rgba(20, 45, 75, 0.8), rgba(10, 25, 45, 0.9));
+    border: 1px solid rgba(60, 120, 190, 0.45);
+    border-radius: 8px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+
+  .demo-btn:active {
+    background: rgba(30, 65, 110, 0.9);
+    border-color: rgba(90, 176, 255, 0.7);
     color: #fff;
   }
 
