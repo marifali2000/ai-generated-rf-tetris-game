@@ -7,6 +7,56 @@ import { getColorForType, getShapeForType } from '../piece.js';
 
 const CELL_SIZE = 32;
 
+/**
+ * Theme-specific color palettes.
+ * Maps standard Tetris piece colors to theme-appropriate shades.
+ * Keys are the default hex colors from PIECE_DATA.
+ */
+const THEME_COLORS = Object.freeze({
+  wood: Object.freeze({
+    '#00f0f0': '#c4956a',  // I — light birch
+    '#f0f000': '#8b5e3c',  // O — dark walnut
+    '#a000f0': '#a0522d',  // T — sienna
+    '#00f000': '#d2a96a',  // S — maple
+    '#f00000': '#6b3a2a',  // Z — mahogany
+    '#0000f0': '#b87333',  // J — cedar/copper-brown
+    '#f0a000': '#deb887',  // L — burlywood
+  }),
+  metal: Object.freeze({
+    '#00f0f0': '#a8b8c8',  // I — bright steel
+    '#f0f000': '#7a8a9a',  // O — gunmetal
+    '#a000f0': '#8890a0',  // T — blue steel
+    '#00f000': '#c0c8d0',  // S — polished chrome
+    '#f00000': '#606870',  // Z — dark iron
+    '#0000f0': '#9098a8',  // J — brushed nickel
+    '#f0a000': '#b0b8c0',  // L — light alloy
+  }),
+  gold: Object.freeze({
+    '#00f0f0': '#ffd700',  // I — pure gold
+    '#f0f000': '#daa520',  // O — goldenrod
+    '#a000f0': '#f0c050',  // T — bright gold
+    '#00f000': '#c8a020',  // S — antique gold
+    '#f00000': '#b8860b',  // Z — dark goldenrod
+    '#0000f0': '#e8b830',  // J — warm gold
+    '#f0a000': '#f5d060',  // L — light gold
+  }),
+  silver: Object.freeze({
+    '#00f0f0': '#d0d0d8',  // I — bright silver
+    '#f0f000': '#a0a0a8',  // O — pewter
+    '#a000f0': '#b8b8c0',  // T — platinum
+    '#00f000': '#c8c8d0',  // S — polished silver
+    '#f00000': '#808890',  // Z — dark silver
+    '#0000f0': '#9898a8',  // J — tarnished silver
+    '#f0a000': '#e0e0e8',  // L — white silver
+  }),
+});
+
+/** Remap a piece color to theme-appropriate palette, or pass through. */
+function remapColor(color, theme) {
+  const map = THEME_COLORS[theme];
+  return map?.[color] ?? color;
+}
+
 function lightenColor(hex, percent) {
   const num = Number.parseInt(hex.slice(1), 16);
   const r = Math.min(255, (num >> 16) + Math.round(2.55 * percent));
@@ -34,19 +84,20 @@ function drawCell(ctx, x, y, color, alpha, theme, cellSize) {
   const py = y * CELL_SIZE;
   const inset = 1;
   const w = cellSize - 2;
+  const c = remapColor(color, theme);
 
   ctx.globalAlpha = alpha;
 
   switch (theme) {
-    case 'concrete': drawCellConcrete(ctx, px, py, inset, w, color); break;
-    case 'crystal':  drawCellCrystal(ctx, px, py, inset, w, color); break;
-    case 'metal':    drawCellMetal(ctx, px, py, inset, w, color); break;
-    case 'ice':      drawCellIce(ctx, px, py, inset, w, color); break;
-    case 'wood':     drawCellWood(ctx, px, py, inset, w, color); break;
-    case 'plastic':  drawCellPlastic(ctx, px, py, inset, w, color); break;
-    case 'gold':     drawCellGold(ctx, px, py, inset, w, color); break;
-    case 'silver':   drawCellSilver(ctx, px, py, inset, w, color); break;
-    default:         drawCellGlass(ctx, px, py, inset, w, color); break;
+    case 'concrete': drawCellConcrete(ctx, px, py, inset, w, c); break;
+    case 'crystal':  drawCellCrystal(ctx, px, py, inset, w, c); break;
+    case 'metal':    drawCellMetal(ctx, px, py, inset, w, c); break;
+    case 'ice':      drawCellIce(ctx, px, py, inset, w, c); break;
+    case 'wood':     drawCellWood(ctx, px, py, inset, w, c); break;
+    case 'plastic':  drawCellPlastic(ctx, px, py, inset, w, c); break;
+    case 'gold':     drawCellGold(ctx, px, py, inset, w, c); break;
+    case 'silver':   drawCellSilver(ctx, px, py, inset, w, c); break;
+    default:         drawCellGlass(ctx, px, py, inset, w, c); break;
   }
 
   ctx.globalAlpha = 1;
@@ -372,25 +423,25 @@ function drawCellPlastic(ctx, px, py, inset, w, color) {
 
 function drawCellGold(ctx, px, py, inset, w, color) {
   const r = 2;
-  // Rich gold multi-stop gradient
+  // Rich gold gradient using the remapped per-piece color
   const grad = ctx.createLinearGradient(px, py, px, py + CELL_SIZE);
-  grad.addColorStop(0, '#ffeaa0');
-  grad.addColorStop(0.15, '#ffe070');
-  grad.addColorStop(0.3, '#d4a520');
-  grad.addColorStop(0.5, '#ffd700');
-  grad.addColorStop(0.7, '#d4a520');
-  grad.addColorStop(0.85, '#b8860b');
-  grad.addColorStop(1, '#8b6914');
+  grad.addColorStop(0, lightenColor(color, 30));
+  grad.addColorStop(0.15, lightenColor(color, 20));
+  grad.addColorStop(0.3, color);
+  grad.addColorStop(0.5, lightenColor(color, 15));
+  grad.addColorStop(0.7, color);
+  grad.addColorStop(0.85, darkenColor(color, 15));
+  grad.addColorStop(1, darkenColor(color, 28));
   ctx.fillStyle = grad;
   ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.fill();
   // Bright specular band
   const spec = ctx.createLinearGradient(px, py + 5, px, py + 14);
   spec.addColorStop(0, 'rgba(255,255,255,0)');
-  spec.addColorStop(0.5, 'rgba(255,255,220,0.45)');
+  spec.addColorStop(0.5, 'rgba(255,255,220,0.50)');
   spec.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = spec; ctx.fillRect(px + inset + 2, py + 5, w - 4, 9);
   // Top highlight edge
-  ctx.fillStyle = 'rgba(255,255,200,0.35)'; ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
+  ctx.fillStyle = 'rgba(255,255,200,0.40)'; ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
   // Bottom/right shadow
   ctx.fillStyle = 'rgba(100,60,0,0.35)';
   ctx.fillRect(px + inset + 2, py + CELL_SIZE - 3, w - 4, 2);
@@ -399,32 +450,32 @@ function drawCellGold(ctx, px, py, inset, w, color) {
 
 function drawCellSilver(ctx, px, py, inset, w, color) {
   const r = 2;
-  // Silver gradient
+  // Silver gradient using remapped per-piece color
   const grad = ctx.createLinearGradient(px, py, px, py + CELL_SIZE);
-  grad.addColorStop(0, '#e8e8e8');
-  grad.addColorStop(0.15, '#d0d0d0');
-  grad.addColorStop(0.3, '#a8a8a8');
-  grad.addColorStop(0.5, '#c8c8c8');
-  grad.addColorStop(0.7, '#a0a0a0');
-  grad.addColorStop(0.85, '#909090');
-  grad.addColorStop(1, '#787878');
+  grad.addColorStop(0, lightenColor(color, 22));
+  grad.addColorStop(0.15, lightenColor(color, 12));
+  grad.addColorStop(0.3, darkenColor(color, 10));
+  grad.addColorStop(0.5, lightenColor(color, 5));
+  grad.addColorStop(0.7, darkenColor(color, 12));
+  grad.addColorStop(0.85, darkenColor(color, 20));
+  grad.addColorStop(1, darkenColor(color, 30));
   ctx.fillStyle = grad;
   ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.fill();
   // Polished mirror spec band
   const spec = ctx.createLinearGradient(px, py + 4, px, py + 13);
   spec.addColorStop(0, 'rgba(255,255,255,0)');
-  spec.addColorStop(0.5, 'rgba(255,255,255,0.40)');
+  spec.addColorStop(0.5, 'rgba(255,255,255,0.45)');
   spec.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = spec; ctx.fillRect(px + inset + 2, py + 4, w - 4, 9);
   // Subtle brush-line pattern
   ctx.save(); ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, r); ctx.clip();
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 0.5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 0.5;
   for (let i = 0; i < w; i += 3) {
     ctx.beginPath(); ctx.moveTo(px + inset, py + inset + i); ctx.lineTo(px + inset + w, py + inset + i); ctx.stroke();
   }
   ctx.restore();
   // Top highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
+  ctx.fillStyle = 'rgba(255,255,255,0.30)'; ctx.fillRect(px + inset + 2, py + inset, w - 4, 1.5);
   // Bottom shadow
   ctx.fillStyle = 'rgba(0,0,0,0.30)';
   ctx.fillRect(px + inset + 2, py + CELL_SIZE - 3, w - 4, 2);
@@ -432,8 +483,9 @@ function drawCellSilver(ctx, px, py, inset, w, color) {
 }
 
 function drawMiniCell(ctx, px, py, inset, w, s, color, theme) {
+  const c = remapColor(color, theme);
   const draw = MINI_CELL_DRAWERS[theme] || MINI_CELL_DRAWERS['glass'];
-  draw(ctx, px, py, inset, w, s, color);
+  draw(ctx, px, py, inset, w, s, c);
 }
 
 /** Per-theme mini cell draw functions. */
@@ -510,29 +562,29 @@ const MINI_CELL_DRAWERS = {
   },
   gold(ctx, px, py, inset, w, s, color) {
     const grad = ctx.createLinearGradient(px, py, px, py + s);
-    grad.addColorStop(0, '#ffeaa0');
-    grad.addColorStop(0.5, '#d4a520');
-    grad.addColorStop(1, '#8b6914');
+    grad.addColorStop(0, lightenColor(color, 28));
+    grad.addColorStop(0.5, color);
+    grad.addColorStop(1, darkenColor(color, 25));
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,220,0.30)';
+    ctx.fillStyle = 'rgba(255,255,220,0.35)';
     ctx.fillRect(px + 2, py + inset, w - 3, 1);
   },
   silver(ctx, px, py, inset, w, s, color) {
     const grad = ctx.createLinearGradient(px, py, px, py + s);
-    grad.addColorStop(0, '#e8e8e8');
-    grad.addColorStop(0.5, '#a8a8a8');
-    grad.addColorStop(1, '#787878');
+    grad.addColorStop(0, lightenColor(color, 20));
+    grad.addColorStop(0.5, color);
+    grad.addColorStop(1, darkenColor(color, 28));
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillStyle = 'rgba(255,255,255,0.30)';
     ctx.fillRect(px + 2, py + inset, w - 3, 1);
   },
 };
 
 function drawPreviewPiece(ctx, type, width, height, theme, cellSize) {
   const shape = getShapeForType(type);
-  const color = getColorForType(type);
+  const color = remapColor(getColorForType(type), theme);
   const maxCellW = (width - 4) / shape[0].length;
   const maxCellH = (height - 4) / shape.length;
   const previewCellSize = Math.min(26, Math.floor(Math.min(maxCellW, maxCellH)));
@@ -664,12 +716,12 @@ const PREVIEW_CELL_DRAWERS = {
   gold(ctx, px, py, s, color) {
     const inset = 1, w = s - 2;
     const grad = ctx.createLinearGradient(px, py, px, py + s);
-    grad.addColorStop(0, '#ffeaa0');
-    grad.addColorStop(0.5, '#d4a520');
-    grad.addColorStop(1, '#8b6914');
+    grad.addColorStop(0, lightenColor(color, 28));
+    grad.addColorStop(0.5, color);
+    grad.addColorStop(1, darkenColor(color, 25));
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,220,0.35)';
+    ctx.fillStyle = 'rgba(255,255,220,0.40)';
     ctx.fillRect(px + 3, py + inset, w - 4, 1.5);
     ctx.fillStyle = 'rgba(100,60,0,0.30)';
     ctx.fillRect(px + 3, py + s - 3, w - 4, 2);
@@ -677,12 +729,12 @@ const PREVIEW_CELL_DRAWERS = {
   silver(ctx, px, py, s, color) {
     const inset = 1, w = s - 2;
     const grad = ctx.createLinearGradient(px, py, px, py + s);
-    grad.addColorStop(0, '#e8e8e8');
-    grad.addColorStop(0.5, '#a8a8a8');
-    grad.addColorStop(1, '#787878');
+    grad.addColorStop(0, lightenColor(color, 20));
+    grad.addColorStop(0.5, color);
+    grad.addColorStop(1, darkenColor(color, 28));
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.roundRect(px + inset, py + inset, w, w, 1); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.30)';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
     ctx.fillRect(px + 3, py + inset, w - 4, 1.5);
     ctx.fillStyle = 'rgba(0,0,0,0.30)';
     ctx.fillRect(px + 3, py + s - 3, w - 4, 2);
