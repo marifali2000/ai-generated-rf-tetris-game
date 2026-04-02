@@ -113,6 +113,20 @@ class Game {
       if (this.#state === 'playing') this.#togglePause();
     });
 
+    document.getElementById('mobile-btn-start')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.#sound.init();
+      this.#handleStart();
+      mobileDrawer?.classList.add('drawer-hidden');
+    });
+
+    document.getElementById('mobile-btn-stop')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.#sound.init();
+      this.#stopGame();
+      mobileDrawer?.classList.add('drawer-hidden');
+    });
+
     document.getElementById('mobile-btn-demo')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.#sound.init();

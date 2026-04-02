@@ -109,8 +109,8 @@ class InputHandler {
   }
 
   #attachTouchControls() {
-    // Use dedicated gesture area on mobile, fall back to canvas on desktop emulation
-    const gestureTarget = document.getElementById('gesture-area') || document.getElementById('game-canvas');
+    // Use the game canvas as the gesture target — it fills the screen on mobile
+    const gestureTarget = document.getElementById('game-canvas');
     if (!gestureTarget) return;
 
     let startX = 0;

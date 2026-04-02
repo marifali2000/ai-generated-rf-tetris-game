@@ -346,166 +346,144 @@ kbd {
   display: none;
 }
 
-/* Mobile stats bar — hidden on desktop */
-#mobile-stats {
-  display: none;
-}
-
-/* Mobile drawer — hidden on desktop */
-#mobile-drawer {
-  display: none;
-}
-
-/* Gesture area — hidden on desktop */
-#gesture-area {
-  display: none;
-}
-
-/* Mobile bottom bar — hidden on desktop */
-#mobile-bottom-bar {
+/* Mobile-only elements — hidden on desktop */
+#mobile-stats,
+#mobile-drawer,
+#mobile-menu-toggle {
   display: none;
 }
 
 /* ─── Mobile / Touch ──────────────────────────────── */
 @media (max-width: 768px) {
   body {
-    padding: 6px 0 0;
-    justify-content: flex-start;
+    padding: 0;
+    justify-content: center;
+    align-items: center;
     overflow: hidden;
     height: 100vh;
     height: 100dvh;
     -webkit-user-select: none;
     user-select: none;
     touch-action: none;
+    position: relative;
   }
 
   #game-title {
-    font-size: 18px;
-    letter-spacing: 8px;
-    margin-bottom: 4px;
+    display: none;
   }
 
-  /* Hide side panels and old touch buttons on mobile */
+  /* Hide side panels */
   #left-panel,
   #right-panel,
   #touch-controls {
     display: none !important;
   }
 
-  /* Mobile stats bar */
+  /* Stats overlaid on top of canvas */
   #mobile-stats {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    width: 100%;
-    max-width: 380px;
-    margin: 0 auto 2px;
-    padding: 4px 8px;
-    background: linear-gradient(180deg, rgba(13, 27, 46, 0.8), rgba(8, 16, 30, 0.9));
-    border: 1px solid rgba(40, 80, 130, 0.35);
-    border-radius: 8px;
-    position: relative;
-    z-index: 10;
+    position: fixed;
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 6px 12px;
+    background: linear-gradient(180deg, rgba(4, 8, 16, 0.85) 0%, rgba(4, 8, 16, 0) 100%);
+    pointer-events: none;
   }
 
   .mobile-stat {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1px;
+    gap: 0;
   }
 
   .mobile-stat-label {
-    font-size: 9px;
+    font-size: 8px;
     letter-spacing: 2px;
     color: #5a8eb8;
     text-transform: uppercase;
   }
 
   .mobile-stat span:last-child {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #fff;
     font-variant-numeric: tabular-nums;
     font-family: 'Courier New', 'Consolas', monospace;
-    text-shadow: 0 0 8px rgba(90, 176, 255, 0.35);
+    text-shadow: 0 0 10px rgba(90, 176, 255, 0.5);
   }
 
+  /* Game fills the entire screen */
   #game-container {
     gap: 0;
+    position: fixed;
+    inset: 0;
+    display: flex;
     justify-content: center;
-    flex: 0 0 auto;
+    align-items: center;
   }
 
   #center-panel {
     width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
   }
 
   #game-canvas {
-    width: min(100vw - 16px, 52dvh);
-    height: auto;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     touch-action: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  #overlay {
+    border-radius: 0;
   }
 
   #overlay-text {
-    font-size: 16px;
+    font-size: 18px;
     letter-spacing: 3px;
   }
 
-  /* Full-screen gesture area — fills space below canvas */
-  #gesture-area {
-    display: block;
-    flex: 1;
-    width: 100%;
-    touch-action: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Bottom bar: gesture hints + menu button */
-  #mobile-bottom-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 6px 12px;
-    padding-bottom: max(6px, env(safe-area-inset-bottom));
-    background: rgba(8, 16, 30, 0.8);
-    border-top: 1px solid rgba(40, 80, 130, 0.3);
-    position: relative;
-    z-index: 10;
-  }
-
-  #gesture-hint {
-    font-size: 9px;
-    color: #4a7a9a;
-    letter-spacing: 0.5px;
-  }
-
+  /* Floating menu button (top-right) */
   #mobile-menu-toggle {
-    font-size: 22px;
-    color: #5ab0ff;
-    background: none;
-    border: 2px solid rgba(60, 120, 190, 0.5);
-    border-radius: 6px;
-    padding: 4px 10px;
+    display: block;
+    position: fixed;
+    top: env(safe-area-inset-top, 6px);
+    right: 8px;
+    z-index: 30;
+    font-size: 20px;
+    color: rgba(90, 176, 255, 0.7);
+    background: rgba(8, 16, 30, 0.6);
+    border: 1px solid rgba(60, 120, 190, 0.3);
+    border-radius: 8px;
+    padding: 6px 10px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   #mobile-menu-toggle:active {
-    background: rgba(90, 176, 255, 0.15);
+    background: rgba(90, 176, 255, 0.2);
     border-color: rgba(90, 176, 255, 0.8);
+    color: #fff;
   }
 
   #keys-section {
     display: none;
   }
 
-  /* ── Mobile settings drawer ── */
+  /* ── Expandable settings drawer ── */
   #mobile-drawer {
     display: block;
     position: fixed;
@@ -513,13 +491,13 @@ kbd {
     left: 0;
     right: 0;
     z-index: 100;
-    background: linear-gradient(180deg, rgba(8, 18, 35, 0.97), rgba(5, 10, 22, 0.99));
-    border-top: 2px solid rgba(60, 120, 190, 0.5);
-    padding: 12px 16px;
+    background: linear-gradient(180deg, rgba(6, 14, 28, 0.96), rgba(4, 8, 18, 0.98));
+    border-top: 1px solid rgba(60, 120, 190, 0.4);
+    padding: 14px 16px;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
     transition: transform 0.3s ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   #mobile-drawer.drawer-hidden {
@@ -542,15 +520,15 @@ kbd {
 
   .drawer-btn {
     flex: 1;
-    padding: 10px 6px;
-    font-size: 12px;
+    padding: 11px 6px;
+    font-size: 13px;
     font-weight: 700;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     letter-spacing: 1px;
     color: #c0d8f0;
     background: linear-gradient(180deg, rgba(20, 45, 75, 0.8), rgba(10, 25, 45, 0.9));
     border: 1px solid rgba(60, 120, 190, 0.45);
-    border-radius: 6px;
+    border-radius: 8px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     cursor: pointer;
@@ -559,6 +537,7 @@ kbd {
   .drawer-btn:active {
     background: rgba(30, 65, 110, 0.9);
     border-color: rgba(90, 176, 255, 0.7);
+    color: #fff;
   }
 
   .drawer-label {
@@ -571,14 +550,14 @@ kbd {
 
   .drawer-select {
     flex: 1;
-    padding: 8px 6px;
-    font-size: 12px;
+    padding: 9px 8px;
+    font-size: 13px;
     font-weight: 600;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: #c0d8f0;
     background: rgba(15, 35, 60, 0.9);
     border: 1px solid rgba(60, 120, 190, 0.45);
-    border-radius: 5px;
+    border-radius: 6px;
     -webkit-appearance: none;
     appearance: none;
   }
@@ -600,31 +579,35 @@ kbd {
 
   .drawer-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: #5ab0ff;
     border: 2px solid #1b3a5c;
   }
 
   .drawer-slider::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: #5ab0ff;
     border: 2px solid #1b3a5c;
+  }
+
+  #drawer-gestures {
+    font-size: 9px;
+    color: #4a6a8a;
+    text-align: center;
+    letter-spacing: 0.5px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(40, 80, 130, 0.2);
   }
 }
 
 /* Small phones */
 @media (max-width: 380px) {
-  #game-title {
-    font-size: 14px;
-    letter-spacing: 6px;
-    margin-bottom: 2px;
-  }
-
-  #gesture-hint {
-    font-size: 8px;
+  .drawer-btn {
+    padding: 9px 4px;
+    font-size: 11px;
   }
 }

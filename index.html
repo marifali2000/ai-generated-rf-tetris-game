@@ -91,16 +91,20 @@
     </div>
   </div>
 
-  <!-- Mobile gesture area (covers full screen below stats) -->
-  <div id="gesture-area"></div>
+  <!-- Mobile floating menu button -->
+  <button id="mobile-menu-toggle">☰</button>
 
   <!-- Mobile settings drawer -->
   <div id="mobile-drawer" class="drawer-hidden">
     <div id="drawer-content">
       <div class="drawer-row">
+        <button class="drawer-btn" id="mobile-btn-start">▶ START</button>
+        <button class="drawer-btn" id="mobile-btn-pause">⏸ PAUSE</button>
+        <button class="drawer-btn" id="mobile-btn-stop">⏹ STOP</button>
+      </div>
+      <div class="drawer-row">
         <button class="drawer-btn" id="mobile-btn-demo">⚙ DEMO</button>
         <button class="drawer-btn" id="mobile-btn-mute">🔊 SOUND</button>
-        <button class="drawer-btn" id="mobile-btn-pause">⏸ PAUSE</button>
       </div>
       <div class="drawer-row">
         <label class="drawer-label">THEME</label>
@@ -116,13 +120,10 @@
         <label class="drawer-label">VOL</label>
         <input type="range" id="mobile-volume" min="0" max="100" value="70" class="drawer-slider">
       </div>
+      <div id="drawer-gestures">
+        Swipe ←→ move · ↓ drop · tap rotate · 2-finger hold
+      </div>
     </div>
-  </div>
-
-  <!-- Mobile gesture hint + settings toggle -->
-  <div id="mobile-bottom-bar">
-    <span id="gesture-hint">Swipe ←→ move · ↓ drop · tap rotate · 2-finger hold</span>
-    <button id="mobile-menu-toggle">☰</button>
   </div>
 
   <script type="module" src="js/game.js"></script>
