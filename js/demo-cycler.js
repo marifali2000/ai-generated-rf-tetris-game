@@ -1,10 +1,10 @@
 /**
  * Auto-cycles through game settings during demo mode.
- * Two-phase approach: highlight the control, pause, then apply and resume.
+ * Highlights the control being changed, applies the setting, game keeps playing.
  */
 
-const PLAY_DURATION = 5000;   // ms to play after applying a setting
-const HIGHLIGHT_DURATION = 1800; // ms to pause & highlight before applying
+const STEP_INTERVAL = 6000;      // ms between setting changes
+const HIGHLIGHT_DURATION = 2500; // ms the control stays highlighted after change
 
 /** Maps setting type → demo panel element IDs to highlight. */
 const HIGHLIGHT_IDS = {
@@ -38,10 +38,11 @@ const DEMO_SEQUENCE = [
 ];
 
 export class DemoCycler {
-  #timer = null;
+  #stepTimer = null;
+  #highlightTimer = null;
   #stepIndex = 0;
   #callbacks;
-  #phase = 'idle'; // idle | highlight | play
+  #running = false;
 
   /**
    * @param {Object} callbacks
@@ -50,8 +51,6 @@ export class DemoCycler {
    * @param {Function} callbacks.onSpeedChange
    * @param {Function} callbacks.onMute
    * @param {Function} callbacks.onUnmute
-   * @param {Function} callbacks.onPause  — pause game during highlight
-   * @param {Function} callbacks.onResume — resume game after applying
    * @param {Function} callbacks.onHighlight — highlight controls for a type
    * @param {Function} callbacks.onClearHighlight — remove highlights
    */
@@ -62,52 +61,48 @@ export class DemoCycler {
   start() {
     this.stop();
     this.#stepIndex = 0;
-    this.#phase = 'play';
-    // Let the game play a bit before the first setting change
-    this.#timer = setTimeout(() => this.#beginHighlightPhase(), PLAY_DURATION);
+    this.#running = true;
+    this.#stepTimer = setTimeout(() => this.#tick(), STEP_INTERVAL);
   }
 
   stop() {
-    if (this.#timer) {
-      clearTimeout(this.#timer);
-      this.#timer = null;
+    this.#running = false;
+    if (this.#stepTimer) {
+      clearTimeout(this.#stepTimer);
+      this.#stepTimer = null;
     }
-    this.#phase = 'idle';
+    if (this.#highlightTimer) {
+      clearTimeout(this.#highlightTimer);
+      this.#highlightTimer = null;
+    }
     this.#stepIndex = 0;
-    this.#clearHighlights();
-    this.#callbacks.onClearHighlight();
-    this.#restoreDemoPanelOpacity();
+    this.#clearAllHighlights();
     this.#removeIndicator();
   }
 
   get active() {
-    return this.#phase !== 'idle';
+    return this.#running;
   }
 
-  /** Phase 1: pause game, highlight the control, show indicator. */
-  #beginHighlightPhase() {
-    if (this.#phase === 'idle') return;
+  /** Apply the setting, highlight the control, schedule next step. */
+  #tick() {
+    if (!this.#running) return;
     const step = DEMO_SEQUENCE[this.#stepIndex];
-    this.#phase = 'highlight';
-    this.#callbacks.onPause();
+
+    // Highlight, apply, show indicator — all at once, no pause
     this.#highlightControls(step.type);
     this.#callbacks.onHighlight(step.type);
-    this.#showIndicator(step.label);
     this.#bringDemoPanelForward();
-    this.#timer = setTimeout(() => this.#beginPlayPhase(), HIGHLIGHT_DURATION);
-  }
-
-  /** Phase 2: apply the setting, resume game, play for a while. */
-  #beginPlayPhase() {
-    const step = DEMO_SEQUENCE[this.#stepIndex];
-    this.#phase = 'play';
-    this.#clearHighlights();
-    this.#callbacks.onClearHighlight();
+    this.#showIndicator(step.label);
     this.#applyStep(step);
-    this.#restoreDemoPanelOpacity();
-    this.#callbacks.onResume();
+
+    // Clear highlights after duration
+    this.#highlightTimer = setTimeout(() => {
+      this.#clearAllHighlights();
+    }, HIGHLIGHT_DURATION);
+
     this.#stepIndex = (this.#stepIndex + 1) % DEMO_SEQUENCE.length;
-    this.#timer = setTimeout(() => this.#beginHighlightPhase(), PLAY_DURATION);
+    this.#stepTimer = setTimeout(() => this.#tick(), STEP_INTERVAL);
   }
 
   #applyStep(step) {
@@ -132,7 +127,7 @@ export class DemoCycler {
 
   /** Highlight the relevant control row in the demo panel. */
   #highlightControls(type) {
-    this.#clearHighlights();
+    this.#clearMobileHighlights();
     const ids = HIGHLIGHT_IDS[type] || [];
     for (const id of ids) {
       const el = document.getElementById(id);
@@ -143,7 +138,7 @@ export class DemoCycler {
     }
   }
 
-  #clearHighlights() {
+  #clearMobileHighlights() {
     for (const el of document.querySelectorAll('.demo-row-highlight')) {
       el.classList.remove('demo-row-highlight');
     }
@@ -152,7 +147,13 @@ export class DemoCycler {
     }
   }
 
-  /** Make demo panel fully opaque during highlight phase. */
+  #clearAllHighlights() {
+    this.#clearMobileHighlights();
+    this.#callbacks.onClearHighlight();
+    this.#restoreDemoPanelOpacity();
+  }
+
+  /** Make demo panel fully opaque during highlight. */
   #bringDemoPanelForward() {
     document.getElementById('demo-controls')?.classList.add('demo-highlight-active');
   }

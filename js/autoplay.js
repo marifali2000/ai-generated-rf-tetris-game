@@ -5,32 +5,26 @@
 
 class AutoPlayer {
   #active = false;
-  #paused = false;
   #moveQueue = [];
 
   get active() { return this.#active; }
 
   start() {
     this.#active = true;
-    this.#paused = false;
     this.#moveQueue = [];
   }
 
   stop() {
     this.#active = false;
-    this.#paused = false;
     this.#moveQueue = [];
   }
-
-  pause() { this.#paused = true; }
-  resume() { this.#paused = false; }
 
   /**
    * Called each frame by game loop. Returns next action or null.
    * Actions: 'left', 'right', 'rotateCW', 'hardDrop'
    */
   getNextMove(board, piece, holdType, nextQueue) {
-    if (!this.#active || this.#paused || !piece) return null;
+    if (!this.#active || !piece) return null;
 
     // If we have queued moves, serve them
     if (this.#moveQueue.length > 0) {

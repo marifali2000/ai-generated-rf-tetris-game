@@ -64,8 +64,6 @@ class Game {
       onSpeedChange: (v) => this.#syncSpeed(v),
       onMute: () => this.#demoSetMuted(true),
       onUnmute: () => this.#demoSetMuted(false),
-      onPause: () => this.#demoPause(),
-      onResume: () => this.#demoResume(),
       onHighlight: (type) => this.#demoHighlightDesktop(type),
       onClearHighlight: () => this.#demoClearDesktopHighlight(),
     });
@@ -873,27 +871,6 @@ class Game {
     if (this.#sound.muted !== muted) {
       this.#sound.toggleMute();
       this.#updateMuteButton();
-    }
-  }
-
-  /** Pause game loop for demo setting highlight phase. */
-  #demoPause() {
-    if (this.#state !== 'playing') return;
-    this.#autoPlayer.pause();
-    this.#state = 'paused';
-    this.#renderer.showOverlay('⚙ CHANGING SETTING…');
-  }
-
-  /** Resume game loop after demo setting is applied. */
-  #demoResume() {
-    if (this.#state !== 'paused') return;
-    this.#autoPlayer.resume();
-    this.#state = 'playing';
-    this.#renderer.hideOverlay();
-    this.#lastTimestamp = performance.now();
-    this.#lastDropTime = performance.now();
-    if (!this.#animFrameId) {
-      this.#animFrameId = requestAnimationFrame((ts) => this.#gameLoop(ts));
     }
   }
 
