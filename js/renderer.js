@@ -230,7 +230,7 @@ class Renderer {
     // Build vanishing row data — each row vanishes one by one
     this.#vanishingRows = [];
     this.#vanishPhase = true;
-    const ROW_STAGGER = 120; // frames between each row starting to vanish (very slow)
+    const ROW_STAGGER = 60; // frames between each row starting to vanish
 
     for (let i = 0; i < clearedRows.length; i++) {
       const row = clearedRows[i];
@@ -243,8 +243,8 @@ class Renderer {
           color: colors[c],
           scale: 1,
           alpha: 1,
-          // Cells vanish left-to-right with very visible stagger
-          delay: c * 8,
+          // Cells vanish left-to-right with stagger
+          delay: c * 4,
           shrinking: false,
           glowAlpha: 0,
           popSoundPlayed: false, // per-cell pop sound tracking
@@ -253,7 +253,7 @@ class Renderer {
       this.#vanishingRows.push({
         row,
         cells,
-        delay: i * ROW_STAGGER, // each row waits a long time before vanishing
+        delay: i * ROW_STAGGER, // each row waits before vanishing
         highlightAlpha: 0,
         phase: 'highlight', // highlight → shrink → done
         phaseTimer: 0,
@@ -271,7 +271,7 @@ class Renderer {
     this.#addShockwaves(clearedRows, count, isTetris);
 
     // Timer for particles and other effects
-    this.#clearAnimDuration = 120 + count * ROW_STAGGER + 200;
+    this.#clearAnimDuration = 60 + count * ROW_STAGGER + 100;
     this.#clearAnimTimer = this.#clearAnimDuration;
 
     // Background reactivity
@@ -525,7 +525,7 @@ class Renderer {
         currentY: fc.fromRow,
         color: fc.color,
         velocity: 0,
-        gravity: 0.004 + Math.random() * 0.002, // super slow gravity — very visible falling
+        gravity: 0.008 + Math.random() * 0.004, // visible falling
         bounces: 0,
         delay: 0,
         started: false,
@@ -867,8 +867,8 @@ class Renderer {
       vr.phaseTimer++;
 
       if (vr.phase === 'highlight') {
-        // Glow highlight ramps up over ~40 frames, using the row's own colors
-        vr.highlightAlpha = Math.min(1, vr.phaseTimer / 40);
+        // Glow highlight ramps up over ~20 frames, using the row's own colors
+        vr.highlightAlpha = Math.min(1, vr.phaseTimer / 20);
 
         // Play highlight sound when this row starts glowing
         if (!vr.soundPlayed) {
@@ -891,7 +891,7 @@ class Renderer {
         ctx.fillRect(0, vr.row * CELL_SIZE, COLS * CELL_SIZE, CELL_SIZE);
         ctx.restore();
 
-        if (vr.phaseTimer >= 60) {
+        if (vr.phaseTimer >= 30) {
           vr.phase = 'shrink';
           vr.phaseTimer = 0;
         }
@@ -912,8 +912,19 @@ class Renderer {
             cell.popSoundPlayed = true;
             this.#soundCallbacks.onCellPop(cell.col, COLS);
           }
-          cell.scale *= 0.975;
-          cell.alpha *= 0.98;
+          cell.scale *= 0.95;
+          cell.alpha *= 0.96;
+          // Spawn particles immediately as cell starts shrinking (simultaneous)
+          if (!cell.particlesSpawned) {
+            cell.particlesSpawned = true;
+            const cx = cell.col * CELL_SIZE + CELL_SIZE / 2;
+            const cy = vr.row * CELL_SIZE + CELL_SIZE / 2;
+            for (let p = 0; p < 5; p++) {
+              if (this.#particles.length < MAX_PARTICLES) {
+                this.#particles.push(new Particle(cx, cy, cell.color));
+              }
+            }
+          }
           if (cell.scale > 0.05 && cell.alpha > 0.05) {
             // Draw shrinking cell
             const px = cell.col * CELL_SIZE + CELL_SIZE / 2;
@@ -932,16 +943,6 @@ class Renderer {
             ctx.fillRect(-half + 1, -half + 1, CELL_SIZE - 2, CELL_SIZE - 2);
             ctx.restore();
             rowDone = false;
-          } else if (!cell.particlesSpawned) {
-            // Spawn particles when cell vanishes
-            cell.particlesSpawned = true;
-            const cx = cell.col * CELL_SIZE + CELL_SIZE / 2;
-            const cy = vr.row * CELL_SIZE + CELL_SIZE / 2;
-            for (let p = 0; p < 4; p++) {
-              if (this.#particles.length < MAX_PARTICLES) {
-                this.#particles.push(new Particle(cx, cy, cell.color));
-              }
-            }
           }
         }
         if (rowDone) {
