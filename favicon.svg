@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#120e28"/>
+    </linearGradient>
+    <linearGradient id="t" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d946ef"/>
+      <stop offset="100%" stop-color="#9333ea"/>
+    </linearGradient>
+    <linearGradient id="i" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="o" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#bg)"/>
+  <!-- T-piece (purple) -->
+  <rect x="3" y="3" width="7" height="7" rx="1.5" fill="url(#t)" opacity="0.95"/>
+  <rect x="10" y="3" width="7" height="7" rx="1.5" fill="url(#t)" opacity="0.95"/>
+  <rect x="17" y="3" width="7" height="7" rx="1.5" fill="url(#t)" opacity="0.95"/>
+  <rect x="10" y="10" width="7" height="7" rx="1.5" fill="url(#t)" opacity="0.95"/>
+  <!-- I-piece cell (cyan) -->
+  <rect x="3" y="17" width="7" height="7" rx="1.5" fill="url(#i)" opacity="0.9"/>
+  <!-- S-piece cell (green) -->
+  <rect x="17" y="17" width="7" height="7" rx="1.5" fill="url(#s)" opacity="0.9"/>
+  <!-- O-piece cell (yellow) -->
+  <rect x="3" y="24" width="7" height="5" rx="1.5" fill="url(#o)" opacity="0.85"/>
+  <rect x="10" y="24" width="7" height="5" rx="1.5" fill="url(#o)" opacity="0.85"/>
+  <!-- Glow highlights -->
+  <rect x="4" y="4" width="5" height="2" rx="1" fill="white" opacity="0.3"/>
+  <rect x="11" y="4" width="5" height="2" rx="1" fill="white" opacity="0.3"/>
+  <rect x="18" y="4" width="5" height="2" rx="1" fill="white" opacity="0.3"/>
+  <rect x="11" y="11" width="5" height="2" rx="1" fill="white" opacity="0.25"/>
+</svg>

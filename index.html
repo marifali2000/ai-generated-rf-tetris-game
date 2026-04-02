@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="game-title">TETRIS</div>
+  <div id="game-container">
+    <div id="left-panel">
+      <div id="hold-section">
+        <h3>HOLD</h3>
+        <canvas id="hold-canvas" width="140" height="110"></canvas>
+      </div>
+
+      <div id="button-section">
+        <button id="btn-start" class="game-btn">▶ START</button>
+        <button id="btn-pause" class="game-btn" disabled>⏸ PAUSE</button>
+        <button id="btn-stop" class="game-btn" disabled>⏹ STOP</button>
+        <button id="btn-demo" class="game-btn">⚙ DEMO</button>
+        <button id="btn-mute" class="game-btn">🔊 SOUND</button>
+      </div>
+
+      <div id="theme-section">
+        <h3>SOUND THEME</h3>
+        <select id="sound-theme" class="theme-select">
+          <option value="glass">🔮 Glass Shatter</option>
+          <option value="concrete">🧱 Concrete Break</option>
+          <option value="crystal">💎 Crystal Chime</option>
+          <option value="metal">⚙️ Metal Clang</option>
+          <option value="ice">❄️ Ice Crack</option>
+        </select>
+      </div>
+
+      <div id="volume-section">
+        <h3>VOLUME</h3>
+        <input type="range" id="volume-slider" min="0" max="100" value="70" class="volume-slider">
+      </div>
+
+      <div id="keys-section">
+        <div class="key-row"><kbd>←</kbd><kbd>→</kbd> Move</div>
+        <div class="key-row"><kbd>↓</kbd> Soft Drop</div>
+        <div class="key-row"><kbd>Space</kbd> Hard Drop</div>
+        <div class="key-row"><kbd>↑</kbd> Rotate</div>
+        <div class="key-row"><kbd>C</kbd> Hold</div>
+        <div class="key-row"><kbd>Enter</kbd> Start</div>
+        <div class="key-row"><kbd>P</kbd> Pause</div>
+        <div class="key-row"><kbd>M</kbd> Mute</div>
+        <div class="key-row"><kbd>D</kbd> Demo</div>
+      </div>
+    </div>
+
+    <div id="center-panel">
+      <canvas id="game-canvas" width="384" height="768"></canvas>
+      <div id="overlay" class="visible">
+        <div id="overlay-text">PRESS ENTER TO START</div>
+      </div>
+    </div>
+
+    <div id="right-panel">
+      <div id="next-section">
+        <h3>NEXT</h3>
+        <canvas id="next-canvas" width="140" height="340"></canvas>
+      </div>
+      <div id="score-section">
+        <div class="stat">
+          <h3>SCORE</h3>
+          <div id="score-value">0</div>
+        </div>
+        <div class="stat">
+          <h3>LEVEL</h3>
+          <div id="level-value">1</div>
+        </div>
+        <div class="stat">
+          <h3>LINES</h3>
+          <div id="lines-value">0</div>
+        </div>
+        <div class="stat high-score-stat">
+          <h3>BEST</h3>
+          <div id="high-score">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
