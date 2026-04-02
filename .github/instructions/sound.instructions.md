@@ -19,8 +19,8 @@ applyTo: "js/sound.js"
 
 ## Sound Design Patterns
 - **Impact** — Low oscillator (40–100Hz, 0.1s) + noise burst for weight
-- **Snap/Click** — Short noise (0.03–0.05s) through highpass/bandpass filter
-- **Shatter/Break** — Noise sweep with descending filter frequency (4000→200Hz)
+- **Snap/Click** — Short noise (0.03–0.05s) through bandpass filter (3000–5000Hz, Q=0.6–1.0)
+- **Shatter/Break** — Multi-layered: impact burst (bandpass 4–5.5kHz) + sustained body (bandpass sweep 5→3kHz) + scattered debris shards (bandpass 4–8kHz). Use bandpass, NOT highpass — highpass alone creates thin wispy sounds. Low Q (0.4–0.8) sounds natural; high Q (>5) sounds metallic
 - **Celebration** — Ascending arpeggio using musical intervals (octaves, fifths)
 - **Collapse/Fail** — Descending oscillator + long noise tail with slow decay
 - **Layer sounds** — Every impactful sound needs 2–4 layers: transient + body + texture + tail

@@ -14,9 +14,11 @@
 
 ### BiquadFilterNode
 - `lowpass`: Cuts high frequencies (muffled sounds)
-- `highpass`: Cuts low frequencies (thin sounds)
-- `bandpass`: Only passes frequencies near center (focused sounds)
+- `highpass`: Cuts low frequencies (thin, wispy sounds — avoid for glass)
+- `bandpass`: Only passes frequencies near center (focused sounds — preferred for glass/shatter)
 - Key params: `frequency`, `Q` (resonance)
+- **For glass sounds**: Use bandpass at 3500–8000Hz with low Q (0.4–0.8). Highpass alone sounds thin and airy. Low Q sounds natural; high Q (>5) creates metallic resonance — avoid for realistic glass
+- **For impacts**: Bandpass at 4000–5500Hz, Q=0.5–1.0, duration 20–25ms
 
 ### GainNode
 - Controls volume

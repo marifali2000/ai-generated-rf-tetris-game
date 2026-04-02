@@ -2,6 +2,19 @@
 
 Drop-in replacement recipes for each game sound. Each recipe is designed to be more satisfying, layered, and addictive than the basic version.
 
+## Glass Theme Principles
+
+Real glass breaking (from reference audio analysis) has these characteristics:
+
+- **Peak energy at 4000–5500Hz** — NOT ultra-high (>8kHz). Use bandpass, not highpass
+- **Strong sustained body** lasting 80–200ms that decays with irregularity
+- **Multiple impact bursts** — secondary impacts at ~60% through as large pieces break away
+- **Sporadic loud shard hits** scattered unpredictably through the cascade
+- **Low Q values (0.4–0.8)** — natural broadband character. High Q (>5) sounds metallic
+- **Multi-layered**: impact burst + shatter body + shard cascade + scattered debris
+
+**Critical rule**: For ALL glass-themed sounds, use `bandpass` filters (not `highpass`). Highpass creates thin, wispy, airy sounds that lack the body of real glass. Bandpass centred at 3500–8000Hz with low Q gives convincing glass character.
+
 ## Spawn — "Crystalline Pop"
 
 Replace the basic poing with a bubbly pop + shimmer tail:

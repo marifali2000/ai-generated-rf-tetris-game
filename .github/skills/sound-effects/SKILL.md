@@ -52,9 +52,14 @@ createNoiseBuffer(duration = 1) {
 ## Sound Recipes
 
 ### Glass Shatter (Row/Match Clear)
-- Source: White noise buffer (0.3s)
-- Filter: Bandpass, Q=1.0, frequency automates from 4000→200Hz over 0.3s
-- Gain: Start at 0.8, exponentialRampToValueAtTime 0.001 at +0.3s
+Real glass breaking has strong energy at 4–6kHz with a sustained body, NOT thin highpass hiss.
+- **Impact burst**: White noise (20–25ms), bandpass at 4000–5500Hz, Q=0.5–1.0, sharp exponential decay
+- **Shatter body**: White noise (80–120ms), bandpass sweeping 5000→3000Hz, Q=0.4, gradual decay
+- **Shard cascade**: 5–10 short (15–25ms) bandpass noise bursts at 4000–8000Hz, Q=0.4–0.8, staggered
+- **Secondary impact**: Repeat impact burst at ~60% through (simulates large piece breaking away)
+- **Scatter shards**: 5–7 tiny (10–15ms) bandpass noise puffs at 4000–8000Hz, randomised timing
+- Always use **bandpass** (not highpass) for glass — highpass creates thin, wispy sounds lacking the body of real glass
+- Low Q values (0.4–0.8) sound natural; high Q (>5) sounds metallic/resonant — avoid for glass
 - For multi-row/match clears, layer 2-3 instances with slight time offsets
 
 ### Impact Thud (Hard Drop / Slam)
@@ -63,13 +68,15 @@ createNoiseBuffer(duration = 1) {
 - Layer with very short noise burst (0.05s) for texture
 
 ### Snap (Element Placement / Lock)
-- Noise buffer: 0.05s duration
-- Filter: Bandpass at 3000Hz, Q=2.0
-- Gain: 0.4, fast decay
+- Noise buffer: 0.03s duration
+- Filter: Bandpass at 3000–4500Hz, Q=0.6–1.0
+- Gain: 0.3, fast exponential decay
+- Layer with a brief sub-bass sine (80–100Hz, 0.03s) for weight
 
 ### Crystalline Click (Rotation / Action)
 - Oscillator: Sine, 1200Hz, duration 0.03s
 - Gain: 0.2, immediate decay
+- Add octave harmonic (2400Hz) at 30% volume for brightness
 
 ### Collapse (Game Over)
 - Oscillator: Sine, sweep 400→40Hz over 2s

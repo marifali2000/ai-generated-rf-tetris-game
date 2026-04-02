@@ -7,7 +7,7 @@ export const glassTheme = {
   spawn(sc) {
   const t = sc.now();
   const pf = 0.96 + Math.random() * 0.08;
-  // Glass tinkle ping
+  // Glass tinkle ping — body tone
   const osc = sc.ctx.createOscillator();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(2800 * pf, t);
@@ -18,21 +18,23 @@ export const glassTheme = {
   env.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
   osc.connect(env); env.connect(sc.gain);
   osc.start(t); osc.stop(t + 0.15);
-  // High sparkle
+  // Sparkle — bandpass for glass body
   const n = sc.ctx.createBufferSource();
-  n.buffer = sc.createNoiseBuffer(0.02);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass'; hpf.frequency.value = 7000;
+  n.buffer = sc.createNoiseBuffer(0.025);
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 5500 + Math.random() * 1500;
+  bp.Q.value = 0.6;
   const ne = sc.ctx.createGain();
-  ne.gain.setValueAtTime(0.08, t);
-  ne.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+  ne.gain.setValueAtTime(0.10, t);
+  ne.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
   n.start(t); n.stop(t + 0.03);
     },
 
   rotate(sc) {
   const t = sc.now();
   const p = 0.97 + Math.random() * 0.06;
+  // Fundamental tick
   const osc = sc.ctx.createOscillator();
   osc.type = 'sine'; osc.frequency.value = 3200 * p;
   const env = sc.ctx.createGain();
@@ -40,11 +42,22 @@ export const glassTheme = {
   env.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
   osc.connect(env); env.connect(sc.gain);
   osc.start(t); osc.stop(t + 0.04);
+  // Bandpass transient for glass texture
+  const n = sc.ctx.createBufferSource();
+  n.buffer = sc.createNoiseBuffer(0.012);
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 5000 * p;
+  bp.Q.value = 0.5;
+  const ne = sc.ctx.createGain();
+  ne.gain.setValueAtTime(0.06, t);
+  ne.gain.exponentialRampToValueAtTime(0.001, t + 0.012);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
+  n.start(t); n.stop(t + 0.015);
     },
 
   lock(sc) {
   const t = sc.now();
-  // Glass clink
+  // Glass clink — body tone
   const osc = sc.ctx.createOscillator();
   osc.type = 'sine'; osc.frequency.value = 2500 + Math.random() * 300;
   const env = sc.ctx.createGain();
@@ -52,29 +65,33 @@ export const glassTheme = {
   env.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
   osc.connect(env); env.connect(sc.gain);
   osc.start(t); osc.stop(t + 0.07);
-  // Tiny glass tap
+  // Glass tap — bandpass for body
   const n = sc.ctx.createBufferSource();
-  n.buffer = sc.createNoiseBuffer(0.015);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass'; hpf.frequency.value = 5000;
+  n.buffer = sc.createNoiseBuffer(0.02);
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 4000 + Math.random() * 1500;
+  bp.Q.value = 0.6;
   const ne = sc.ctx.createGain();
-  ne.gain.setValueAtTime(0.1, t);
-  ne.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
-  n.start(t); n.stop(t + 0.02);
+  ne.gain.setValueAtTime(0.12, t);
+  ne.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
+  n.start(t); n.stop(t + 0.025);
     },
 
   hardDrop(sc) {
   const t = sc.now();
-  // Glass impact — bright shatter with sub
+  // Glass impact — bandpass shatter burst with body
   const n = sc.ctx.createBufferSource();
   n.buffer = sc.createNoiseBuffer(0.08);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass'; hpf.frequency.value = 4000;
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(5000, t);
+  bp.frequency.exponentialRampToValueAtTime(3000, t + 0.08);
+  bp.Q.value = 0.5;
   const ne = sc.ctx.createGain();
-  ne.gain.setValueAtTime(0.25, t);
+  ne.gain.setValueAtTime(0.28, t);
   ne.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
   n.start(t); n.stop(t + 0.09);
   // Sub weight
   const sub = sc.ctx.createOscillator();
@@ -86,6 +103,17 @@ export const glassTheme = {
   se.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
   sub.connect(se); se.connect(sc.gain);
   sub.start(t); sub.stop(t + 0.11);
+  // Impact crack transient
+  const cr = sc.ctx.createBufferSource();
+  cr.buffer = sc.createNoiseBuffer(0.015);
+  const cbp = sc.ctx.createBiquadFilter();
+  cbp.type = 'bandpass'; cbp.frequency.value = 4500;
+  cbp.Q.value = 0.7;
+  const ce = sc.ctx.createGain();
+  ce.gain.setValueAtTime(0.20, t);
+  ce.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+  cr.connect(cbp); cbp.connect(ce); ce.connect(sc.gain);
+  cr.start(t); cr.stop(t + 0.02);
     },
 
   lineClear(sc, t, intensity, totalDur, vol, comboShift) {
@@ -126,15 +154,16 @@ export const glassTheme = {
     osc.connect(env); env.connect(sc.gain);
     osc.start(s); osc.stop(s + 0.13);
   }
-  // Glass shimmer burst
+  // Glass shimmer burst — bandpass for body
   const n = sc.ctx.createBufferSource();
   n.buffer = sc.createNoiseBuffer(0.12);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass'; hpf.frequency.value = 6000;
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 5000;
+  bp.Q.value = 0.6;
   const ne = sc.ctx.createGain();
-  ne.gain.setValueAtTime(0.12, t + 0.28);
+  ne.gain.setValueAtTime(0.14, t + 0.28);
   ne.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
   n.start(t + 0.28); n.stop(t + 0.41);
     },
 
@@ -153,15 +182,17 @@ export const glassTheme = {
     env.gain.exponentialRampToValueAtTime(0.001, s + 0.5);
     osc.connect(env); env.connect(sc.gain);
     osc.start(s); osc.stop(s + 0.51);
-    // Glass debris noise
+    // Glass debris noise — bandpass for body
     const n = sc.ctx.createBufferSource();
     n.buffer = sc.createNoiseBuffer(0.3);
-    const hpf = sc.ctx.createBiquadFilter();
-    hpf.type = 'highpass'; hpf.frequency.value = 3000 + i * 200;
+    const bp = sc.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 3500 + i * 400;
+    bp.Q.value = 0.5;
     const ne = sc.ctx.createGain();
     ne.gain.setValueAtTime(0.15 - i * 0.02, s + 0.05);
     ne.gain.exponentialRampToValueAtTime(0.001, s + 0.3);
-    n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+    n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
     n.start(s + 0.05); n.stop(s + 0.31);
   }
     },
@@ -179,18 +210,19 @@ export const glassTheme = {
 
   hold(sc) {
   const t = sc.now();
-  // Glass slide whoosh
+  // Glass slide — bandpass sweep for body
   const n = sc.ctx.createBufferSource();
   n.buffer = sc.createNoiseBuffer(0.1);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass';
-  hpf.frequency.setValueAtTime(3000, t);
-  hpf.frequency.exponentialRampToValueAtTime(6000, t + 0.05);
-  hpf.frequency.exponentialRampToValueAtTime(4000, t + 0.1);
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(3000, t);
+  bp.frequency.exponentialRampToValueAtTime(5500, t + 0.05);
+  bp.frequency.exponentialRampToValueAtTime(4000, t + 0.1);
+  bp.Q.value = 0.5;
   const ne = sc.ctx.createGain();
   ne.gain.setValueAtTime(0.1, t);
   ne.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
   n.start(t); n.stop(t + 0.11);
     },
 
@@ -208,15 +240,16 @@ export const glassTheme = {
   env.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
   osc.connect(env); env.connect(sc.gain);
   osc.start(t); osc.stop(t + 0.16);
-  // High-freq noise tinkle
+  // Glass shard tinkle — bandpass for body
   const n = sc.ctx.createBufferSource();
   n.buffer = sc.createNoiseBuffer(0.06);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass'; hpf.frequency.value = 6000 + combo * 200;
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 5000 + combo * 300;
+  bp.Q.value = 0.5;
   const ne = sc.ctx.createGain();
-  ne.gain.setValueAtTime(0.1, t);
+  ne.gain.setValueAtTime(0.12, t);
   ne.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
   n.start(t); n.stop(t + 0.07);
     },
 
@@ -224,47 +257,50 @@ export const glassTheme = {
   const t = sc.now();
   const isFull = type === 'full';
   const vol = isFull ? 0.2 : 0.12;
-  // Glass spiral — rising filtered noise
+  // Glass spiral — bandpass sweep for body
   const n = sc.ctx.createBufferSource();
   n.buffer = sc.createNoiseBuffer(0.25);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass';
-  hpf.frequency.setValueAtTime(3000, t);
-  hpf.frequency.exponentialRampToValueAtTime(8000, t + 0.1);
-  hpf.frequency.exponentialRampToValueAtTime(4000, t + 0.2);
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(3500, t);
+  bp.frequency.exponentialRampToValueAtTime(6500, t + 0.1);
+  bp.frequency.exponentialRampToValueAtTime(4500, t + 0.2);
+  bp.Q.value = 0.5;
   const ne = sc.ctx.createGain();
   ne.gain.setValueAtTime(vol, t);
   ne.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
   n.start(t); n.stop(t + 0.23);
   if (isFull) {
-    // Glass shatter burst
+    // Glass shatter burst — bandpass for body
     const shard = sc.ctx.createBufferSource();
     shard.buffer = sc.createNoiseBuffer(0.15);
-    const shpf = sc.ctx.createBiquadFilter();
-    shpf.type = 'highpass'; shpf.frequency.value = 5000;
+    const sbp = sc.ctx.createBiquadFilter();
+    sbp.type = 'bandpass'; sbp.frequency.value = 4500;
+    sbp.Q.value = 0.6;
     const se = sc.ctx.createGain();
     se.gain.setValueAtTime(0.18, t + 0.08);
     se.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-    shard.connect(shpf); shpf.connect(se); se.connect(sc.gain);
+    shard.connect(sbp); sbp.connect(se); se.connect(sc.gain);
     shard.start(t + 0.08); shard.stop(t + 0.21);
   }
     },
 
   perfectClear(sc) {
   const t = sc.now();
-  // Cascading glass shatter — multiple tinkles
+  // Cascading glass shatter — bandpass bursts with body
   for (let i = 0; i < 4; i++) {
     const s = t + i * 0.08;
-    const freq = 3000 + i * 500;
+    const freq = 3500 + i * 500;
     const n = sc.ctx.createBufferSource();
     n.buffer = sc.createNoiseBuffer(0.12);
-    const hpf = sc.ctx.createBiquadFilter();
-    hpf.type = 'highpass'; hpf.frequency.value = freq;
+    const bp = sc.ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = freq;
+    bp.Q.value = 0.5;
     const ne = sc.ctx.createGain();
-    ne.gain.setValueAtTime(0.15, s);
+    ne.gain.setValueAtTime(0.18, s);
     ne.gain.exponentialRampToValueAtTime(0.001, s + 0.12);
-    n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+    n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
     n.start(s); n.stop(s + 0.13);
     // Tinkle tone
     const osc = sc.ctx.createOscillator();
@@ -279,15 +315,18 @@ export const glassTheme = {
 
   backToBack(sc) {
   const t = sc.now();
-  // Emphatic glass crash — layered shatter
+  // Emphatic glass crash — bandpass shatter with body
   const n = sc.ctx.createBufferSource();
   n.buffer = sc.createNoiseBuffer(0.2);
-  const hpf = sc.ctx.createBiquadFilter();
-  hpf.type = 'highpass'; hpf.frequency.value = 4000;
+  const bp = sc.ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(5000, t);
+  bp.frequency.exponentialRampToValueAtTime(3500, t + 0.2);
+  bp.Q.value = 0.5;
   const ne = sc.ctx.createGain();
-  ne.gain.setValueAtTime(0.25, t);
+  ne.gain.setValueAtTime(0.28, t);
   ne.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-  n.connect(hpf); hpf.connect(ne); ne.connect(sc.gain);
+  n.connect(bp); bp.connect(ne); ne.connect(sc.gain);
   n.start(t); n.stop(t + 0.21);
   // Glass resonance ping
   const osc = sc.ctx.createOscillator();
@@ -317,14 +356,22 @@ export const glassTheme = {
     },
 
   rowHighlight(sc, t, rowIndex, pitch, ds) {
-  // Glass stress — short micro-cracks only, no sustained elements
+  // Glass stress — short bandpass micro-cracks
   const dur = 0.5 * ds;
   const cracks = 3 + Math.floor(Math.random() * 2);
   for (let i = 0; i < cracks; i++) {
     const ct = t + (i / cracks) * dur * 0.85 + Math.random() * 0.02 * ds;
-    sc.crackBurst(ct, 3000 + rowIndex * 800 + Math.random() * 2000,
-      4 + Math.random() * 4, 0.003 + Math.random() * 0.003,
-      0.06 + Math.random() * 0.04);
+    const n = sc.ctx.createBufferSource();
+    n.buffer = sc.createNoiseBuffer(0.006);
+    const bp = sc.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 3500 + rowIndex * 600 + Math.random() * 2000;
+    bp.Q.value = 0.6 + Math.random() * 0.4;
+    const env = sc.ctx.createGain();
+    env.gain.setValueAtTime(0.06 + Math.random() * 0.04, ct);
+    env.gain.exponentialRampToValueAtTime(0.001, ct + 0.005);
+    n.connect(bp); bp.connect(env); env.connect(sc.gain);
+    n.start(ct); n.stop(ct + 0.008);
   }
     },
 
@@ -332,11 +379,12 @@ export const glassTheme = {
   // Realistic glass shard breaking off — sharp transient + tinkle ring-out
   const freq = (1800 + progress * 2500) * pitch;
 
-  // Layer 1: Sharp transient crack (< 5ms attack)
+  // Layer 1: Sharp transient crack — bandpass for body
   const crack = sc.ctx.createBufferSource();
   crack.buffer = sc.createNoiseBuffer(0.025 * ds);
   const cf = sc.ctx.createBiquadFilter();
-  cf.type = 'highpass'; cf.frequency.value = 3000 + progress * 3000;
+  cf.type = 'bandpass'; cf.frequency.value = 3500 + progress * 2500;
+  cf.Q.value = 0.6;
   const ce = sc.ctx.createGain();
   ce.gain.setValueAtTime(0.2, t);
   ce.gain.exponentialRampToValueAtTime(0.001, t + 0.025 * ds);
@@ -366,31 +414,36 @@ export const glassTheme = {
     },
 
   rowCleared(sc, t, rowIndex, pitch, ds) {
-  // Glass rod shattering L→R — broadband noise, no metallic tones
-  // Visual sweep: 0.15*ds seconds across 10 cells
+  // Glass shattering L→R — multi-layered to match real glass breakage
+  // Reference: strong 4-6kHz body, secondary impacts, sporadic scatter
   const sweepDur = 0.15 * ds;
   const ctx = sc.ctx;
 
-  // Initial crack — broadband high-freq snap
-  _glassSnap(ctx, sc, t, 0.005, 0.45);
+  // Layer 1: Initial impact burst — strong broadband crack (4-5.5kHz body)
+  _glassImpactBurst(ctx, sc, t, 0.50);
 
-  // 10-cell shatter cascade L→R — each cell is a burst of glass noise
+  // Layer 2: Sustained shatter body — bandpass noise sweeping down
+  _glassShatterBody(ctx, sc, t, sweepDur * 0.8, 0.32);
+
+  // Layer 3: 10-cell L→R cascade — bandpass shards with body
   for (let i = 0; i < 10; i++) {
     const ct = t + (i / 9) * sweepDur;
-    const vol = 0.20 + Math.random() * 0.10;
-    // Broadband shatter fragment — highpass noise, wide spectrum
-    _glassShardNoise(ctx, sc, ct, 0.015 + Math.random() * 0.01, vol);
+    const vol = 0.22 + Math.random() * 0.12;
+    _glassShardNoise(ctx, sc, ct, 0.02 + Math.random() * 0.015, vol);
   }
 
-  // Final break at right edge
-  _glassSnap(ctx, sc, t + sweepDur, 0.006, 0.35);
+  // Layer 4: Secondary impact at ~60% — another big piece falling
+  _glassImpactBurst(ctx, sc, t + sweepDur * 0.6, 0.30);
 
-  // 3-4 falling shard tinkles after — very short high-freq noise puffs
-  const shards = 3 + Math.floor(Math.random() * 2);
+  // Layer 5: Final snap at end
+  _glassSnap(ctx, sc, t + sweepDur, 0.010, 0.35);
+
+  // Layer 6: 5-7 sporadic shard hits scattered throughout + after
+  const shards = 5 + Math.floor(Math.random() * 3);
   for (let i = 0; i < shards; i++) {
-    const st = t + sweepDur + 0.01 + Math.random() * 0.06 * ds;
-    _glassShardNoise(ctx, sc, st, 0.008 + Math.random() * 0.006,
-      0.04 + Math.random() * 0.03);
+    const st = t + sweepDur * 0.3 + Math.random() * sweepDur * 0.9;
+    const vol = 0.05 + Math.random() * 0.10;
+    _glassShardNoise(ctx, sc, st, 0.010 + Math.random() * 0.012, vol);
   }
     },
 };
@@ -402,8 +455,9 @@ function _glassFractureTransient030ms(sc, t, intensity, totalDur, vol, comboShif
   const fracture = sc.ctx.createBufferSource();
   fracture.buffer = sc.createNoiseBuffer(0.03);
   const fractureFilter = sc.ctx.createBiquadFilter();
-  fractureFilter.type = 'highpass';
-  fractureFilter.frequency.value = 1500;
+  fractureFilter.type = 'bandpass';
+  fractureFilter.frequency.value = 4000 + Math.random() * 1500;
+  fractureFilter.Q.value = 0.6;
   const fractureGain = sc.ctx.createGain();
   fractureGain.gain.setValueAtTime(vol * 1.2, t);
   fractureGain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
@@ -509,8 +563,9 @@ function _glassDebrisScatterTail(sc, t, intensity, totalDur, vol, comboShift) {
   const scatter = sc.ctx.createBufferSource();
   scatter.buffer = sc.createNoiseBuffer(scatterDur);
   const scatterF = sc.ctx.createBiquadFilter();
-  scatterF.type = 'highpass';
-  scatterF.frequency.value = 5000;
+  scatterF.type = 'bandpass';
+  scatterF.frequency.value = 4500;
+  scatterF.Q.value = 0.5;
   const scatterEnv = sc.ctx.createGain();
   scatterEnv.gain.setValueAtTime(0.001, t + 0.15);
   scatterEnv.gain.linearRampToValueAtTime(vol * 0.15, t + 0.25);
@@ -549,39 +604,65 @@ function _glassReverbTail(sc, t, intensity, totalDur, vol, comboShift) {
 
 // ─── rowCleared helpers ────────────────────────────────────────────
 
-/** Sharp initial crack — very short broadband highpass noise burst. */
+/** Strong initial crack — broadband bandpass burst centred at 4-5.5kHz. */
+function _glassImpactBurst(ctx, sc, t, vol) {
+  const src = ctx.createBufferSource();
+  src.buffer = sc.createNoiseBuffer(0.025);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 4000 + Math.random() * 1500;
+  bp.Q.value = 0.5 + Math.random() * 0.5;
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(vol, t);
+  env.gain.exponentialRampToValueAtTime(0.001, t + 0.020);
+  src.connect(bp); bp.connect(env); env.connect(sc.gain);
+  src.start(t); src.stop(t + 0.025);
+}
+
+/** Sustained shatter body — bandpass noise sweeping 5→3kHz for warmth. */
+function _glassShatterBody(ctx, sc, t, dur, vol) {
+  const src = ctx.createBufferSource();
+  src.buffer = sc.createNoiseBuffer(dur);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(5000, t);
+  bp.frequency.exponentialRampToValueAtTime(3000, t + dur);
+  bp.Q.value = 0.4;
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(vol, t);
+  env.gain.setValueAtTime(vol * 0.7, t + dur * 0.15);
+  env.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(bp); bp.connect(env); env.connect(sc.gain);
+  src.start(t); src.stop(t + dur + 0.005);
+}
+
+/** Sharp snap — bandpass noise burst at 3.5-5.5kHz. */
 function _glassSnap(ctx, sc, t, len, vol) {
   const src = ctx.createBufferSource();
   src.buffer = sc.createNoiseBuffer(len);
-  const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass';
-  hp.frequency.value = 3000 + Math.random() * 2000;
-  hp.Q.value = 0.7;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 3500 + Math.random() * 2000;
+  bp.Q.value = 0.6;
   const env = ctx.createGain();
   env.gain.setValueAtTime(vol, t);
   env.gain.exponentialRampToValueAtTime(0.001, t + len);
-  src.connect(hp);
-  hp.connect(env);
-  env.connect(sc.gain);
-  src.start(t);
-  src.stop(t + len + 0.002);
+  src.connect(bp); bp.connect(env); env.connect(sc.gain);
+  src.start(t); src.stop(t + len + 0.002);
 }
 
-/** Glass fragment burst — short highpass noise with randomised cutoff. */
+/** Glass fragment — bandpass noise at 4-8kHz with body. */
 function _glassShardNoise(ctx, sc, t, len, vol) {
   const src = ctx.createBufferSource();
   src.buffer = sc.createNoiseBuffer(len);
-  const hp = ctx.createBiquadFilter();
-  hp.type = 'highpass';
-  hp.frequency.value = 4000 + Math.random() * 5000;
-  hp.Q.value = 0.5;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 4000 + Math.random() * 4000;
+  bp.Q.value = 0.4 + Math.random() * 0.4;
   const env = ctx.createGain();
   env.gain.setValueAtTime(vol, t);
   env.gain.exponentialRampToValueAtTime(0.001, t + len);
-  src.connect(hp);
-  hp.connect(env);
-  env.connect(sc.gain);
-  src.start(t);
-  src.stop(t + len + 0.002);
+  src.connect(bp); bp.connect(env); env.connect(sc.gain);
+  src.start(t); src.stop(t + len + 0.002);
 }
 
