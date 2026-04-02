@@ -4,6 +4,7 @@
 import { getColorForType, getShapeForType } from './piece.js';
 import { drawCell, drawMiniCell, drawPreviewPiece, lightenColor, darkenColor, hexToRgba, remapColor } from './rendering/cell-themes.js';
 import { EffectsEngine } from './rendering/effects.js';
+import { Particle, MAX_PARTICLES } from './rendering/particles.js';
 
 const CELL_SIZE = 32;
 const COLS = 10;
@@ -72,6 +73,9 @@ class Renderer {
   /** True while line clear animation is playing — game logic should pause. */
   get isAnimating() { return this.#fx.isAnimating; }
 
+  /** Reset all animation state — call on game start/restart. */
+  resetAnimations() { this.#fx.resetAnimations(); }
+
   constructor() {
     const gameCanvas = document.getElementById('game-canvas');
     gameCanvas.width = COLS * CELL_SIZE;
@@ -125,6 +129,7 @@ class Renderer {
     const ROW_STAGGER = Math.round(30 / this.#fx.animSpeed);
 
     this.#fx.vanishPhase = true;
+    this.#fx.vanishStartTime = performance.now();
     this.#fx.vanishingRows = this.#buildVanishRows(clearedRows, clearedRowColors, ROW_STAGGER);
 
     this.#fx.shakeAmount = isTetris ? 12 : 3 + count * 2;

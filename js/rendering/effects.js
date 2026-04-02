@@ -25,6 +25,7 @@ class EffectsEngine {
   clearAnimDuration = 0;
   vanishingRows = [];
   vanishPhase = false;
+  vanishStartTime = 0;
   slamLines = [];
   lockPulse = null;
   crackLines = [];
@@ -42,7 +43,24 @@ class EffectsEngine {
   visualTheme = 'glass';
 
   get isAnimating() {
+    // Safety: force-clear stuck animations after 5 seconds
+    if (this.vanishPhase && performance.now() - this.vanishStartTime > 5000) {
+      this.vanishPhase = false;
+      this.vanishingRows = [];
+    }
     return this.vanishPhase === true;
+  }
+
+  /** Reset all animation state — call on game start/restart. */
+  resetAnimations() {
+    this.vanishPhase = false;
+    this.vanishStartTime = 0;
+    this.vanishingRows = [];
+    this.fallingCells = [];
+    this.collapseActive = false;
+    this.collapseGrid = [];
+    this.clearAnimTimer = 0;
+    this.shakeAmount = 0;
   }
 
   get isCollapsing() {
@@ -507,8 +525,8 @@ class EffectsEngine {
         rowDone = false;
         continue;
       }
-      cell.scale *= (1 - 0.10 * this.animSpeed);
-      cell.alpha *= (1 - 0.08 * this.animSpeed);
+      cell.scale *= (1 - Math.max(0.10 * this.animSpeed, 0.05));
+      cell.alpha *= (1 - Math.max(0.08 * this.animSpeed, 0.04));
       if (!cell.particlesSpawned) {
         cell.particlesSpawned = true;
         const cx = cell.col * CELL_SIZE + CELL_SIZE / 2;

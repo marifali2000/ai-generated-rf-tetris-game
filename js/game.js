@@ -378,6 +378,8 @@ class Game {
     this.#sound.init();
     this.#sound.warmUp();
     this.#demoFrozen = false;
+    this.#wasAnimating = false;
+    this.#renderer.resetAnimations();
     this.#board.reset();
     this.#scoring.reset();
     this.#holdType = null;
@@ -715,6 +717,8 @@ class Game {
     this.#state = 'gameOver';
     this.#currentPiece = null;
     this.#demoFrozen = false;
+    this.#wasAnimating = false;
+    this.#renderer.resetAnimations();
     this.#sound.playGameOver();
 
     // Trigger visual collapse animation
@@ -781,6 +785,8 @@ class Game {
       this.#demoFrozen = false;
       this.#state = 'gameOver';
       this.#currentPiece = null;
+      this.#wasAnimating = false;
+      this.#renderer.resetAnimations();
       if (this.#animFrameId) {
         cancelAnimationFrame(this.#animFrameId);
         this.#animFrameId = null;
@@ -828,6 +834,8 @@ class Game {
       cancelAnimationFrame(this.#animFrameId);
       this.#animFrameId = null;
     }
+    this.#wasAnimating = false;
+    this.#renderer.resetAnimations();
     this.#board.reset();
     this.#scoring.reset();
     this.#holdType = null;
