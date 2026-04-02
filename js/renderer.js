@@ -238,7 +238,7 @@ class Renderer {
     // Build vanishing row data — each row vanishes one by one
     this.#vanishingRows = [];
     this.#vanishPhase = true;
-    const ROW_STAGGER = 60; // frames between each row starting to vanish
+    const ROW_STAGGER = 90; // frames between each row starting to vanish
 
     for (let i = 0; i < clearedRows.length; i++) {
       const row = clearedRows[i];
@@ -252,7 +252,7 @@ class Renderer {
           scale: 1,
           alpha: 1,
           // Cells vanish left-to-right with stagger
-          delay: c * 4,
+          delay: c * 6,
           shrinking: false,
           glowAlpha: 0,
           popSoundPlayed: false, // per-cell pop sound tracking
@@ -279,7 +279,7 @@ class Renderer {
     this.#addShockwaves(clearedRows, count, isTetris);
 
     // Timer for particles and other effects
-    this.#clearAnimDuration = 60 + count * ROW_STAGGER + 100;
+    this.#clearAnimDuration = 90 + count * ROW_STAGGER + 150;
     this.#clearAnimTimer = this.#clearAnimDuration;
 
     // Background reactivity
@@ -533,7 +533,7 @@ class Renderer {
         currentY: fc.fromRow,
         color: fc.color,
         velocity: 0,
-        gravity: 0.008 + Math.random() * 0.004, // visible falling
+        gravity: 0.005 + Math.random() * 0.003, // visible falling
         bounces: 0,
         delay: 0,
         started: false,
@@ -876,7 +876,7 @@ class Renderer {
 
       if (vr.phase === 'highlight') {
         // Glow highlight ramps up over ~20 frames, using the row's own colors
-        vr.highlightAlpha = Math.min(1, vr.phaseTimer / 20);
+        vr.highlightAlpha = Math.min(1, vr.phaseTimer / 30);
 
         // Play highlight sound when this row starts glowing
         if (!vr.soundPlayed) {
@@ -899,7 +899,7 @@ class Renderer {
         ctx.fillRect(0, vr.row * CELL_SIZE, COLS * CELL_SIZE, CELL_SIZE);
         ctx.restore();
 
-        if (vr.phaseTimer >= 30) {
+        if (vr.phaseTimer >= 45) {
           vr.phase = 'shrink';
           vr.phaseTimer = 0;
         }
@@ -920,8 +920,8 @@ class Renderer {
             cell.popSoundPlayed = true;
             this.#soundCallbacks.onCellPop(cell.col, COLS);
           }
-          cell.scale *= 0.95;
-          cell.alpha *= 0.96;
+          cell.scale *= 0.965;
+          cell.alpha *= 0.97;
           // Spawn particles immediately as cell starts shrinking (simultaneous)
           if (!cell.particlesSpawned) {
             cell.particlesSpawned = true;

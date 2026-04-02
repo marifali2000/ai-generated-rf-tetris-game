@@ -226,6 +226,8 @@ class Game {
   #handleStart() {
     if (this.#state === 'idle' || this.#state === 'gameOver') {
       this.#startGame();
+    } else if (this.#state === 'paused') {
+      this.#togglePause();
     }
   }
 
