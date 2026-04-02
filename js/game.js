@@ -10,6 +10,7 @@ import { SoundEngine } from './sound.js';
 import { AutoPlayer } from './autoplay.js';
 
 const LOCK_DELAY = 500; // ms
+const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window;
 
 class Game {
   #board;
@@ -56,7 +57,7 @@ class Game {
 
     this.#bindInput();
     this.#input.attach();
-    this.#renderer.showOverlay('PRESS ENTER TO START');
+    this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
 
     // Wire sound callbacks to renderer for animation-synced audio
     this.#renderer.setSoundCallbacks({
@@ -536,7 +537,7 @@ class Game {
         cancelAnimationFrame(this.#animFrameId);
         this.#animFrameId = null;
       }
-      this.#renderer.showOverlay('PAUSED\nPRESS P TO RESUME');
+      this.#renderer.showOverlay(IS_MOBILE ? 'PAUSED\nTAP TO RESUME' : 'PAUSED\nPRESS P TO RESUME');
       this.#updateButtons();
     } else if (this.#state === 'paused') {
       this.#state = 'playing';
@@ -595,7 +596,7 @@ class Game {
       this.#renderer.showOverlay('DEMO MODE\nGAME OVER\nRESTARTING...');
     } else {
       const hs = this.#scoring.highScore;
-      this.#renderer.showOverlay(`GAME OVER\nSCORE: ${this.#scoring.score}\nBEST: ${hs}\nPRESS ENTER TO RESTART`);
+      this.#renderer.showOverlay(`GAME OVER\nSCORE: ${this.#scoring.score}\nBEST: ${hs}\n${IS_MOBILE ? 'TAP TO RESTART' : 'PRESS ENTER TO RESTART'}`);
     }
   }
 
@@ -622,7 +623,7 @@ class Game {
         this.#animFrameId = null;
       }
       this.#render();
-      this.#renderer.showOverlay('PRESS ENTER TO START');
+      this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
       this.#btnDemo?.classList.remove('active');
       this.#updateButtons();
     } else {
@@ -652,7 +653,7 @@ class Game {
     this.#scoring.reset();
     this.#holdType = null;
     this.#render();
-    this.#renderer.showOverlay('PRESS ENTER TO START');
+    this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
     this.#updateButtons();
   }
 

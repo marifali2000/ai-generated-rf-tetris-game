@@ -14,6 +14,16 @@
     <div class="mobile-stat"><span class="mobile-stat-label">LVL</span><span id="mobile-level">1</span></div>
     <div class="mobile-stat"><span class="mobile-stat-label">LINES</span><span id="mobile-lines">0</span></div>
   </div>
+
+  <!-- Mobile Hold & Next panels (overlay on game canvas) -->
+  <div id="mobile-hold">
+    <span class="mobile-panel-label">HOLD</span>
+    <canvas id="mobile-hold-canvas" width="70" height="55"></canvas>
+  </div>
+  <div id="mobile-next">
+    <span class="mobile-panel-label">NEXT</span>
+    <canvas id="mobile-next-canvas" width="70" height="170"></canvas>
+  </div>
   <div id="game-container">
     <div id="left-panel">
       <div id="hold-section">
@@ -51,8 +61,8 @@
         <div class="key-row"><kbd>Space</kbd> Hard Drop</div>
         <div class="key-row"><kbd>↑</kbd> Rotate</div>
         <div class="key-row"><kbd>C</kbd> Hold</div>
-        <div class="key-row"><kbd>Enter</kbd> Start</div>
-        <div class="key-row"><kbd>P</kbd> Pause</div>
+        <div class="key-row"><kbd>Enter</kbd> Start / Stop</div>
+        <div class="key-row"><kbd>P</kbd> Pause / Resume</div>
         <div class="key-row"><kbd>M</kbd> Mute</div>
         <div class="key-row"><kbd>D</kbd> Demo</div>
       </div>
@@ -61,7 +71,7 @@
     <div id="center-panel">
       <canvas id="game-canvas" width="320" height="640"></canvas>
       <div id="overlay" class="visible">
-        <div id="overlay-text">TAP TO START</div>
+        <div id="overlay-text">PRESS ENTER TO START</div>
       </div>
     </div>
 
@@ -121,7 +131,7 @@
         <input type="range" id="mobile-volume" min="0" max="100" value="70" class="drawer-slider">
       </div>
       <div id="drawer-gestures">
-        Swipe ←→ move · ↓ drop · tap rotate · 2-finger hold
+        Tap to start/stop · Swipe ←→ move · ↓ drop · Tap rotate · 2-finger hold
       </div>
     </div>
   </div>

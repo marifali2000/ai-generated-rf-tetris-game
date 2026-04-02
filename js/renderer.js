@@ -113,6 +113,8 @@ class Renderer {
   #gameCtx;
   #holdCtx;
   #nextCtx;
+  #mobileHoldCtx;
+  #mobileNextCtx;
   #scoreEl;
   #levelEl;
   #linesEl;
@@ -201,6 +203,12 @@ class Renderer {
 
     this.#holdCtx = document.getElementById('hold-canvas').getContext('2d');
     this.#nextCtx = document.getElementById('next-canvas').getContext('2d');
+
+    // Mobile hold/next canvases (may not exist on desktop, safe to check)
+    const mhc = document.getElementById('mobile-hold-canvas');
+    const mnc = document.getElementById('mobile-next-canvas');
+    this.#mobileHoldCtx = mhc ? mhc.getContext('2d') : null;
+    this.#mobileNextCtx = mnc ? mnc.getContext('2d') : null;
     this.#scoreEl = document.getElementById('score-value');
     this.#levelEl = document.getElementById('level-value');
     this.#linesEl = document.getElementById('lines-value');
@@ -1139,10 +1147,13 @@ class Renderer {
   }
 
   #drawHoldPiece(type) {
-    const ctx = this.#holdCtx;
+    this.#drawHoldToCanvas(this.#holdCtx, type);
+    if (this.#mobileHoldCtx) this.#drawHoldToCanvas(this.#mobileHoldCtx, type);
+  }
+
+  #drawHoldToCanvas(ctx, type) {
     const canvas = ctx.canvas;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Panel gradient background
     const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
     bg.addColorStop(0, '#0c1a2e');
     bg.addColorStop(1, '#0a1222');
@@ -1153,10 +1164,13 @@ class Renderer {
   }
 
   #drawNextPieces(types) {
-    const ctx = this.#nextCtx;
+    this.#drawNextToCanvas(this.#nextCtx, types, 24);
+    if (this.#mobileNextCtx) this.#drawNextToCanvas(this.#mobileNextCtx, types, 12);
+  }
+
+  #drawNextToCanvas(ctx, types, cellSize) {
     const canvas = ctx.canvas;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Panel gradient background
     const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
     bg.addColorStop(0, '#0c1a2e');
     bg.addColorStop(1, '#0a1222');
@@ -1164,20 +1178,19 @@ class Renderer {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     if (!types || types.length === 0) return;
 
-    const previewCellSize = 24;
     const slotH = canvas.height / 3;
     for (let i = 0; i < types.length; i++) {
       const shape = getShapeForType(types[i]);
       const color = getColorForType(types[i]);
-      const offsetX = (canvas.width - shape[0].length * previewCellSize) / 2;
-      const offsetY = i * slotH + (slotH - shape.length * previewCellSize) / 2;
+      const offsetX = (canvas.width - shape[0].length * cellSize) / 2;
+      const offsetY = i * slotH + (slotH - shape.length * cellSize) / 2;
 
       for (let r = 0; r < shape.length; r++) {
         for (let c = 0; c < shape[r].length; c++) {
           if (shape[r][c]) {
-            const px = offsetX + c * previewCellSize;
-            const py = offsetY + r * previewCellSize;
-            const s = previewCellSize;
+            const px = offsetX + c * cellSize;
+            const py = offsetY + r * cellSize;
+            const s = cellSize;
             // Mini gradient cell with rounded corners
             const grad = ctx.createLinearGradient(px, py, px, py + s);
             grad.addColorStop(0, lightenColor(color, 18));
@@ -1208,7 +1221,10 @@ class Renderer {
   #drawPreviewPiece(ctx, type, width, height) {
     const shape = getShapeForType(type);
     const color = getColorForType(type);
-    const previewCellSize = 26;
+    // Scale cell size to fit the canvas
+    const maxCellW = (width - 4) / shape[0].length;
+    const maxCellH = (height - 4) / shape.length;
+    const previewCellSize = Math.min(26, Math.floor(Math.min(maxCellW, maxCellH)));
     const offsetX = (width - shape[0].length * previewCellSize) / 2;
     const offsetY = (height - shape.length * previewCellSize) / 2;
 
