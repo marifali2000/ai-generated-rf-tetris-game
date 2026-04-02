@@ -351,10 +351,15 @@ kbd {
   display: none;
 }
 
+/* Mobile drawer — hidden on desktop */
+#mobile-drawer {
+  display: none;
+}
+
 /* ─── Mobile / Touch ──────────────────────────────── */
 @media (max-width: 768px) {
   body {
-    padding: 8px 0 0;
+    padding: 6px 0 0;
     justify-content: flex-start;
     overflow: hidden;
     height: 100vh;
@@ -365,7 +370,7 @@ kbd {
   }
 
   #game-title {
-    font-size: 20px;
+    font-size: 18px;
     letter-spacing: 8px;
     margin-bottom: 4px;
   }
@@ -431,9 +436,9 @@ kbd {
   }
 
   #game-canvas {
-    width: min(100vw - 16px, 55vh);
+    width: min(100vw - 16px, 50dvh);
     height: auto;
-    max-height: calc(100dvh - 200px);
+    max-height: calc(100dvh - 220px);
     object-fit: contain;
   }
 
@@ -446,11 +451,11 @@ kbd {
   #touch-controls {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     max-width: 380px;
     margin: 0 auto;
-    padding: 6px 12px 12px;
+    padding: 4px 12px 8px;
   }
 
   #touch-top-row,
@@ -486,6 +491,12 @@ kbd {
     transform: scale(0.95);
   }
 
+  .touch-menu-btn {
+    max-width: 60px;
+    font-size: 20px;
+    padding: 10px 8px;
+  }
+
   .touch-arrow {
     font-size: 22px;
     padding: 16px 8px;
@@ -494,12 +505,114 @@ kbd {
   #keys-section {
     display: none;
   }
+
+  /* ── Mobile settings drawer ── */
+  #mobile-drawer {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: linear-gradient(180deg, rgba(8, 18, 35, 0.97), rgba(5, 10, 22, 0.99));
+    border-top: 2px solid rgba(60, 120, 190, 0.5);
+    padding: 12px 16px 20px;
+    transition: transform 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  #mobile-drawer.drawer-hidden {
+    transform: translateY(100%);
+  }
+
+  #drawer-content {
+    max-width: 380px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .drawer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .drawer-btn {
+    flex: 1;
+    padding: 10px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    letter-spacing: 1px;
+    color: #c0d8f0;
+    background: linear-gradient(180deg, rgba(20, 45, 75, 0.8), rgba(10, 25, 45, 0.9));
+    border: 1px solid rgba(60, 120, 190, 0.45);
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .drawer-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #5a8eb8;
+    min-width: 50px;
+    text-align: right;
+  }
+
+  .drawer-select {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #c0d8f0;
+    background: rgba(15, 35, 60, 0.9);
+    border: 1px solid rgba(60, 120, 190, 0.45);
+    border-radius: 5px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .drawer-select option {
+    background: #0c1a2e;
+    color: #c0d8f0;
+  }
+
+  .drawer-slider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(40, 80, 130, 0.5);
+    border-radius: 3px;
+    outline: none;
+  }
+
+  .drawer-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #5ab0ff;
+    border: 2px solid #1b3a5c;
+  }
+
+  .drawer-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #5ab0ff;
+    border: 2px solid #1b3a5c;
+  }
 }
 
 /* Small phones */
 @media (max-width: 380px) {
   #game-title {
-    font-size: 16px;
+    font-size: 14px;
     letter-spacing: 6px;
     margin-bottom: 2px;
   }
@@ -515,8 +628,8 @@ kbd {
   }
 
   #touch-controls {
-    padding: 4px 8px 8px;
-    gap: 6px;
+    padding: 4px 8px 6px;
+    gap: 4px;
   }
 
   #touch-top-row,

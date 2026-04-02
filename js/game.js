@@ -102,6 +102,62 @@ class Game {
       this.#sound.init();
       this.#sound.setVolume(Number(e.target.value) / 100);
     });
+
+    // ── Mobile drawer controls ──
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    mobileMenuToggle?.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      mobileDrawer?.classList.toggle('drawer-hidden');
+      if (this.#state === 'playing') this.#togglePause();
+    }, { passive: false });
+
+    document.getElementById('mobile-btn-demo')?.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.#sound.init();
+      this.#toggleDemo();
+      mobileDrawer?.classList.add('drawer-hidden');
+    }, { passive: false });
+
+    document.getElementById('mobile-btn-mute')?.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.#sound.init();
+      this.#sound.toggleMute();
+      this.#updateMuteButton();
+      const btn = e.currentTarget;
+      btn.textContent = this.#sound.muted ? '🔇 MUTED' : '🔊 SOUND';
+    }, { passive: false });
+
+    document.getElementById('mobile-btn-pause')?.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.#sound.init();
+      this.#togglePause();
+      mobileDrawer?.classList.add('drawer-hidden');
+    }, { passive: false });
+
+    const mobileTheme = document.getElementById('mobile-sound-theme');
+    mobileTheme?.addEventListener('change', (e) => {
+      this.#sound.init();
+      this.#sound.setSoundTheme(e.target.value);
+      this.#sound.playLineClear(2);
+      // Sync desktop select
+      const desktopSelect = document.getElementById('sound-theme');
+      if (desktopSelect) desktopSelect.value = e.target.value;
+    });
+
+    const mobileVolume = document.getElementById('mobile-volume');
+    mobileVolume?.addEventListener('input', (e) => {
+      this.#sound.init();
+      this.#sound.setVolume(Number(e.target.value) / 100);
+      // Sync desktop slider
+      const desktopSlider = document.getElementById('volume-slider');
+      if (desktopSlider) desktopSlider.value = e.target.value;
+    });
+
+    // Init sound on first touch anywhere (mobile audio unlock)
+    document.addEventListener('touchstart', () => {
+      this.#sound.init();
+    }, { once: true });
   }
 
   #bindInput() {

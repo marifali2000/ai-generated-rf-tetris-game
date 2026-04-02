@@ -95,13 +95,38 @@
   <div id="touch-controls">
     <div id="touch-top-row">
       <button class="touch-btn" data-action="hold">HOLD</button>
-      <button class="touch-btn" data-action="hardDrop">DROP</button>
+      <button class="touch-btn touch-menu-btn" id="mobile-menu-toggle">☰</button>
       <button class="touch-btn" data-action="rotateCW">↻</button>
     </div>
     <div id="touch-bottom-row">
       <button class="touch-btn touch-arrow" data-action="left">◀</button>
       <button class="touch-btn touch-arrow" data-action="softDrop">▼</button>
       <button class="touch-btn touch-arrow" data-action="right">▶</button>
+    </div>
+  </div>
+
+  <!-- Mobile settings drawer -->
+  <div id="mobile-drawer" class="drawer-hidden">
+    <div id="drawer-content">
+      <div class="drawer-row">
+        <button class="drawer-btn" id="mobile-btn-demo">⚙ DEMO</button>
+        <button class="drawer-btn" id="mobile-btn-mute">🔊 SOUND</button>
+        <button class="drawer-btn" id="mobile-btn-pause">⏸ PAUSE</button>
+      </div>
+      <div class="drawer-row">
+        <label class="drawer-label">THEME</label>
+        <select id="mobile-sound-theme" class="drawer-select">
+          <option value="glass">🔮 Glass</option>
+          <option value="concrete">🧱 Concrete</option>
+          <option value="crystal">💎 Crystal</option>
+          <option value="metal">⚙️ Metal</option>
+          <option value="ice">❄️ Ice</option>
+        </select>
+      </div>
+      <div class="drawer-row">
+        <label class="drawer-label">VOL</label>
+        <input type="range" id="mobile-volume" min="0" max="100" value="70" class="drawer-slider">
+      </div>
     </div>
   </div>
 

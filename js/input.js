@@ -109,7 +109,8 @@ class InputHandler {
   }
 
   #attachTouchControls() {
-    const buttons = document.querySelectorAll('.touch-btn');
+    // ── Button controls ──
+    const buttons = document.querySelectorAll('.touch-btn[data-action]');
     for (const btn of buttons) {
       const action = btn.dataset.action;
       if (!action) continue;
@@ -151,7 +152,59 @@ class InputHandler {
       });
     }
 
-    // Also handle tap on overlay to start
+    // ── Swipe gestures on game canvas ──
+    const canvas = document.getElementById('game-canvas');
+    if (!canvas) return;
+
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let swiped = false;
+    const SWIPE_THRESHOLD = 30;
+    const TAP_THRESHOLD = 15;
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      startTime = Date.now();
+      swiped = false;
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (swiped) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+
+      if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal swipe — move piece
+        this.#callbacks[dx > 0 ? 'right' : 'left']?.();
+        startX = t.clientX; // allow repeated swipes while dragging
+      } else if (dy > SWIPE_THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
+        // Swipe down — hard drop
+        swiped = true;
+        this.#callbacks['hardDrop']?.();
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (swiped) return;
+      const elapsed = Date.now() - startTime;
+      const t = e.changedTouches[0];
+      const dx = Math.abs(t.clientX - startX);
+      const dy = Math.abs(t.clientY - startY);
+
+      // Tap = rotate
+      if (dx < TAP_THRESHOLD && dy < TAP_THRESHOLD && elapsed < 300) {
+        this.#callbacks['rotateCW']?.();
+      }
+    }, { passive: false });
+
+    // ── Tap overlay to start ──
     const overlay = document.getElementById('overlay');
     overlay?.addEventListener('touchstart', (e) => {
       e.preventDefault();
