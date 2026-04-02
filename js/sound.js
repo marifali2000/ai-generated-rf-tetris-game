@@ -56,6 +56,17 @@ class SoundEngine {
 
   get muted() { return this.#muted; }
 
+  /** Pre-warm the audio pipeline so first real sound plays instantly */
+  warmUp() {
+    if (!this.#ctx) return;
+    // Play a silent buffer to prime mobile audio pipeline
+    const buf = this.#ctx.createBuffer(1, 1, this.#ctx.sampleRate);
+    const src = this.#ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(this.#ctx.destination);
+    src.start();
+  }
+
   setVolume(v) {
     this.#volume = Math.max(0, Math.min(1, v));
     if (this.#masterGain) {
@@ -1432,45 +1443,47 @@ class SoundEngine {
   }
 
   #rowHighlightGlass(t, rowIndex, pitch) {
-    // Realistic glass stress creak — like glass about to shatter
-    // Layer 1: High-frequency stress tone (glass resonance ~ 2000-5000 Hz)
-    const stressFreq = (2000 + rowIndex * 600) * pitch;
-    const osc = this.#ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(stressFreq, t);
-    osc.frequency.linearRampToValueAtTime(stressFreq * 1.4, t + 0.4);
-    const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0, t);
-    env.gain.linearRampToValueAtTime(0.08, t + 0.05);
-    env.gain.setValueAtTime(0.08, t + 0.25);
-    env.gain.linearRampToValueAtTime(0, t + 0.5);
-    osc.connect(env); env.connect(this.#masterGain);
-    osc.start(t); osc.stop(t + 0.55);
-
-    // Layer 2: Thin crackling — glass micro-fractures
+    // Realistic glass stress creak — crackling, no tonal whistle
+    // Layer 1: Glass micro-fracture crackle (noise-only, no sine)
     const crack = this.#ctx.createBufferSource();
-    crack.buffer = this.#createNoiseBuffer(0.4);
+    crack.buffer = this.#createNoiseBuffer(0.5);
     const cf = this.#ctx.createBiquadFilter();
-    cf.type = 'bandpass'; cf.frequency.value = 5000 + rowIndex * 1000; cf.Q.value = 3;
+    cf.type = 'bandpass'; cf.frequency.value = 3000 + rowIndex * 800; cf.Q.value = 1.5;
     const ce = this.#ctx.createGain();
-    // Intermittent crackling via rapid gain modulation
+    // Intermittent crackling — sounds like glass fracturing
     ce.gain.setValueAtTime(0, t);
-    ce.gain.linearRampToValueAtTime(0.06, t + 0.03);
-    ce.gain.setValueAtTime(0.02, t + 0.1);
-    ce.gain.linearRampToValueAtTime(0.08, t + 0.15);
-    ce.gain.setValueAtTime(0.01, t + 0.25);
-    ce.gain.linearRampToValueAtTime(0.07, t + 0.3);
-    ce.gain.linearRampToValueAtTime(0, t + 0.45);
+    ce.gain.linearRampToValueAtTime(0.1, t + 0.02);
+    ce.gain.setValueAtTime(0.03, t + 0.08);
+    ce.gain.linearRampToValueAtTime(0.12, t + 0.12);
+    ce.gain.setValueAtTime(0.02, t + 0.2);
+    ce.gain.linearRampToValueAtTime(0.1, t + 0.25);
+    ce.gain.setValueAtTime(0.01, t + 0.35);
+    ce.gain.linearRampToValueAtTime(0.08, t + 0.38);
+    ce.gain.linearRampToValueAtTime(0, t + 0.5);
     crack.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
-    crack.start(t); crack.stop(t + 0.5);
+    crack.start(t); crack.stop(t + 0.55);
 
-    // Layer 3: Sub-bass tension
+    // Layer 2: High-freq glass crinkle (very short bursts)
+    const crinkle = this.#ctx.createBufferSource();
+    crinkle.buffer = this.#createNoiseBuffer(0.4);
+    const crf = this.#ctx.createBiquadFilter();
+    crf.type = 'highpass'; crf.frequency.value = 6000;
+    const cre = this.#ctx.createGain();
+    cre.gain.setValueAtTime(0, t);
+    cre.gain.linearRampToValueAtTime(0.04, t + 0.05);
+    cre.gain.setValueAtTime(0.01, t + 0.15);
+    cre.gain.linearRampToValueAtTime(0.05, t + 0.2);
+    cre.gain.linearRampToValueAtTime(0, t + 0.45);
+    crinkle.connect(crf); crf.connect(cre); cre.connect(this.#masterGain);
+    crinkle.start(t); crinkle.stop(t + 0.5);
+
+    // Layer 3: Sub-bass tension (felt, not heard)
     const sub = this.#ctx.createOscillator();
     sub.type = 'sine';
-    sub.frequency.value = 55 + rowIndex * 10;
+    sub.frequency.value = 45 + rowIndex * 8;
     const sEnv = this.#ctx.createGain();
     sEnv.gain.setValueAtTime(0, t);
-    sEnv.gain.linearRampToValueAtTime(0.12, t + 0.1);
+    sEnv.gain.linearRampToValueAtTime(0.1, t + 0.1);
     sEnv.gain.linearRampToValueAtTime(0, t + 0.5);
     sub.connect(sEnv); sEnv.connect(this.#masterGain);
     sub.start(t); sub.stop(t + 0.55);
@@ -1607,45 +1620,48 @@ class SoundEngine {
   }
 
   #rowHighlightIce(t, rowIndex, pitch) {
-    // Ice cracking under pressure — eerie, sharp
-    // Layer 1: Sharp crack pitch-drop (ice fracture)
-    const freq = (3000 + rowIndex * 800) * pitch;
-    const osc = this.#ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, t);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.3, t + 0.15);
-    osc.frequency.setValueAtTime(freq * 0.8, t + 0.2);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.2, t + 0.4);
-    const env = this.#ctx.createGain();
-    env.gain.setValueAtTime(0, t);
-    env.gain.linearRampToValueAtTime(0.1, t + 0.01);
-    env.gain.exponentialRampToValueAtTime(0.02, t + 0.1);
-    env.gain.linearRampToValueAtTime(0.08, t + 0.2);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
-    osc.connect(env); env.connect(this.#masterGain);
-    osc.start(t); osc.stop(t + 0.5);
+    // Ice cracking under pressure — sharp cracks, no whistle
+    // Layer 1: Short sharp crack bursts (pitch-dropped noise, not sine)
+    const crack1 = this.#ctx.createBufferSource();
+    crack1.buffer = this.#createNoiseBuffer(0.06);
+    const c1f = this.#ctx.createBiquadFilter();
+    c1f.type = 'bandpass'; c1f.frequency.value = 4000 + rowIndex * 500; c1f.Q.value = 2;
+    const c1e = this.#ctx.createGain();
+    c1e.gain.setValueAtTime(0.15, t);
+    c1e.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    crack1.connect(c1f); c1f.connect(c1e); c1e.connect(this.#masterGain);
+    crack1.start(t); crack1.stop(t + 0.06);
 
-    // Layer 2: High-freq ice crackle (sharp filtered noise)
-    const crack = this.#ctx.createBufferSource();
-    crack.buffer = this.#createNoiseBuffer(0.3);
+    // Second crack after a gap
+    const crack2 = this.#ctx.createBufferSource();
+    crack2.buffer = this.#createNoiseBuffer(0.05);
+    const c2f = this.#ctx.createBiquadFilter();
+    c2f.type = 'highpass'; c2f.frequency.value = 5000;
+    const c2e = this.#ctx.createGain();
+    c2e.gain.setValueAtTime(0.12, t + 0.15);
+    c2e.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    crack2.connect(c2f); c2f.connect(c2e); c2e.connect(this.#masterGain);
+    crack2.start(t + 0.15); crack2.stop(t + 0.22);
+
+    // Layer 2: Creaking ice noise (broadband, slow swell)
+    const creak = this.#ctx.createBufferSource();
+    creak.buffer = this.#createNoiseBuffer(0.4);
     const cf = this.#ctx.createBiquadFilter();
-    cf.type = 'highpass'; cf.frequency.value = 6000;
-    const cf2 = this.#ctx.createBiquadFilter();
-    cf2.type = 'peaking'; cf2.frequency.value = 8000; cf2.gain.value = 12; cf2.Q.value = 2;
+    cf.type = 'bandpass'; cf.frequency.value = 2000 + rowIndex * 400; cf.Q.value = 1;
     const ce = this.#ctx.createGain();
     ce.gain.setValueAtTime(0, t);
-    ce.gain.linearRampToValueAtTime(0.05, t + 0.02);
-    ce.gain.setValueAtTime(0.01, t + 0.1);
-    ce.gain.linearRampToValueAtTime(0.06, t + 0.18);
-    ce.gain.linearRampToValueAtTime(0, t + 0.4);
-    crack.connect(cf); cf.connect(cf2); cf2.connect(ce); ce.connect(this.#masterGain);
-    crack.start(t); crack.stop(t + 0.45);
+    ce.gain.linearRampToValueAtTime(0.06, t + 0.08);
+    ce.gain.setValueAtTime(0.02, t + 0.18);
+    ce.gain.linearRampToValueAtTime(0.07, t + 0.25);
+    ce.gain.linearRampToValueAtTime(0, t + 0.45);
+    creak.connect(cf); cf.connect(ce); ce.connect(this.#masterGain);
+    creak.start(t); creak.stop(t + 0.5);
 
     // Layer 3: Low sub-ice rumble (frozen lake groaning)
     const sub = this.#ctx.createOscillator();
     sub.type = 'sine';
-    sub.frequency.setValueAtTime(45 * pitch, t);
-    sub.frequency.linearRampToValueAtTime(35 * pitch, t + 0.4);
+    sub.frequency.setValueAtTime(40 * pitch, t);
+    sub.frequency.linearRampToValueAtTime(30 * pitch, t + 0.4);
     const se = this.#ctx.createGain();
     se.gain.setValueAtTime(0, t);
     se.gain.linearRampToValueAtTime(0.1, t + 0.08);

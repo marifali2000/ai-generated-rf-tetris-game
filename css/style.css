@@ -493,13 +493,12 @@ kbd {
     align-items: center;
     position: fixed;
     z-index: 15;
-    background: rgba(6, 14, 28, 0.75);
-    border: 1px solid rgba(60, 120, 190, 0.3);
+    background: rgba(6, 14, 28, 0.35);
+    border: 1px solid rgba(60, 120, 190, 0.15);
     border-radius: 8px;
     padding: 4px 6px 6px;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
     pointer-events: none;
+    opacity: 0.65;
   }
 
   #mobile-hold {
@@ -518,6 +517,14 @@ kbd {
     color: #5a8eb8;
     text-transform: uppercase;
     margin-bottom: 2px;
+  }
+
+  .mobile-hold-hint {
+    font-size: 7px;
+    color: #4a7a9a;
+    text-align: center;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
   }
 
   #mobile-hold-canvas,
@@ -637,12 +644,13 @@ kbd {
   }
 
   #drawer-gestures {
-    font-size: 9px;
-    color: #4a6a8a;
+    font-size: 13px;
+    color: #7a9aba;
     text-align: center;
     letter-spacing: 0.5px;
-    padding-top: 4px;
-    border-top: 1px solid rgba(40, 80, 130, 0.2);
+    padding-top: 6px;
+    border-top: 1px solid rgba(40, 80, 130, 0.3);
+    line-height: 1.6;
   }
 }
 

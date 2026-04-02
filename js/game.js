@@ -230,7 +230,9 @@ class Game {
   }
 
   #startGame() {
+    // Eagerly init + resume audio context — avoids mobile delay
     this.#sound.init();
+    this.#sound.warmUp();
     this.#board.reset();
     this.#scoring.reset();
     this.#holdType = null;
