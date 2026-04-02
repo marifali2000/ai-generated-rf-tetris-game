@@ -359,6 +359,157 @@ kbd {
   display: none;
 }
 
+/* Tutorial overlay — hidden by default, shown on first visit */
+#tutorial-overlay {
+  display: none;
+}
+
+#tutorial-overlay.visible {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(3, 8, 18, 0.95);
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: tutorialFadeIn 0.3s ease;
+}
+
+@keyframes tutorialFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#tutorial-content {
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+}
+
+.tutorial-title {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: #5ab0ff;
+  margin-bottom: 28px;
+  text-shadow: 0 0 20px rgba(90, 176, 255, 0.5);
+}
+
+.tutorial-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.tutorial-item {
+  background: rgba(15, 30, 55, 0.7);
+  border: 1px solid rgba(60, 120, 190, 0.25);
+  border-radius: 10px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 0.3s ease;
+}
+
+.tutorial-item:hover {
+  border-color: rgba(90, 176, 255, 0.5);
+}
+
+.tutorial-icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.tutorial-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c0d8f0;
+  letter-spacing: 1px;
+}
+
+.tutorial-desc {
+  font-size: 10px;
+  color: #7a9aba;
+}
+
+/* Hide mobile controls on desktop */
+.tutorial-mobile,
+.tutorial-mobile-text {
+  display: none;
+}
+
+#tutorial-start-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(40, 100, 180, 0.8), rgba(20, 60, 120, 0.9));
+  border: 1px solid rgba(90, 176, 255, 0.5);
+  border-radius: 12px;
+  cursor: pointer;
+  text-shadow: 0 0 12px rgba(90, 176, 255, 0.6);
+  box-shadow: 0 0 20px rgba(90, 176, 255, 0.2);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+#tutorial-start-btn:hover {
+  background: linear-gradient(180deg, rgba(50, 120, 200, 0.9), rgba(30, 70, 140, 0.9));
+}
+
+#tutorial-start-btn:active {
+  background: rgba(50, 120, 200, 0.9);
+  transform: scale(0.97);
+}
+
+/* Desktop settings highlight after tutorial */
+.settings-highlight {
+  animation: settingsGlow 1.2s ease-in-out 3;
+}
+
+@keyframes settingsGlow {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 15px rgba(90, 176, 255, 0.4), 0 0 30px rgba(90, 176, 255, 0.2); border-radius: 8px; }
+}
+
+/* Demo settings indicator (floating text) */
+#demo-setting-indicator {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgba(10, 25, 50, 0.9);
+  border: 1px solid rgba(90, 176, 255, 0.5);
+  border-radius: 8px;
+  padding: 8px 20px;
+  color: #5ab0ff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#demo-setting-indicator.show {
+  animation: indicatorFade 3s ease forwards;
+}
+
+@keyframes indicatorFade {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Touch controls — hidden on desktop */
 #touch-controls {
   display: none;

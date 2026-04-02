@@ -204,11 +204,13 @@
     </div>
   </div>
 
-  <!-- Tutorial overlay (mobile, shown before first game) -->
+  <!-- Tutorial overlay (shown before first game on all platforms) -->
   <div id="tutorial-overlay">
     <div id="tutorial-content">
       <div class="tutorial-title">HOW TO PLAY</div>
-      <div class="tutorial-grid">
+
+      <!-- Mobile touch controls -->
+      <div class="tutorial-grid tutorial-mobile">
         <div class="tutorial-item">
           <div class="tutorial-icon">👆</div>
           <div class="tutorial-label">Tap</div>
@@ -240,7 +242,45 @@
           <div class="tutorial-desc">Watch AI play via menu</div>
         </div>
       </div>
-      <button id="tutorial-start-btn">TAP TO START</button>
+
+      <!-- Desktop keyboard controls -->
+      <div class="tutorial-grid tutorial-desktop">
+        <div class="tutorial-item">
+          <div class="tutorial-icon">⬅ ➡</div>
+          <div class="tutorial-label">Arrow Keys</div>
+          <div class="tutorial-desc">Move piece left/right</div>
+        </div>
+        <div class="tutorial-item">
+          <div class="tutorial-icon">⬇</div>
+          <div class="tutorial-label">Down Arrow</div>
+          <div class="tutorial-desc">Soft drop</div>
+        </div>
+        <div class="tutorial-item">
+          <div class="tutorial-icon">␣</div>
+          <div class="tutorial-label">Space Bar</div>
+          <div class="tutorial-desc">Hard drop</div>
+        </div>
+        <div class="tutorial-item">
+          <div class="tutorial-icon">⬆</div>
+          <div class="tutorial-label">Up Arrow</div>
+          <div class="tutorial-desc">Rotate piece</div>
+        </div>
+        <div class="tutorial-item">
+          <div class="tutorial-icon">C</div>
+          <div class="tutorial-label">C Key</div>
+          <div class="tutorial-desc">Hold piece</div>
+        </div>
+        <div class="tutorial-item">
+          <div class="tutorial-icon">D</div>
+          <div class="tutorial-label">D Key</div>
+          <div class="tutorial-desc">Toggle demo mode</div>
+        </div>
+      </div>
+
+      <button id="tutorial-start-btn">
+        <span class="tutorial-mobile-text">TAP TO START</span>
+        <span class="tutorial-desktop-text">PRESS ENTER OR CLICK TO START</span>
+      </button>
     </div>
   </div>
 

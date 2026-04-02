@@ -8,6 +8,7 @@ import { Renderer } from './renderer.js';
 import { Scoring } from './scoring.js';
 import { SoundEngine } from './sound.js';
 import { AutoPlayer } from './autoplay.js';
+import { DemoCycler } from './demo-cycler.js';
 
 const LOCK_DELAY = 500; // ms
 const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window;
@@ -22,6 +23,7 @@ class Game {
   #sound;
   #bag;
   #autoPlayer;
+  #demoCycler;
   #autoMoveTimer = 0;
 
   #btnStart;
@@ -56,6 +58,13 @@ class Game {
     this.#sound = new SoundEngine();
     this.#bag = new BagRandomizer();
     this.#autoPlayer = new AutoPlayer();
+    this.#demoCycler = new DemoCycler({
+      onThemeChange: (v) => this.#demoApplyTheme(v),
+      onVolumeChange: (v) => this.#demoApplyVolume(v),
+      onSpeedChange: (v) => this.#syncSpeed(v),
+      onMute: () => this.#demoSetMuted(true),
+      onUnmute: () => this.#demoSetMuted(false),
+    });
 
     this.#bindInput();
     this.#input.attach();
@@ -73,18 +82,10 @@ class Game {
     const tutorialOverlay = document.getElementById('tutorial-overlay');
     const tutorialBtn = document.getElementById('tutorial-start-btn');
     tutorialBtn?.addEventListener('click', () => {
-      tutorialOverlay?.classList.remove('visible');
-      localStorage.setItem('tetris-tutorial-seen', '1');
       this.#sound.init();
-      this.#sound.warmUp();
-      this.#showHamburgerHint();
-      if (this.#state === 'idle' || this.#state === 'gameOver') {
-        this.#handleStart();
-      } else if (this.#state === 'paused') {
-        this.#togglePause();
-      }
+      this.#handleStart();
     });
-    if (IS_MOBILE && !localStorage.getItem('tetris-tutorial-seen')) {
+    if (!localStorage.getItem('tetris-tutorial-seen')) {
       tutorialOverlay?.classList.add('visible');
       this.#renderer.showOverlay('');
     } else {
@@ -343,11 +344,21 @@ class Game {
   }
 
   #handleStart() {
-    // Dismiss tutorial if visible
-    document.getElementById('tutorial-overlay')?.classList.remove('visible');
-    // Dismiss hamburger hint
+    const tutOverlay = document.getElementById('tutorial-overlay');
+    const wasTutorial = tutOverlay?.classList.contains('visible');
+    tutOverlay?.classList.remove('visible');
     document.getElementById('mobile-menu-toggle')?.classList.remove('hamburger-highlight');
     document.getElementById('hamburger-hint')?.classList.remove('visible');
+    if (wasTutorial) {
+      localStorage.setItem('tetris-tutorial-seen', '1');
+      this.#sound.init();
+      this.#sound.warmUp();
+      if (IS_MOBILE) {
+        this.#showHamburgerHint();
+      } else {
+        this.#showDesktopSettingsHint();
+      }
+    }
     if (this.#state === 'idle' || this.#state === 'gameOver') {
       this.#startGame();
     } else if (this.#state === 'paused') {
@@ -745,6 +756,7 @@ class Game {
     if (this.#autoPlayer.active) {
       // Stop demo
       this.#autoPlayer.stop();
+      this.#demoCycler.stop();
       this.#state = 'gameOver';
       this.#currentPiece = null;
       if (this.#animFrameId) {
@@ -759,6 +771,7 @@ class Game {
     } else {
       // Start demo
       this.#autoPlayer.start();
+      this.#demoCycler.start();
       this.#btnDemo?.classList.add('active');
       demoControls?.classList.remove('demo-controls-hidden');
       // Sync demo controls with current values
@@ -781,6 +794,7 @@ class Game {
     if (this.#state === 'idle') return;
     if (this.#autoPlayer.active) {
       this.#autoPlayer.stop();
+      this.#demoCycler.stop();
       this.#btnDemo?.classList.remove('active');
     }
     document.getElementById('demo-controls')?.classList.add('demo-controls-hidden');
@@ -817,11 +831,57 @@ class Game {
   }
 
   #updateMuteButton() {
+    const muted = this.#sound.muted;
+    const text = muted ? '🔇 MUTED' : '🔊 SOUND';
     if (this.#btnMute) {
-      const muted = this.#sound.muted;
-      this.#btnMute.textContent = muted ? '🔇 MUTED' : '🔊 SOUND';
+      this.#btnMute.textContent = text;
       this.#btnMute.classList.toggle('active', muted);
     }
+    const mobileMute = document.getElementById('mobile-btn-mute');
+    if (mobileMute) mobileMute.textContent = text;
+    const demoMute = document.getElementById('demo-mute-btn');
+    if (demoMute) demoMute.textContent = text;
+  }
+
+  /** Apply theme change from demo cycler across all UI panels. */
+  #demoApplyTheme(value) {
+    this.#sound.setSoundTheme(value);
+    this.#renderer.setVisualTheme(value);
+    this.#sound.playLineClear(2);
+    for (const id of ['sound-theme', 'mobile-sound-theme', 'demo-theme']) {
+      const el = document.getElementById(id);
+      if (el) el.value = value;
+    }
+  }
+
+  /** Apply volume change from demo cycler across all UI panels. */
+  #demoApplyVolume(value) {
+    this.#sound.setVolume(value / 100);
+    for (const id of ['volume-slider', 'mobile-volume', 'demo-volume']) {
+      const el = document.getElementById(id);
+      if (el) el.value = value;
+    }
+  }
+
+  /** Set muted state from demo cycler (only toggles if state differs). */
+  #demoSetMuted(muted) {
+    if (this.#sound.muted !== muted) {
+      this.#sound.toggleMute();
+      this.#updateMuteButton();
+    }
+  }
+
+  /** Highlight desktop settings panel briefly after tutorial dismissal. */
+  #showDesktopSettingsHint() {
+    const sections = ['theme-section', 'volume-section', 'speed-section'];
+    for (const id of sections) {
+      document.getElementById(id)?.classList.add('settings-highlight');
+    }
+    setTimeout(() => {
+      for (const id of sections) {
+        document.getElementById(id)?.classList.remove('settings-highlight');
+      }
+    }, 4500);
   }
 
   #render() {
