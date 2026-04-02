@@ -277,6 +277,26 @@ class Game {
       if (this.#lockTimer !== null) {
         this.#lockStartTime = timestamp;
       }
+
+      // Cascade: check if falling blocks formed new complete lines
+      const cascade = this.#board.clearLines();
+      if (cascade.linesCleared > 0) {
+        const result = this.#scoring.addLineClear(cascade.linesCleared, 'none');
+        this.#sound.playLineClear(cascade.linesCleared);
+        this.#renderer.triggerLineClearEffect(cascade.clearedRows, cascade.clearedRowColors);
+        this.#renderer.triggerFallingCells(cascade.fallingCells);
+        this.#renderer.triggerComboText(`CASCADE ${cascade.linesCleared}`, cascade.clearedRows[0]);
+        if (result.leveledUp) {
+          this.#sound.playLevelUp();
+          this.#renderer.triggerLevelUpEffect(this.#scoring.level);
+        }
+        // Stay in animating state — don't flush input yet
+        this.#wasAnimating = true;
+        this.#render();
+        this.#animFrameId = requestAnimationFrame((t) => this.#gameLoop(t));
+        return true;
+      }
+
       this.#flushInputBuffer();
     }
     return false;

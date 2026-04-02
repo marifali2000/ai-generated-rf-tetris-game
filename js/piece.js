@@ -2,7 +2,7 @@
  * Tetromino definitions with SRS rotation states and wall kick data.
  */
 
-const COLS = 12;
+const COLS = 10;
 
 // Rotation states for each piece (4 rotations each)
 // 0=spawn, 1=CW, 2=180°, 3=CCW

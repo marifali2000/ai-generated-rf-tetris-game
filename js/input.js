@@ -118,6 +118,7 @@ class InputHandler {
     let startTime = 0;
     let hasMoved = false;
     let moveCount = 0;
+    let hardDropped = false; // prevent multiple drops per touch
     const MOVE_THRESHOLD = 25;  // px per column-move
     const TAP_THRESHOLD = 12;
     const SWIPE_DOWN_THRESHOLD = 40;
@@ -137,6 +138,7 @@ class InputHandler {
       startTime = Date.now();
       hasMoved = false;
       moveCount = 0;
+      hardDropped = false;
     }, { passive: false });
 
     gestureTarget.addEventListener('touchmove', (e) => {
@@ -159,12 +161,11 @@ class InputHandler {
         moveCount += moves;
       }
 
-      // Downward swipe — hard drop (only if not already moving horizontally)
-      if (dy > SWIPE_DOWN_THRESHOLD && Math.abs(dy) > Math.abs(dx) * 1.5 && moveCount === 0) {
+      // Downward swipe — hard drop (only once per touch, and only if not already moving horizontally)
+      if (!hardDropped && dy > SWIPE_DOWN_THRESHOLD && Math.abs(dy) > Math.abs(dx) * 1.5 && moveCount === 0) {
         hasMoved = true;
+        hardDropped = true;
         this.#callbacks['hardDrop']?.();
-        // Reset to prevent re-triggering
-        startY = t.clientY;
       }
     }, { passive: false });
 

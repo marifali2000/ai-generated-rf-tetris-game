@@ -4,8 +4,8 @@
 import { getColorForType, getShapeForType } from './piece.js';
 
 const CELL_SIZE = 32;
-const COLS = 12;
-const ROWS = 24;
+const COLS = 10;
+const ROWS = 20;
 
 function lightenColor(hex, percent) {
   const num = Number.parseInt(hex.slice(1), 16);
@@ -139,6 +139,10 @@ class Renderer {
   #clearAnimTimer = 0;
   #clearAnimDuration = 0;
 
+  // Row-by-row vanish: each cleared row's cells shrink and fade
+  #vanishingRows = [];  // { row, cells: [{col, color, scale, alpha, delay}], startFrame }
+  #vanishPhase = false; // true while rows are vanishing
+
   // Hard drop slam lines
   #slamLines = [];
 
@@ -173,7 +177,7 @@ class Renderer {
 
   /** True while line clear animation is playing — game logic should pause. */
   get isAnimating() {
-    return this.#clearAnimTimer > 0;
+    return this.#clearAnimTimer > 0 || this.#vanishPhase || this.#fallingCells.length > 0;
   }
 
   constructor() {
@@ -202,37 +206,58 @@ class Renderer {
   }
 
   /**
-   * Multi-phase dramatic line clear: highlight → crack → sweep → dissolve → shockwave → particles.
-   * Animation runs over #clearAnimDuration frames — game pauses but animation renders.
+   * Row-by-row line clear animation: each row highlights in color, cells shrink and vanish
+   * one row at a time with staggered delay. No white flash. Particles burst from each cell.
    */
   triggerLineClearEffect(clearedRows, clearedRowColors) {
     const count = clearedRows.length;
     const isTetris = count >= 4;
 
-    // Animation duration: longer = more dramatic
-    this.#clearAnimDuration = 90 + count * 25;
-    if (isTetris) this.#clearAnimDuration = 180;
-    this.#clearAnimTimer = this.#clearAnimDuration;
+    // Build vanishing row data — each row vanishes one by one
+    this.#vanishingRows = [];
+    this.#vanishPhase = true;
+    const ROW_STAGGER = 30; // frames between each row starting to vanish
 
-    this.#shakeAmount = 6 + count * 5;
-    this.#flashAlpha = 0.35 + count * 0.15;
-    this.#flashColor = '#c8d8ff';
-
-    if (isTetris) {
-      this.#flashAlpha = 0.9;
-      this.#flashColor = '#ffe080';
-      this.#shakeAmount = 25;
+    for (let i = 0; i < clearedRows.length; i++) {
+      const row = clearedRows[i];
+      const colors = clearedRowColors[i];
+      const cells = [];
+      for (let c = 0; c < colors.length; c++) {
+        if (!colors[c]) continue;
+        cells.push({
+          col: c,
+          color: colors[c],
+          scale: 1,
+          alpha: 1,
+          // Cells vanish left-to-right with slight stagger within the row
+          delay: c * 2,
+          shrinking: false,
+          glowAlpha: 0,
+        });
+      }
+      this.#vanishingRows.push({
+        row,
+        cells,
+        delay: i * ROW_STAGGER, // each row starts vanishing after the previous
+        highlightAlpha: 0,
+        phase: 'highlight', // highlight → shrink → done
+        phaseTimer: 0,
+      });
     }
 
-    this.#addRowFlashes(clearedRows, isTetris);
-    this.#addCrackLines(clearedRows);
-    this.#addSweepBeams(clearedRows, count, isTetris);
-    this.#addDissolveEffects(clearedRows, clearedRowColors);
-    this.#addShockwaves(clearedRows, count, isTetris);
-    this.#addExplosionParticles(clearedRows, clearedRowColors, count);
+    // Mild shake — no white flash
+    this.#shakeAmount = 3 + count * 2;
+    if (isTetris) this.#shakeAmount = 12;
 
-    // Background reactivity — stars speed up
-    this.#starSpeedBoost = 3 + count;
+    // Shockwave (subtle, colored not white)
+    this.#addShockwaves(clearedRows, count, isTetris);
+
+    // Timer for particles and other effects
+    this.#clearAnimDuration = 40 + count * ROW_STAGGER + 60;
+    this.#clearAnimTimer = this.#clearAnimDuration;
+
+    // Background reactivity
+    this.#starSpeedBoost = 2 + count;
   }
 
   #addCrackLines(clearedRows) {
@@ -260,8 +285,9 @@ class Renderer {
 
   #addRowFlashes(clearedRows, isTetris) {
     const color = isTetris ? '#ffe080' : '#ffffff';
-    for (const row of clearedRows) {
-      this.#rowFlashData.push({ row, alpha: 1.2, color });
+    for (let i = 0; i < clearedRows.length; i++) {
+      // Stagger each row's flash — each row lights up one after another
+      this.#rowFlashData.push({ row: clearedRows[i], alpha: 1.5, color, delay: i * 18 });
     }
   }
 
@@ -469,7 +495,7 @@ class Renderer {
 
   /**
    * Animate cells sliding down after line clears.
-   * Each cell lerps from fromRow → toRow over time.
+   * Slow, visible fall with gentle bounce at landing.
    */
   triggerFallingCells(fallingCells) {
     if (!fallingCells || fallingCells.length === 0) return;
@@ -480,8 +506,11 @@ class Renderer {
         toY: fc.toRow,
         currentY: fc.fromRow,
         color: fc.color,
-        speed: 0.015 + Math.random() * 0.01, // slower slide for drama
-        delay: Math.random() * 8, // stagger start for cascade feel
+        velocity: 0,
+        gravity: 0.025 + Math.random() * 0.01, // slow gravity for visible fall
+        bounces: 0,
+        delay: 0, // starts after vanish phase finishes
+        started: false,
       });
     }
   }
@@ -530,6 +559,7 @@ class Renderer {
     }
     this.#drawDangerZone(ctx);
     this.#drawFallingCells(ctx);
+    this.#drawVanishingRows(ctx);
     this.#drawCrackLines(ctx);
     this.#drawRowFlashes(ctx);
     this.#drawSweepBeams(ctx);
@@ -661,6 +691,7 @@ class Renderer {
   #drawRowFlashes(ctx) {
     if (this.#rowFlashData.length === 0) return;
     for (const rf of this.#rowFlashData) {
+      if (rf.delay > 0) { rf.delay--; continue; }
       ctx.save();
       // Pulsing glow effect — brighter and more visible
       const pulse = 0.85 + 0.15 * Math.sin(this.#frameCount * 0.4);
@@ -671,7 +702,7 @@ class Renderer {
       ctx.shadowBlur = 40 * Math.min(1, rf.alpha);
       ctx.fillRect(0, rf.row * CELL_SIZE - 6, COLS * CELL_SIZE, CELL_SIZE + 12);
       ctx.restore();
-      rf.alpha -= 0.008;
+      rf.alpha -= 0.012;
     }
     this.#rowFlashData = this.#rowFlashData.filter(rf => rf.alpha > 0.01);
   }
@@ -737,26 +768,146 @@ class Renderer {
 
   #drawFallingCells(ctx) {
     if (this.#fallingCells.length === 0) return;
-    for (const fc of this.#fallingCells) {
-      // Stagger start for cascade feel
-      if (fc.delay > 0) { fc.delay--; continue; }
-      // Gentle accelerating slide toward target
-      const dist = fc.toY - fc.currentY;
-      fc.currentY += dist * 0.035 + fc.speed;
-      if (fc.currentY >= fc.toY - 0.01) {
-        fc.currentY = fc.toY;
-        fc.done = true;
+    // Don't start falling until vanish phase is complete
+    if (this.#vanishPhase) {
+      // Draw cells at their original position while waiting
+      for (const fc of this.#fallingCells) {
+        this.#drawCell(ctx, fc.col, fc.fromY, fc.color, 1);
       }
-      // Draw with subtle motion trail
-      if (!fc.done && dist > 0.3) {
+      return;
+    }
+    for (const fc of this.#fallingCells) {
+      // Slow physics-based falling
+      fc.velocity += fc.gravity;
+      fc.currentY += fc.velocity;
+
+      if (fc.currentY >= fc.toY) {
+        fc.currentY = fc.toY;
+        if (fc.bounces < 1 && fc.velocity > 0.12) {
+          fc.velocity *= -0.2; // gentle bounce
+          fc.bounces++;
+        } else {
+          fc.velocity = 0;
+          fc.done = true;
+        }
+      }
+
+      // Motion trail behind falling cell
+      if (!fc.done && fc.velocity > 0.08) {
         ctx.save();
-        ctx.globalAlpha = 0.15;
-        this.#drawCell(ctx, fc.col, fc.currentY - 0.3, fc.color, 0.15);
+        ctx.globalAlpha = 0.1;
+        this.#drawCell(ctx, fc.col, fc.currentY - 0.3, fc.color, 0.1);
         ctx.restore();
       }
       this.#drawCell(ctx, fc.col, fc.currentY, fc.color, 1);
     }
     this.#fallingCells = this.#fallingCells.filter(fc => !fc.done);
+  }
+
+  /**
+   * Draw vanishing rows — row-by-row highlight then cell shrink animation.
+   * Each row: highlight with color glow → cells shrink to nothing → particles burst.
+   */
+  #drawVanishingRows(ctx) {
+    if (this.#vanishingRows.length === 0) {
+      if (this.#vanishPhase) this.#vanishPhase = false;
+      return;
+    }
+
+    let allDone = true;
+    for (const vr of this.#vanishingRows) {
+      // Stagger: wait for this row's delay
+      if (vr.delay > 0) {
+        vr.delay--;
+        // Draw cells normally while waiting
+        for (const cell of vr.cells) {
+          this.#drawCell(ctx, cell.col, vr.row, cell.color, 1);
+        }
+        allDone = false;
+        continue;
+      }
+
+      vr.phaseTimer++;
+
+      if (vr.phase === 'highlight') {
+        // Glow highlight ramps up over ~15 frames, using the row's own colors
+        vr.highlightAlpha = Math.min(1, vr.phaseTimer / 15);
+        // Draw cells with increasing glow
+        for (const cell of vr.cells) {
+          this.#drawCell(ctx, cell.col, vr.row, cell.color, 1);
+        }
+        // Colored glow overlay on the row (not white)
+        ctx.save();
+        const glowAlpha = vr.highlightAlpha * 0.4;
+        ctx.globalAlpha = glowAlpha;
+        // Use average color tint from first cell
+        const tintColor = vr.cells.length > 0 ? vr.cells[0].color : '#80c0ff';
+        ctx.fillStyle = tintColor;
+        ctx.shadowColor = tintColor;
+        ctx.shadowBlur = 20 * vr.highlightAlpha;
+        ctx.fillRect(0, vr.row * CELL_SIZE, COLS * CELL_SIZE, CELL_SIZE);
+        ctx.restore();
+
+        if (vr.phaseTimer >= 20) {
+          vr.phase = 'shrink';
+          vr.phaseTimer = 0;
+        }
+        allDone = false;
+      } else if (vr.phase === 'shrink') {
+        // Cells shrink and fade one by one (left to right stagger)
+        let rowDone = true;
+        for (const cell of vr.cells) {
+          if (cell.delay > 0) {
+            cell.delay--;
+            // Still visible while waiting
+            this.#drawCell(ctx, cell.col, vr.row, cell.color, cell.alpha);
+            rowDone = false;
+            continue;
+          }
+          cell.scale *= 0.92;
+          cell.alpha *= 0.94;
+          if (cell.scale > 0.05 && cell.alpha > 0.05) {
+            // Draw shrinking cell
+            const px = cell.col * CELL_SIZE + CELL_SIZE / 2;
+            const py = vr.row * CELL_SIZE + CELL_SIZE / 2;
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.scale(cell.scale, cell.scale);
+            ctx.globalAlpha = cell.alpha;
+            const half = CELL_SIZE / 2;
+            // Draw as the colored block, shrinking
+            const grad = ctx.createLinearGradient(-half, -half, half * 0.4, half);
+            grad.addColorStop(0, lightenColor(cell.color, 28));
+            grad.addColorStop(0.35, cell.color);
+            grad.addColorStop(1, darkenColor(cell.color, 30));
+            ctx.fillStyle = grad;
+            ctx.fillRect(-half + 1, -half + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+            ctx.restore();
+            rowDone = false;
+          } else if (!cell.particlesSpawned) {
+            // Spawn particles when cell vanishes
+            cell.particlesSpawned = true;
+            const cx = cell.col * CELL_SIZE + CELL_SIZE / 2;
+            const cy = vr.row * CELL_SIZE + CELL_SIZE / 2;
+            for (let p = 0; p < 4; p++) {
+              if (this.#particles.length < MAX_PARTICLES) {
+                this.#particles.push(new Particle(cx, cy, cell.color));
+              }
+            }
+          }
+        }
+        if (rowDone) {
+          vr.phase = 'done';
+        }
+        allDone = allDone && rowDone;
+      }
+    }
+
+    // Remove completed rows
+    this.#vanishingRows = this.#vanishingRows.filter(vr => vr.phase !== 'done');
+    if (this.#vanishingRows.length === 0 && this.#vanishPhase) {
+      this.#vanishPhase = false;
+    }
   }
 
   #drawLockPulse(ctx) {

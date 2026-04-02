@@ -2,8 +2,8 @@
  * Board grid, collision detection, and line clearing.
  */
 
-const COLS = 12;
-const ROWS = 24;
+const COLS = 10;
+const ROWS = 20;
 const HIDDEN_ROWS = 2;
 const TOTAL_ROWS = ROWS + HIDDEN_ROWS;
 
