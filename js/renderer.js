@@ -216,7 +216,7 @@ class Renderer {
     // Build vanishing row data — each row vanishes one by one
     this.#vanishingRows = [];
     this.#vanishPhase = true;
-    const ROW_STAGGER = 60; // frames between each row starting to vanish (slow)
+    const ROW_STAGGER = 120; // frames between each row starting to vanish (very slow)
 
     for (let i = 0; i < clearedRows.length; i++) {
       const row = clearedRows[i];
@@ -229,8 +229,8 @@ class Renderer {
           color: colors[c],
           scale: 1,
           alpha: 1,
-          // Cells vanish left-to-right with visible stagger within the row
-          delay: c * 5,
+          // Cells vanish left-to-right with very visible stagger
+          delay: c * 8,
           shrinking: false,
           glowAlpha: 0,
         });
@@ -238,7 +238,7 @@ class Renderer {
       this.#vanishingRows.push({
         row,
         cells,
-        delay: i * ROW_STAGGER, // each row starts vanishing well after the previous
+        delay: i * ROW_STAGGER, // each row waits a long time before vanishing
         highlightAlpha: 0,
         phase: 'highlight', // highlight → shrink → done
         phaseTimer: 0,
@@ -253,7 +253,7 @@ class Renderer {
     this.#addShockwaves(clearedRows, count, isTetris);
 
     // Timer for particles and other effects
-    this.#clearAnimDuration = 60 + count * ROW_STAGGER + 120;
+    this.#clearAnimDuration = 120 + count * ROW_STAGGER + 200;
     this.#clearAnimTimer = this.#clearAnimDuration;
 
     // Background reactivity
@@ -507,10 +507,11 @@ class Renderer {
         currentY: fc.fromRow,
         color: fc.color,
         velocity: 0,
-        gravity: 0.008 + Math.random() * 0.004, // very slow gravity — visibly falling
+        gravity: 0.004 + Math.random() * 0.002, // super slow gravity — very visible falling
         bounces: 0,
-        delay: 0, // starts after vanish phase finishes
+        delay: 0,
         started: false,
+        landGlow: 0, // glow when cell lands
       });
     }
   }
@@ -777,26 +778,44 @@ class Renderer {
       return;
     }
     for (const fc of this.#fallingCells) {
+      // Cell has landed — show landing glow then mark truly done
+      if (fc.landed) {
+        fc.landGlow -= 0.02;
+        // Draw landed cell solidly at final position
+        this.#drawCell(ctx, fc.col, fc.toY, fc.color, 1);
+        // Landing glow overlay
+        if (fc.landGlow > 0) {
+          ctx.save();
+          ctx.globalAlpha = fc.landGlow * 0.5;
+          ctx.fillStyle = fc.color;
+          ctx.shadowColor = fc.color;
+          ctx.shadowBlur = 15;
+          ctx.fillRect(fc.col * CELL_SIZE, fc.toY * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          ctx.restore();
+        } else {
+          fc.done = true;
+        }
+        continue;
+      }
+
       // Slow physics-based falling
       fc.velocity += fc.gravity;
       fc.currentY += fc.velocity;
 
       if (fc.currentY >= fc.toY) {
         fc.currentY = fc.toY;
-        if (fc.bounces < 1 && fc.velocity > 0.12) {
-          fc.velocity *= -0.2; // gentle bounce
-          fc.bounces++;
-        } else {
-          fc.velocity = 0;
-          fc.done = true;
-        }
+        fc.velocity = 0;
+        fc.landed = true;
+        fc.landGlow = 1; // start landing glow
       }
 
       // Motion trail behind falling cell
-      if (!fc.done && fc.velocity > 0.08) {
+      if (fc.velocity > 0.03) {
         ctx.save();
-        ctx.globalAlpha = 0.1;
-        this.#drawCell(ctx, fc.col, fc.currentY - 0.3, fc.color, 0.1);
+        ctx.globalAlpha = 0.15;
+        this.#drawCell(ctx, fc.col, fc.currentY - 0.4, fc.color, 0.15);
+        ctx.globalAlpha = 0.08;
+        this.#drawCell(ctx, fc.col, fc.currentY - 0.7, fc.color, 0.08);
         ctx.restore();
       }
       this.#drawCell(ctx, fc.col, fc.currentY, fc.color, 1);
@@ -830,8 +849,8 @@ class Renderer {
       vr.phaseTimer++;
 
       if (vr.phase === 'highlight') {
-        // Glow highlight ramps up over ~30 frames, using the row's own colors
-        vr.highlightAlpha = Math.min(1, vr.phaseTimer / 30);
+        // Glow highlight ramps up over ~40 frames, using the row's own colors
+        vr.highlightAlpha = Math.min(1, vr.phaseTimer / 40);
         // Draw cells with increasing glow
         for (const cell of vr.cells) {
           this.#drawCell(ctx, cell.col, vr.row, cell.color, 1);
@@ -848,7 +867,7 @@ class Renderer {
         ctx.fillRect(0, vr.row * CELL_SIZE, COLS * CELL_SIZE, CELL_SIZE);
         ctx.restore();
 
-        if (vr.phaseTimer >= 40) {
+        if (vr.phaseTimer >= 60) {
           vr.phase = 'shrink';
           vr.phaseTimer = 0;
         }
@@ -864,8 +883,8 @@ class Renderer {
             rowDone = false;
             continue;
           }
-          cell.scale *= 0.965;
-          cell.alpha *= 0.97;
+          cell.scale *= 0.975;
+          cell.alpha *= 0.98;
           if (cell.scale > 0.05 && cell.alpha > 0.05) {
             // Draw shrinking cell
             const px = cell.col * CELL_SIZE + CELL_SIZE / 2;
