@@ -96,9 +96,14 @@ export class DemoCycler {
   /** Phase 1: freeze blocks, highlight the control, show old→new indicator. */
   #beginFreeze() {
     if (!this.#running) return;
+    // If freeze callback fails (game not playing), skip this step entirely
+    const froze = this.#callbacks.onFreeze();
+    if (!froze) {
+      this.#timer = setTimeout(() => this.#beginFreeze(), PLAY_DURATION);
+      return;
+    }
     const step = DEMO_SEQUENCE[this.#stepIndex];
     this.#phase = 'freeze';
-    this.#callbacks.onFreeze();
     this.#highlightControls(step.type);
     this.#callbacks.onHighlight(step.type);
     this.#bringDemoPanelForward();

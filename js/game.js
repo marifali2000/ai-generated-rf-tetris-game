@@ -50,6 +50,7 @@ class Game {
   #dangerPulseTimer = 0;
   #lastPiecePos = null; // for trail tracking
   #demoFrozen = false;   // true during demo setting changes
+  #demoFreezeTime = 0;   // timestamp when freeze started (safety timeout)
 
   constructor() {
     this.#board = new Board();
@@ -460,10 +461,15 @@ class Game {
 
     // Keep rendering but skip all game logic when demo-frozen
     if (this.#demoFrozen) {
-      this.#lastTimestamp = timestamp;
-      this.#render();
-      this.#animFrameId = requestAnimationFrame((t) => this.#gameLoop(t));
-      return;
+      // Safety: force unfreeze after 5s to prevent permanent freeze
+      if (performance.now() - this.#demoFreezeTime > 5000) {
+        this.#demoFrozen = false;
+      } else {
+        this.#lastTimestamp = timestamp;
+        this.#render();
+        this.#animFrameId = requestAnimationFrame((t) => this.#gameLoop(t));
+        return;
+      }
     }
 
     // DAS auto-repeat
@@ -708,6 +714,7 @@ class Game {
   #gameOver() {
     this.#state = 'gameOver';
     this.#currentPiece = null;
+    this.#demoFrozen = false;
     this.#sound.playGameOver();
 
     // Trigger visual collapse animation
@@ -862,15 +869,16 @@ class Game {
 
   /** Freeze blocks during demo setting changes — keeps rendering. */
   #demoFreeze() {
-    if (this.#state !== 'playing') return;
+    if (this.#state !== 'playing') return false;
     this.#demoFrozen = true;
+    this.#demoFreezeTime = performance.now();
     this.#lastDropTime = performance.now();
     this.#lastAutoTime = performance.now();
+    return true;
   }
 
   /** Unfreeze blocks — reset timing so no jump in gravity. */
   #demoUnfreeze() {
-    if (!this.#demoFrozen) return;
     this.#demoFrozen = false;
     const now = performance.now();
     this.#lastDropTime = now;
