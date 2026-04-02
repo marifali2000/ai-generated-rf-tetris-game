@@ -62,46 +62,44 @@ class Board {
   }
 
   /**
-   * Clear completed lines, then apply per-column gravity so floating
-   * blocks drop down (Block Blast style). Repeats until no new lines form.
+   * Clear completed lines (single pass — no cascade).
+   * Finds full rows, removes them, applies gravity once.
+   * Cascade detection is handled by game.js after animation finishes.
    * Returns falling cell data for smooth visual animation.
    */
   clearLines() {
-    let totalCleared = 0;
     const allClearedRows = [];
     const allClearedRowColors = [];
     const fallingCells = [];
 
-    // Cascade: clear → gravity → clear again until stable
-    for (;;) {
-      // Find full rows
-      const fullRows = [];
-      for (let r = 0; r < TOTAL_ROWS; r++) {
-        if (this.#grid[r].every(cell => cell !== null)) {
-          fullRows.push(r);
-        }
+    // Find full rows (single pass only)
+    const fullRows = [];
+    for (let r = 0; r < TOTAL_ROWS; r++) {
+      if (this.#grid[r].every(cell => cell !== null)) {
+        fullRows.push(r);
       }
-
-      if (fullRows.length === 0) break;
-      totalCleared += fullRows.length;
-
-      // Record for visual effects (convert to visible row index)
-      for (const r of fullRows) {
-        allClearedRows.push(r - HIDDEN_ROWS);
-        allClearedRowColors.push([...this.#grid[r]]);
-      }
-
-      // Remove full rows
-      for (const r of fullRows) {
-        this.#grid[r] = new Array(COLS).fill(null);
-      }
-
-      // Per-column gravity: track movements for animation
-      this.#applyColumnGravity(fallingCells);
     }
 
+    if (fullRows.length === 0) {
+      return { linesCleared: 0, clearedRows: [], clearedRowColors: [], fallingCells: [] };
+    }
+
+    // Record for visual effects (convert to visible row index)
+    for (const r of fullRows) {
+      allClearedRows.push(r - HIDDEN_ROWS);
+      allClearedRowColors.push([...this.#grid[r]]);
+    }
+
+    // Remove full rows
+    for (const r of fullRows) {
+      this.#grid[r] = new Array(COLS).fill(null);
+    }
+
+    // Per-column gravity: track movements for animation
+    this.#applyColumnGravity(fallingCells);
+
     return {
-      linesCleared: totalCleared,
+      linesCleared: fullRows.length,
       clearedRows: allClearedRows,
       clearedRowColors: allClearedRowColors,
       fallingCells,
