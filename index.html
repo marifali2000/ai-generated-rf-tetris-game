@@ -91,19 +91,8 @@
     </div>
   </div>
 
-  <!-- Mobile touch controls -->
-  <div id="touch-controls">
-    <div id="touch-top-row">
-      <button class="touch-btn" data-action="hold">HOLD</button>
-      <button class="touch-btn touch-menu-btn" id="mobile-menu-toggle">☰</button>
-      <button class="touch-btn" data-action="rotateCW">↻</button>
-    </div>
-    <div id="touch-bottom-row">
-      <button class="touch-btn touch-arrow" data-action="left">◀</button>
-      <button class="touch-btn touch-arrow" data-action="softDrop">▼</button>
-      <button class="touch-btn touch-arrow" data-action="right">▶</button>
-    </div>
-  </div>
+  <!-- Mobile gesture area (covers full screen below stats) -->
+  <div id="gesture-area"></div>
 
   <!-- Mobile settings drawer -->
   <div id="mobile-drawer" class="drawer-hidden">
@@ -128,6 +117,12 @@
         <input type="range" id="mobile-volume" min="0" max="100" value="70" class="drawer-slider">
       </div>
     </div>
+  </div>
+
+  <!-- Mobile gesture hint + settings toggle -->
+  <div id="mobile-bottom-bar">
+    <span id="gesture-hint">Swipe ←→ move · ↓ drop · tap rotate · 2-finger hold</span>
+    <button id="mobile-menu-toggle">☰</button>
   </div>
 
   <script type="module" src="js/game.js"></script>

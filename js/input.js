@@ -109,96 +109,75 @@ class InputHandler {
   }
 
   #attachTouchControls() {
-    // ── Button controls ──
-    const buttons = document.querySelectorAll('.touch-btn[data-action]');
-    for (const btn of buttons) {
-      const action = btn.dataset.action;
-      if (!action) continue;
-
-      const isRepeatable = action === 'left' || action === 'right' || action === 'softDrop';
-
-      btn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        btn.classList.add('touch-active');
-        this.#callbacks[action]?.();
-
-        if (action === 'softDrop') this.#softDropHeld = true;
-
-        if (isRepeatable) {
-          clearInterval(this.#touchRepeatInterval);
-          this.#touchRepeatInterval = setInterval(() => {
-            this.#callbacks[action]?.();
-          }, action === 'softDrop' ? 50 : 80);
-        }
-      }, { passive: false });
-
-      btn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        btn.classList.remove('touch-active');
-        if (action === 'softDrop') this.#softDropHeld = false;
-        if (isRepeatable) {
-          clearInterval(this.#touchRepeatInterval);
-          this.#touchRepeatInterval = null;
-        }
-      }, { passive: false });
-
-      btn.addEventListener('touchcancel', () => {
-        btn.classList.remove('touch-active');
-        if (action === 'softDrop') this.#softDropHeld = false;
-        if (isRepeatable) {
-          clearInterval(this.#touchRepeatInterval);
-          this.#touchRepeatInterval = null;
-        }
-      });
-    }
-
-    // ── Swipe gestures on game canvas ──
-    const canvas = document.getElementById('game-canvas');
-    if (!canvas) return;
+    // Use dedicated gesture area on mobile, fall back to canvas on desktop emulation
+    const gestureTarget = document.getElementById('gesture-area') || document.getElementById('game-canvas');
+    if (!gestureTarget) return;
 
     let startX = 0;
     let startY = 0;
     let startTime = 0;
-    let swiped = false;
-    const SWIPE_THRESHOLD = 30;
-    const TAP_THRESHOLD = 15;
+    let hasMoved = false;
+    let moveCount = 0;
+    const MOVE_THRESHOLD = 25;  // px per column-move
+    const TAP_THRESHOLD = 12;
+    const SWIPE_DOWN_THRESHOLD = 40;
 
-    canvas.addEventListener('touchstart', (e) => {
+    gestureTarget.addEventListener('touchstart', (e) => {
       e.preventDefault();
+
+      // Two-finger tap = hold
+      if (e.touches.length >= 2) {
+        this.#callbacks['hold']?.();
+        return;
+      }
+
       const t = e.touches[0];
       startX = t.clientX;
       startY = t.clientY;
       startTime = Date.now();
-      swiped = false;
+      hasMoved = false;
+      moveCount = 0;
     }, { passive: false });
 
-    canvas.addEventListener('touchmove', (e) => {
+    gestureTarget.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      if (swiped) return;
+      if (e.touches.length !== 1) return;
+
       const t = e.touches[0];
       const dx = t.clientX - startX;
       const dy = t.clientY - startY;
 
-      if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-        // Horizontal swipe — move piece
-        this.#callbacks[dx > 0 ? 'right' : 'left']?.();
-        startX = t.clientX; // allow repeated swipes while dragging
-      } else if (dy > SWIPE_THRESHOLD && Math.abs(dy) > Math.abs(dx)) {
-        // Swipe down — hard drop
-        swiped = true;
+      // Horizontal drag — move piece per threshold crossed
+      if (Math.abs(dx) >= MOVE_THRESHOLD) {
+        const moves = Math.floor(Math.abs(dx) / MOVE_THRESHOLD);
+        const dir = dx > 0 ? 'right' : 'left';
+        for (let i = 0; i < moves; i++) {
+          this.#callbacks[dir]?.();
+        }
+        startX += (dx > 0 ? 1 : -1) * moves * MOVE_THRESHOLD;
+        hasMoved = true;
+        moveCount += moves;
+      }
+
+      // Downward swipe — hard drop (only if not already moving horizontally)
+      if (dy > SWIPE_DOWN_THRESHOLD && Math.abs(dy) > Math.abs(dx) * 1.5 && moveCount === 0) {
+        hasMoved = true;
         this.#callbacks['hardDrop']?.();
+        // Reset to prevent re-triggering
+        startY = t.clientY;
       }
     }, { passive: false });
 
-    canvas.addEventListener('touchend', (e) => {
+    gestureTarget.addEventListener('touchend', (e) => {
       e.preventDefault();
-      if (swiped) return;
+      if (hasMoved) return;
+
       const elapsed = Date.now() - startTime;
       const t = e.changedTouches[0];
       const dx = Math.abs(t.clientX - startX);
       const dy = Math.abs(t.clientY - startY);
 
-      // Tap = rotate
+      // Quick tap = rotate
       if (dx < TAP_THRESHOLD && dy < TAP_THRESHOLD && elapsed < 300) {
         this.#callbacks['rotateCW']?.();
       }

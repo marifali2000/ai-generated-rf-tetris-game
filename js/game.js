@@ -106,34 +106,35 @@ class Game {
     // ── Mobile drawer controls ──
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const mobileDrawer = document.getElementById('mobile-drawer');
-    mobileMenuToggle?.addEventListener('touchstart', (e) => {
+    mobileMenuToggle?.addEventListener('click', (e) => {
       e.preventDefault();
+      this.#sound.init();
       mobileDrawer?.classList.toggle('drawer-hidden');
       if (this.#state === 'playing') this.#togglePause();
-    }, { passive: false });
+    });
 
-    document.getElementById('mobile-btn-demo')?.addEventListener('touchstart', (e) => {
+    document.getElementById('mobile-btn-demo')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.#sound.init();
       this.#toggleDemo();
       mobileDrawer?.classList.add('drawer-hidden');
-    }, { passive: false });
+    });
 
-    document.getElementById('mobile-btn-mute')?.addEventListener('touchstart', (e) => {
+    document.getElementById('mobile-btn-mute')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.#sound.init();
       this.#sound.toggleMute();
       this.#updateMuteButton();
       const btn = e.currentTarget;
       btn.textContent = this.#sound.muted ? '🔇 MUTED' : '🔊 SOUND';
-    }, { passive: false });
+    });
 
-    document.getElementById('mobile-btn-pause')?.addEventListener('touchstart', (e) => {
+    document.getElementById('mobile-btn-pause')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.#sound.init();
       this.#togglePause();
       mobileDrawer?.classList.add('drawer-hidden');
-    }, { passive: false });
+    });
 
     const mobileTheme = document.getElementById('mobile-sound-theme');
     mobileTheme?.addEventListener('change', (e) => {
@@ -154,10 +155,16 @@ class Game {
       if (desktopSlider) desktopSlider.value = e.target.value;
     });
 
-    // Init sound on first touch anywhere (mobile audio unlock)
-    document.addEventListener('touchstart', () => {
+    // Init sound on first interaction (mobile audio unlock — iOS needs touchend or click)
+    const unlockAudio = () => {
       this.#sound.init();
-    }, { once: true });
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('touchend', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    };
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('touchend', unlockAudio);
+    document.addEventListener('click', unlockAudio);
   }
 
   #bindInput() {
