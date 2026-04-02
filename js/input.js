@@ -109,87 +109,81 @@ class InputHandler {
   }
 
   #attachTouchControls() {
-    // Use the game canvas as the gesture target — it fills the screen on mobile
     const gestureTarget = document.getElementById('game-canvas');
     if (!gestureTarget) return;
 
-    let startX = 0;
-    let startY = 0;
-    let startTime = 0;
-    let hasMoved = false;
-    let moveCount = 0;
-    let hardDropped = false; // prevent multiple drops per touch
-    const MOVE_THRESHOLD = 25;  // px per column-move
+    const ts = { startX: 0, startY: 0, startTime: 0, hasMoved: false, moveCount: 0, hardDropped: false };
+    const MOVE_THRESHOLD = 25;
     const TAP_THRESHOLD = 12;
     const SWIPE_DOWN_THRESHOLD = 40;
 
     gestureTarget.addEventListener('touchstart', (e) => {
       e.preventDefault();
-
-      // Two-finger tap = hold
-      if (e.touches.length >= 2) {
-        this.#callbacks['hold']?.();
-        return;
-      }
-
-      const t = e.touches[0];
-      startX = t.clientX;
-      startY = t.clientY;
-      startTime = Date.now();
-      hasMoved = false;
-      moveCount = 0;
-      hardDropped = false;
+      this.#handleTouchStart(e, ts);
     }, { passive: false });
 
     gestureTarget.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      if (e.touches.length !== 1) return;
-
-      const t = e.touches[0];
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
-
-      // Horizontal drag — move piece per threshold crossed
-      if (Math.abs(dx) >= MOVE_THRESHOLD) {
-        const moves = Math.floor(Math.abs(dx) / MOVE_THRESHOLD);
-        const dir = dx > 0 ? 'right' : 'left';
-        for (let i = 0; i < moves; i++) {
-          this.#callbacks[dir]?.();
-        }
-        startX += (dx > 0 ? 1 : -1) * moves * MOVE_THRESHOLD;
-        hasMoved = true;
-        moveCount += moves;
-      }
-
-      // Downward swipe — hard drop (only once per touch, and only if not already moving horizontally)
-      if (!hardDropped && dy > SWIPE_DOWN_THRESHOLD && Math.abs(dy) > Math.abs(dx) * 1.5 && moveCount === 0) {
-        hasMoved = true;
-        hardDropped = true;
-        this.#callbacks['hardDrop']?.();
-      }
+      this.#handleTouchMove(e, ts, MOVE_THRESHOLD, SWIPE_DOWN_THRESHOLD);
     }, { passive: false });
 
     gestureTarget.addEventListener('touchend', (e) => {
       e.preventDefault();
-      if (hasMoved) return;
-
-      const elapsed = Date.now() - startTime;
-      const t = e.changedTouches[0];
-      const dx = Math.abs(t.clientX - startX);
-      const dy = Math.abs(t.clientY - startY);
-
-      // Quick tap = rotate
-      if (dx < TAP_THRESHOLD && dy < TAP_THRESHOLD && elapsed < 300) {
-        this.#callbacks['rotateCW']?.();
-      }
+      this.#handleTouchEnd(e, ts, TAP_THRESHOLD);
     }, { passive: false });
 
-    // ── Tap overlay to start ──
     const overlay = document.getElementById('overlay');
     overlay?.addEventListener('touchstart', (e) => {
       e.preventDefault();
       this.#callbacks['start']?.();
     }, { passive: false });
+  }
+
+  #handleTouchStart(e, ts) {
+    if (e.touches.length >= 2) {
+      this.#callbacks['hold']?.();
+      return;
+    }
+    const t = e.touches[0];
+    ts.startX = t.clientX;
+    ts.startY = t.clientY;
+    ts.startTime = Date.now();
+    ts.hasMoved = false;
+    ts.moveCount = 0;
+    ts.hardDropped = false;
+  }
+
+  #handleTouchMove(e, ts, moveThreshold, swipeThreshold) {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const dx = t.clientX - ts.startX;
+    const dy = t.clientY - ts.startY;
+
+    if (Math.abs(dx) >= moveThreshold) {
+      const moves = Math.floor(Math.abs(dx) / moveThreshold);
+      const dir = dx > 0 ? 'right' : 'left';
+      for (let i = 0; i < moves; i++) this.#callbacks[dir]?.();
+      ts.startX += (dx > 0 ? 1 : -1) * moves * moveThreshold;
+      ts.hasMoved = true;
+      ts.moveCount += moves;
+    }
+
+    if (!ts.hardDropped && dy > swipeThreshold && Math.abs(dy) > Math.abs(dx) * 1.5 && ts.moveCount === 0) {
+      ts.hasMoved = true;
+      ts.hardDropped = true;
+      this.#callbacks['hardDrop']?.();
+    }
+  }
+
+  #handleTouchEnd(e, ts, tapThreshold) {
+    if (ts.hasMoved) return;
+    const elapsed = Date.now() - ts.startTime;
+    const t = e.changedTouches[0];
+    const dx = Math.abs(t.clientX - ts.startX);
+    const dy = Math.abs(t.clientY - ts.startY);
+    if (dx < tapThreshold && dy < tapThreshold && elapsed < 300) {
+      this.#callbacks['rotateCW']?.();
+    }
   }
 
   #onKeyDown(e) {

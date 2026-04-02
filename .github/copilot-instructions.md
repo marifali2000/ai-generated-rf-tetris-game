@@ -10,6 +10,13 @@ Browser-based Tetris game with breaking/shattering sound effects. Must work in a
 - **Module pattern**: Use ES modules (`type="module"`) for code organization
 
 ### File Structure
+This is the recommended file structure for the project. However I would like to see if you can suggest any improvements to it. Also these can be the parent classes for the project, but feel free to add more classes or modules as needed to keep the code organized and maintainable. The main goal is to ensure that each file has a clear responsibility and that the overall structure is easy to navigate. No file should be more than 1000 lines, and no function should be longer than 50 lines — break into smaller helper functions as needed. Follow SOLID principles where applicable, and ensure that the code is modular and reusable. SOLID principles include:
+- Single Responsibility Principle: Each class or module should have one responsibility or reason to change.
+- Open/Closed Principle: Software entities (classes, modules, functions) should be open for extension but closed for modification.
+- Liskov Substitution Principle: Objects of a superclass should be replaceable with objects of a subclass without affecting the correctness of the program.
+- Interface Segregation Principle: Clients should not be forced to depend on interfaces they do not use.
+- Dependency Inversion Principle: High-level modules should not depend on low-level modules. Both should depend on abstractions.
+- All the behavior of the game should be encapsulated within these modules, and they should interact with each other through well-defined interfaces. This will help ensure that the code is maintainable, testable, and scalable as the project evolves.
 ```
 index.html          — Entry point, canvas element, minimal UI
 css/style.css       — Game styling, responsive layout, dark theme

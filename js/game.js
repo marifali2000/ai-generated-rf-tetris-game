@@ -11,6 +11,8 @@ import { AutoPlayer } from './autoplay.js';
 
 const LOCK_DELAY = 500; // ms
 const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window;
+const SPEED_STOPS = [0.25, 1, 2, 4];
+const SPEED_LABELS = ['0.5×', '1×', '2×', '4×'];
 
 class Game {
   #board;
@@ -57,17 +59,24 @@ class Game {
 
     this.#bindInput();
     this.#input.attach();
+    this.#initUI();
+    this.#initButtonBar();
+    this.#initDesktopSettings();
+    this.#initMobileDrawer();
+    this.#initMobileSettings();
+    this.#initDemoControls();
+    this.#initAudioUnlock();
+  }
 
-    // Show tutorial on mobile first visit, or regular overlay
+  /** Tutorial overlay, orientation lock, and sound callbacks. */
+  #initUI() {
     const tutorialOverlay = document.getElementById('tutorial-overlay');
     const tutorialBtn = document.getElementById('tutorial-start-btn');
-    // Tutorial start button always dismisses + starts game
     tutorialBtn?.addEventListener('click', () => {
       tutorialOverlay?.classList.remove('visible');
       localStorage.setItem('tetris-tutorial-seen', '1');
       this.#sound.init();
       this.#sound.warmUp();
-      // Show hamburger hint after tutorial
       this.#showHamburgerHint();
       if (this.#state === 'idle' || this.#state === 'gameOver') {
         this.#handleStart();
@@ -80,11 +89,9 @@ class Game {
       this.#renderer.showOverlay('');
     } else {
       this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
-      // Show hamburger hint if tutorial already seen
       if (IS_MOBILE) this.#showHamburgerHint();
     }
 
-    // Landscape detection — pause game in landscape on mobile
     if (IS_MOBILE) {
       const orientationHandler = () => {
         const isLandscape = window.matchMedia('(orientation: landscape)').matches;
@@ -95,14 +102,15 @@ class Game {
       window.matchMedia('(orientation: landscape)').addEventListener('change', orientationHandler);
     }
 
-    // Wire sound callbacks to renderer for animation-synced audio
     this.#renderer.setSoundCallbacks({
       onRowHighlight: (rowIndex) => this.#sound.playRowHighlight(rowIndex),
       onCellPop: (col, totalCols) => this.#sound.playCellPop(col, totalCols),
       onRowCleared: (rowIndex) => this.#sound.playRowCleared(rowIndex),
     });
+  }
 
-    // Button bar
+  /** Desktop button bar: start, pause, stop, demo, mute. */
+  #initButtonBar() {
     this.#btnStart = document.getElementById('btn-start');
     this.#btnPause = document.getElementById('btn-pause');
     this.#btnStop = document.getElementById('btn-stop');
@@ -130,100 +138,81 @@ class Game {
       this.#sound.toggleMute();
       this.#updateMuteButton();
     });
+  }
 
-    // Sound theme selector
+  /** Desktop sound theme, volume, and speed sliders. */
+  #initDesktopSettings() {
     const themeSelect = document.getElementById('sound-theme');
     themeSelect?.addEventListener('change', (e) => {
       this.#sound.init();
       this.#sound.setSoundTheme(e.target.value);
       this.#renderer.setVisualTheme(e.target.value);
-      // Preview audio with a double-line clear sound
       this.#sound.playLineClear(2);
     });
 
-    // Volume slider
     const volumeSlider = document.getElementById('volume-slider');
     volumeSlider?.addEventListener('input', (e) => {
       this.#sound.init();
       this.#sound.setVolume(Number(e.target.value) / 100);
     });
 
-    // Speed slider (desktop) — controls animation speed only
     const speedSlider = document.getElementById('speed-slider');
-    const speedLabel = document.getElementById('speed-label');
-    const SPEED_STOPS = [0.25, 1, 2, 4];
-    const SPEED_LABELS = ['0.5×', '1×', '2×', '4×'];
     speedSlider?.addEventListener('input', (e) => {
-      const idx = Number(e.target.value);
-      const mult = SPEED_STOPS[idx];
-      this.#renderer.setAnimSpeed(mult);
-      this.#sound.setAnimSpeed(mult);
-      if (speedLabel) speedLabel.textContent = SPEED_LABELS[idx];
-      // Sync mobile slider
-      const mobileSpeed = document.getElementById('mobile-speed');
-      const mobileSpdLabel = document.getElementById('mobile-speed-label');
-      if (mobileSpeed) mobileSpeed.value = e.target.value;
-      if (mobileSpdLabel) mobileSpdLabel.textContent = SPEED_LABELS[idx];
+      this.#syncSpeed(e.target.value);
     });
+  }
 
-    // ── Mobile drawer controls ──
-    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+  /** Bind a mobile drawer button: init sound, run action, close drawer. */
+  #mobileBtn(id, action, drawer) {
+    document.getElementById(id)?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.#sound.init();
+      action();
+      drawer?.classList.add('drawer-hidden');
+    });
+  }
+
+  /** Mobile hamburger menu, game buttons, and help. */
+  #initMobileDrawer() {
     const mobileDrawer = document.getElementById('mobile-drawer');
     const hamburgerHint = document.getElementById('hamburger-hint');
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     mobileMenuToggle?.addEventListener('click', (e) => {
       e.preventDefault();
       this.#sound.init();
-      // Dismiss hamburger hint on first tap
       mobileMenuToggle.classList.remove('hamburger-highlight');
       hamburgerHint?.classList.remove('visible');
       mobileDrawer?.classList.toggle('drawer-hidden');
       if (this.#state === 'playing') this.#togglePause();
     });
 
-    document.getElementById('mobile-btn-start')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.#sound.init();
-      this.#handleStart();
-      mobileDrawer?.classList.add('drawer-hidden');
-    });
-
-    document.getElementById('mobile-btn-stop')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.#sound.init();
-      this.#stopGame();
-      mobileDrawer?.classList.add('drawer-hidden');
-    });
-
-    document.getElementById('mobile-btn-demo')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.#sound.init();
-      this.#toggleDemo();
-      mobileDrawer?.classList.add('drawer-hidden');
-    });
+    this.#mobileBtn('mobile-btn-start', () => this.#handleStart(), mobileDrawer);
+    this.#mobileBtn('mobile-btn-stop', () => this.#stopGame(), mobileDrawer);
+    this.#mobileBtn('mobile-btn-demo', () => this.#toggleDemo(), mobileDrawer);
+    this.#mobileBtn('mobile-btn-pause', () => this.#togglePause(), mobileDrawer);
 
     document.getElementById('mobile-btn-mute')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.#sound.init();
       this.#sound.toggleMute();
       this.#updateMuteButton();
-      const btn = e.currentTarget;
-      btn.textContent = this.#sound.muted ? '🔇 MUTED' : '🔊 SOUND';
+      e.currentTarget.textContent = this.#sound.muted ? '🔇 MUTED' : '🔊 SOUND';
     });
-
-    document.getElementById('mobile-btn-pause')?.addEventListener('click', (e) => {
+    document.getElementById('mobile-btn-help')?.addEventListener('click', (e) => {
       e.preventDefault();
-      this.#sound.init();
-      this.#togglePause();
+      document.getElementById('tutorial-overlay')?.classList.add('visible');
       mobileDrawer?.classList.add('drawer-hidden');
     });
+  }
 
+  /** Mobile theme, volume, and speed sliders. */
+  #initMobileSettings() {
     const mobileTheme = document.getElementById('mobile-sound-theme');
     mobileTheme?.addEventListener('change', (e) => {
       this.#sound.init();
       this.#sound.setSoundTheme(e.target.value);
       this.#renderer.setVisualTheme(e.target.value);
       this.#sound.playLineClear(2);
-      // Sync desktop select
       const desktopSelect = document.getElementById('sound-theme');
       if (desktopSelect) desktopSelect.value = e.target.value;
     });
@@ -232,81 +221,54 @@ class Game {
     mobileVolume?.addEventListener('input', (e) => {
       this.#sound.init();
       this.#sound.setVolume(Number(e.target.value) / 100);
-      // Sync desktop slider
       const desktopSlider = document.getElementById('volume-slider');
       if (desktopSlider) desktopSlider.value = e.target.value;
     });
 
-    // Mobile speed slider
     const mobileSpeed = document.getElementById('mobile-speed');
-    const mobileSpdLabel = document.getElementById('mobile-speed-label');
     mobileSpeed?.addEventListener('input', (e) => {
-      const idx = Number(e.target.value);
-      const mult = SPEED_STOPS[idx];
-      this.#renderer.setAnimSpeed(mult);
-      this.#sound.setAnimSpeed(mult);
-      if (mobileSpdLabel) mobileSpdLabel.textContent = SPEED_LABELS[idx];
-      // Sync desktop slider
-      const desktopSpeed = document.getElementById('speed-slider');
-      const desktopSpdLabel = document.getElementById('speed-label');
-      if (desktopSpeed) desktopSpeed.value = e.target.value;
-      if (desktopSpdLabel) desktopSpdLabel.textContent = SPEED_LABELS[idx];
+      this.#syncSpeed(e.target.value);
     });
+  }
 
-    // Help button — reopen tutorial
-    document.getElementById('mobile-btn-help')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      const tutorialOverlay = document.getElementById('tutorial-overlay');
-      tutorialOverlay?.classList.add('visible');
-      mobileDrawer?.classList.add('drawer-hidden');
-      if (this.#state === 'paused') {
-        // Stay paused, tutorial will dismiss on tap
-      }
-    });
+  /** Sync speed controls across desktop, mobile, and demo panels. */
+  #syncSpeed(value) {
+    const idx = Number(value);
+    const mult = SPEED_STOPS[idx];
+    this.#renderer.setAnimSpeed(mult);
+    this.#sound.setAnimSpeed(mult);
+    const label = SPEED_LABELS[idx];
+    for (const [sId, lId] of [['speed-slider', 'speed-label'], ['mobile-speed', 'mobile-speed-label'], ['demo-speed', 'demo-speed-label']]) {
+      const s = document.getElementById(sId);
+      const l = document.getElementById(lId);
+      if (s) s.value = value;
+      if (l) l.textContent = label;
+    }
+  }
 
-    // ── Demo floating controls ──
-    const demoControls = document.getElementById('demo-controls');
-    const demoVolume = document.getElementById('demo-volume');
-    const demoSpeed = document.getElementById('demo-speed');
-    const demoSpeedLabel = document.getElementById('demo-speed-label');
-    const demoTheme = document.getElementById('demo-theme');
+  /** Demo mode floating controls: volume, speed, theme, mute, stop. */
+  #initDemoControls() {
     const demoMuteBtn = document.getElementById('demo-mute-btn');
-    const demoStopBtn = document.getElementById('demo-stop-btn');
 
-    demoVolume?.addEventListener('input', (e) => {
+    document.getElementById('demo-volume')?.addEventListener('input', (e) => {
       this.#sound.init();
       const val = Number(e.target.value);
       this.#sound.setVolume(val / 100);
-      // Sync other sliders
       const ds = document.getElementById('volume-slider');
       const ms = document.getElementById('mobile-volume');
       if (ds) ds.value = val;
       if (ms) ms.value = val;
     });
 
-    demoSpeed?.addEventListener('input', (e) => {
-      const idx = Number(e.target.value);
-      const mult = SPEED_STOPS[idx];
-      this.#renderer.setAnimSpeed(mult);
-      this.#sound.setAnimSpeed(mult);
-      if (demoSpeedLabel) demoSpeedLabel.textContent = SPEED_LABELS[idx];
-      // Sync other sliders
-      const ds = document.getElementById('speed-slider');
-      const dl = document.getElementById('speed-label');
-      const ms = document.getElementById('mobile-speed');
-      const ml = document.getElementById('mobile-speed-label');
-      if (ds) ds.value = e.target.value;
-      if (dl) dl.textContent = SPEED_LABELS[idx];
-      if (ms) ms.value = e.target.value;
-      if (ml) ml.textContent = SPEED_LABELS[idx];
+    document.getElementById('demo-speed')?.addEventListener('input', (e) => {
+      this.#syncSpeed(e.target.value);
     });
 
-    demoTheme?.addEventListener('change', (e) => {
+    document.getElementById('demo-theme')?.addEventListener('change', (e) => {
       this.#sound.init();
       this.#sound.setSoundTheme(e.target.value);
       this.#renderer.setVisualTheme(e.target.value);
       this.#sound.playLineClear(2);
-      // Sync other selects
       const ds = document.getElementById('sound-theme');
       const ms = document.getElementById('mobile-sound-theme');
       if (ds) ds.value = e.target.value;
@@ -320,11 +282,13 @@ class Game {
       demoMuteBtn.textContent = this.#sound.muted ? '🔇 MUTED' : '🔊 SOUND';
     });
 
-    demoStopBtn?.addEventListener('click', () => {
+    document.getElementById('demo-stop-btn')?.addEventListener('click', () => {
       this.#toggleDemo();
     });
+  }
 
-    // Init sound on first interaction (mobile audio unlock — iOS needs touchend or click)
+  /** Unlock audio context on first user interaction (iOS requirement). */
+  #initAudioUnlock() {
     const unlockAudio = () => {
       this.#sound.init();
       document.removeEventListener('touchstart', unlockAudio);
@@ -805,7 +769,7 @@ class Game {
       if (dv) dv.value = document.getElementById('volume-slider')?.value || 70;
       if (ds) ds.value = document.getElementById('speed-slider')?.value || '2';
       if (dt) dt.value = document.getElementById('sound-theme')?.value || 'glass';
-      if (dl) dl.textContent = ['0.5\u00d7', '1\u00d7', '2\u00d7', '4\u00d7'][Number(ds?.value || 2)];
+      if (dl) dl.textContent = SPEED_LABELS[Number(ds?.value || 2)];
       if (this.#state !== 'playing') {
         this.#startGame();
       }
