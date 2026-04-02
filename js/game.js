@@ -228,6 +228,7 @@ class Game {
       this.#startGame();
     } else if (this.#state === 'paused') {
       this.#togglePause();
+      document.getElementById('mobile-drawer')?.classList.add('drawer-hidden');
     }
   }
 
