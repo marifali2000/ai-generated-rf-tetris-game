@@ -136,6 +136,7 @@ class Game {
     themeSelect?.addEventListener('change', (e) => {
       this.#sound.init();
       this.#sound.setSoundTheme(e.target.value);
+      this.#renderer.setVisualTheme(e.target.value);
       // Preview audio with a double-line clear sound
       this.#sound.playLineClear(2);
     });
@@ -220,6 +221,7 @@ class Game {
     mobileTheme?.addEventListener('change', (e) => {
       this.#sound.init();
       this.#sound.setSoundTheme(e.target.value);
+      this.#renderer.setVisualTheme(e.target.value);
       this.#sound.playLineClear(2);
       // Sync desktop select
       const desktopSelect = document.getElementById('sound-theme');
@@ -302,6 +304,7 @@ class Game {
     demoTheme?.addEventListener('change', (e) => {
       this.#sound.init();
       this.#sound.setSoundTheme(e.target.value);
+      this.#renderer.setVisualTheme(e.target.value);
       this.#sound.playLineClear(2);
       // Sync other selects
       const ds = document.getElementById('sound-theme');

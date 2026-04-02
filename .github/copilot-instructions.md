@@ -52,6 +52,16 @@ All sounds use Web Audio API oscillators and noise buffers:
 - All game state in a single state object (immutable updates where practical)
 - No external libraries, frameworks, or CDN dependencies
 - Prefer `class` syntax for game entities (Board, Piece, Renderer, SoundEngine)
+- No file should be more than 1000 lines — split into modules as needed
+- No functions longer than 50 lines — break into smaller helper functions
+- Use descriptive variable and function names
+- Comment complex logic, especially for rotation and collision detection
+- Use consistent indentation (2 spaces) and spacing
+- Use template literals for string concatenation
+- Avoid global variables — encapsulate in modules or classes
+- Use feature detection for Web Audio API, with graceful fallback if unavailable (game should still work silently)
+- Ensure all code runs without transpilation in modern browsers supporting ES2020+ features
+- 
 
 ## Build and Test
 - No build step — open `index.html` directly in browser
@@ -62,3 +72,9 @@ All sounds use Web Audio API oscillators and noise buffers:
 - Must work without transpilation in browsers supporting ES2020+
 - Use feature detection, not user-agent sniffing
 - Provide graceful fallback if Web Audio API is unavailable (game works silently)
+
+## Pushing the code
+- Write clear commit messages describing the changes
+- After every push, make a tag with the version number (e.g., `v1.0.0`) and push tags to GitHub
+- Update the README.md with any new features or changes to the project structure or controls    
+- Ensure the project is deployed to GitHub Pages and the link is included in the README.md
