@@ -22,41 +22,126 @@ A modern Tetris clone that runs directly in your browser with zero dependencies 
 - **T-spin detection** with bonus scoring
 - **Back-to-back bonus** for consecutive difficult clears
 - **Combo system** with escalating rewards
+- **Perfect clear detection** with bonus scoring
 - **Progressive difficulty** — gravity increases every 10 lines
+- **9 visual themes** — Glass, Concrete, Crystal, Metal, Ice, Wood, Plastic, Gold, Silver
 
 ### Sound Design
 
 All sounds are generated procedurally using the **Web Audio API** — no audio files needed:
 
-- 5 selectable sound themes: Glass Shatter, Concrete Break, Crystal Chime, Metal Clang, Ice Crack
+- **9 selectable sound themes**: Glass Shatter, Concrete Break, Crystal Chime, Metal Clang, Ice Crack, Wood Knock, Plastic Pop, Gold Ring, Silver Chime
+- Per-row highlight and cell pop sounds synced to line clear animations
 - Dramatic line clear effects with shattering/breaking sounds
 - Impact thuds on hard drop, crystalline clicks on rotation
 - Escalating drama for Tetris (4-line) clears
-- Adjustable volume control
+- Combo hit, T-spin, back-to-back, and perfect clear audio cues
+- Danger zone heartbeat pulse when the stack gets high
+- Adjustable volume and animation speed controls
 
 ### Visual Effects
 
-- Multi-phase line clear animations: flash → crack → sweep → dissolve → shockwave → particles
+- **Multi-phase line clear**: row highlight → cell shrink → particle burst → shockwave
+- **Falling cell animation** with gravity physics and landing glow
+- **Per-theme cell rendering** — each of the 9 themes has a distinct visual style for both board cells and preview panels
 - Screen shake on hard drops and line clears
+- Piece trail motion blur
+- Lock bounce with squash-and-stretch
+- Lock pulse glow on placed pieces
 - Floating combo text and score popups
 - Danger zone pulsing when the stack gets high
-- Game over collapse cascade
-- Level-up celebration effects
+- Game over collapse cascade with rotation and gravity
+- Level-up celebration with golden particles
+- Animated stars background with speed boost on clears
+- Board edge glow and vignette
 
 ### Mobile Support
 
 - Fully responsive layout that adapts to any screen size
-- Touch controls with hold-to-repeat for movement buttons
-- Mobile-optimized stats bar
-- Pinch-to-zoom disabled for uninterrupted gameplay
+- Touch gesture controls: swipe left/right to move, swipe down to hard drop, tap to rotate, two-finger tap to hold
+- Slide-out hamburger menu with all settings
+- Mobile-optimized hold/next panels and stats bar
+- Orientation lock warning on landscape
+- Tutorial overlay for first-time mobile users
 
 ### Demo Mode
 
-Hit the **DEMO** button (or press `D`) to watch the AI autoplay — it evaluates all possible placements and picks the best move using a weighted heuristic.
+Hit the **DEMO** button (or press `D`) to watch the AI autoplay — it evaluates all possible placements and picks the best move using a weighted heuristic covering height, holes, bumpiness, and line clears.
+
+## Architecture & Design Practices
+
+### SOLID Principles
+
+This project follows SOLID principles adapted for a vanilla JavaScript ES module architecture:
+
+- **Single Responsibility** — Each module has one clear purpose: `Board` manages the grid and collision, `Piece` defines shapes and rotation, `Renderer` handles canvas drawing, `SoundEngine` manages audio, `Scoring` tracks points and levels, `InputHandler` processes keyboard and touch, `EffectsEngine` runs visual animations, `AutoPlayer` drives AI demo mode.
+- **Open/Closed** — New sound themes are added by creating a new theme module in `js/sounds/` and registering it in the `THEME_MAP` — no modification to the `SoundEngine` dispatcher. New visual themes follow the same pattern via dispatch tables in `cell-themes.js`.
+- **Liskov Substitution** — All 9 sound theme modules expose the same interface (spawn, rotate, lock, hardDrop, lineClear, etc.). Any theme can be swapped at runtime without affecting the sound engine.
+- **Interface Segregation** — The `EffectsEngine` exposes granular methods (`drawVanishingRows`, `drawFallingCells`, `drawShockwaves`, etc.) so the `Renderer` only calls what it needs per frame.
+- **Dependency Inversion** — High-level modules (`Game`) depend on abstractions. Sound callbacks are injected into the renderer via `setSoundCallbacks()`. The renderer doesn't know about the sound engine directly.
+
+### Design Patterns Used
+
+| Pattern | Where | Purpose |
+|---------|-------|---------|
+| **Strategy** | `js/sounds/*.js` | 9 interchangeable sound theme modules behind a common interface |
+| **Dispatch Table** | `js/rendering/cell-themes.js` | Theme-keyed maps (`MINI_CELL_DRAWERS`, `PREVIEW_CELL_DRAWERS`) replace switch statements |
+| **Observer** | `js/input.js` | Event callback registration via `on(action, callback)` |
+| **Facade** | `js/sound.js` | Thin dispatcher that delegates to the active theme module |
+| **Composition** | `js/renderer.js` → `js/rendering/effects.js` | Renderer composes an `EffectsEngine` for all animation state and drawing |
+| **Module Pattern** | All files | ES modules with explicit `export` for encapsulation |
+
+### Coding Standards
+
+- **No file exceeds 1,000 lines** — largest is `game.js` at 863 lines
+- **No function exceeds 50 lines** — complex methods are split into focused helpers (e.g., `Game` constructor uses 7 `#init*()` methods, `drawFrame` delegates to 6 private helper methods)
+- **ES2020+ features** — private class fields (`#field`), optional chaining (`?.`), nullish coalescing, `Object.freeze()`, arrow functions, template literals
+- **`const`/`let` only** — no `var` anywhere
+- **Class syntax** for all game entities (`Board`, `Piece`, `Renderer`, `SoundEngine`, `EffectsEngine`, `InputHandler`, `Scoring`, `AutoPlayer`, `Particle`)
+- **`requestAnimationFrame`** for the game loop — no `setInterval`
+- **Feature detection** for Web Audio API with graceful silent fallback
+- **Zero dependencies** — no npm, no CDN, no build step
+- **No transpilation needed** — runs natively in all modern browsers (ES2020+)
+
+### Project Structure
+
+```
+index.html                        — Entry point, canvas, UI layout
+css/
+  style.css                       — Core styling, dark theme, layout
+  responsive.css                  — Mobile breakpoints, orientation handling
+js/
+  game.js                         — Main game loop, state machine, init
+  board.js                        — Grid, collision, line clearing, gravity
+  piece.js                        — Tetromino shapes, SRS rotation, wall kicks
+  input.js                        — Keyboard (DAS/ARR) + touch gesture handling
+  sound.js                        — Sound engine facade (dispatches to themes)
+  renderer.js                     — Canvas rendering, delegates to effects/themes
+  scoring.js                      — Score, level, combo, T-spin, B2B tracking
+  autoplay.js                     — AI demo player with heuristic evaluation
+  rendering/
+    effects.js                    — EffectsEngine: particles, shockwaves, vanish,
+                                    falling cells, screen shake, danger zone
+    cell-themes.js                — Per-theme cell drawing (9 themes), dispatch tables
+    particles.js                  — Particle class, star field, constants
+  sounds/
+    sound-context.js              — Shared AudioContext wrapper
+    glass-theme.js                — Glass shatter sound theme
+    concrete-theme.js             — Concrete break sound theme
+    crystal-theme.js              — Crystal chime sound theme
+    metal-theme.js                — Metal clang sound theme
+    ice-theme.js                  — Ice crack sound theme
+    wood-theme.js                 — Wood knock sound theme
+    plastic-theme.js              — Plastic pop sound theme
+    gold-theme.js                 — Gold ring sound theme
+    silver-theme.js               — Silver chime sound theme
+```
+
+**Total: ~9,200 lines across 24 source files — all under 1,000 lines each.**
 
 ## How It Was Built
 
-This entire game was built in a **couple of hours** using **GitHub Copilot** with custom skills and instructions:
+This entire game was built using **GitHub Copilot** with custom skills and instructions:
 
 1. **Scaffolded** the project structure with a prompt file that defined the full Tetris specification
 2. **Generated** all game logic (board, pieces, SRS rotation, collision, scoring) through AI-assisted coding
@@ -64,6 +149,8 @@ This entire game was built in a **couple of hours** using **GitHub Copilot** wit
 4. **Created** dramatic animations using an eye-catching animations skill with particle systems and multi-phase effects
 5. **Polished** the UI/UX with a visual enhancement skill covering colors, layout, and responsive design
 6. **Added** mobile touch controls and responsive CSS for phone/tablet play
+7. **Refactored** to enforce coding guidelines — max 1,000 lines/file, max 50 lines/function, SOLID principles throughout
+8. **Extended** with 9 visual + sound themes using Strategy pattern and dispatch tables
 
 ### Tech Stack
 
@@ -75,21 +162,6 @@ This entire game was built in a **couple of hours** using **GitHub Copilot** wit
 | Logic | Vanilla JavaScript (ES modules) |
 | Hosting | GitHub Pages |
 | Build step | None — open `index.html` and play |
-
-### Project Structure
-
-```
-index.html          — Entry point, canvas, UI layout
-css/style.css       — Styling, responsive layout, dark theme
-js/game.js          — Main game loop, state management
-js/board.js         — Grid, collision detection, line clearing
-js/piece.js         — Tetromino definitions, SRS rotation
-js/input.js         — Keyboard + touch input handling
-js/sound.js         — Web Audio API sound engine (5 themes)
-js/renderer.js      — Canvas drawing, animations, particles
-js/scoring.js       — Score, level, combo, T-spin tracking
-js/autoplay.js      — AI demo player
-```
 
 ## Controls
 

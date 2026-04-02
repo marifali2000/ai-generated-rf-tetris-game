@@ -5,6 +5,8 @@
 
 import { getColorForType, getShapeForType } from '../piece.js';
 
+const CELL_SIZE = 32;
+
 function lightenColor(hex, percent) {
   const num = Number.parseInt(hex.slice(1), 16);
   const r = Math.min(255, (num >> 16) + Math.round(2.55 * percent));

@@ -24,7 +24,7 @@ class EffectsEngine {
   clearAnimTimer = 0;
   clearAnimDuration = 0;
   vanishingRows = [];
-  vanishPhase = 'none';
+  vanishPhase = false;
   slamLines = [];
   lockPulse = null;
   crackLines = [];
@@ -42,7 +42,7 @@ class EffectsEngine {
   visualTheme = 'glass';
 
   get isAnimating() {
-    return this.vanishPhase !== 'none';
+    return this.vanishPhase === true;
   }
 
   get isCollapsing() {
@@ -705,7 +705,13 @@ class EffectsEngine {
       if (t.alpha < 0.02) continue;
       ctx.save();
       ctx.globalAlpha = t.alpha;
-      this.#drawPiece(ctx, t.shape, t.x, t.y, t.color, t.alpha);
+      for (let r = 0; r < t.shape.length; r++) {
+        for (let c = 0; c < t.shape[r].length; c++) {
+          if (t.shape[r][c]) {
+            drawCell(ctx, t.x + c, t.y + r, t.color, t.alpha, this.visualTheme, CELL_SIZE);
+          }
+        }
+      }
       ctx.restore();
       t.alpha *= 0.5;
     }

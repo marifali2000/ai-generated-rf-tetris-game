@@ -23,7 +23,7 @@ class Renderer {
   #mobileScoreEl;
   #mobileLevelEl;
   #mobileLinesEl;
-  #fx;
+  #fx = new EffectsEngine();
   #displayScore = 0;
   #displayLines = 0;
   #bgGradient = null;
@@ -32,7 +32,7 @@ class Renderer {
   // Dramatic line clear animation state
 
   // Row-by-row vanish: each cleared row's cells shrink and fade  // { row, cells: [{col, color, scale, alpha, delay}], startFrame }
-  #vanishPhase = false; // true while rows are vanishing
+  // vanishPhase lives on EffectsEngine (#fx.vanishPhase)
 
   // Hard drop slam lines
 
@@ -261,7 +261,7 @@ class Renderer {
       const sx = (Math.random() - 0.5) * this.#fx.shakeAmount;
       const sy = (Math.random() - 0.5) * this.#fx.shakeAmount;
       ctx.translate(sx, sy);
-      this.#fx.shakeAmount *= this.#shakeDecay;
+      this.#fx.shakeAmount *= this.#fx.shakeDecay;
     } else {
       this.#fx.shakeAmount = 0;
     }
@@ -416,9 +416,61 @@ class Renderer {
     if (this.#mobileHoldCtx) this.#drawHoldToCanvas(this.#mobileHoldCtx, type);
   }
 
+  #drawHoldToCanvas(ctx, type) {
+    const canvas = ctx.canvas;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    bg.addColorStop(0, '#0c1a2e');
+    bg.addColorStop(1, '#0a1222');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (!type) return;
+    drawPreviewPiece(ctx, type, canvas.width, canvas.height, this.#visualTheme);
+  }
+
   #drawNextPieces(types) {
     this.#drawNextToCanvas(this.#nextCtx, types, 24);
     if (this.#mobileNextCtx) this.#drawNextToCanvas(this.#mobileNextCtx, types, 12);
+  }
+
+  #drawNextToCanvas(ctx, types, cellSize) {
+    const canvas = ctx.canvas;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    bg.addColorStop(0, '#0c1a2e');
+    bg.addColorStop(1, '#0a1222');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (!types || types.length === 0) return;
+
+    const slotH = canvas.height / 3;
+    for (let i = 0; i < types.length; i++) {
+      const shape = getShapeForType(types[i]);
+      const color = getColorForType(types[i]);
+      const offsetX = (canvas.width - shape[0].length * cellSize) / 2;
+      const offsetY = i * slotH + (slotH - shape.length * cellSize) / 2;
+
+      for (let r = 0; r < shape.length; r++) {
+        for (let c = 0; c < shape[r].length; c++) {
+          if (shape[r][c]) {
+            const px = offsetX + c * cellSize;
+            const py = offsetY + r * cellSize;
+            const inset = 1;
+            const w = cellSize - 2;
+            drawMiniCell(ctx, px, py, inset, w, cellSize, color, this.#visualTheme);
+          }
+        }
+      }
+
+      if (i < types.length - 1) {
+        ctx.strokeStyle = 'rgba(27, 58, 92, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(10, (i + 1) * slotH);
+        ctx.lineTo(canvas.width - 10, (i + 1) * slotH);
+        ctx.stroke();
+      }
+    }
   }
 
   #updateStats(score, level, lines, highScore) {
