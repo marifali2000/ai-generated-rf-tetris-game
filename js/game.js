@@ -57,7 +57,34 @@ class Game {
 
     this.#bindInput();
     this.#input.attach();
-    this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
+
+    // Show tutorial on mobile first visit, or regular overlay
+    if (IS_MOBILE && !localStorage.getItem('tetris-tutorial-seen')) {
+      const tutorialOverlay = document.getElementById('tutorial-overlay');
+      const tutorialBtn = document.getElementById('tutorial-start-btn');
+      tutorialOverlay?.classList.add('visible');
+      tutorialBtn?.addEventListener('click', () => {
+        tutorialOverlay?.classList.remove('visible');
+        localStorage.setItem('tetris-tutorial-seen', '1');
+        this.#sound.init();
+        this.#sound.warmUp();
+        this.#handleStart();
+      });
+      this.#renderer.showOverlay('');
+    } else {
+      this.#renderer.showOverlay(IS_MOBILE ? 'TAP TO START' : 'PRESS ENTER TO START');
+    }
+
+    // Landscape detection — pause game in landscape on mobile
+    if (IS_MOBILE) {
+      const orientationHandler = () => {
+        const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+        if (isLandscape && this.#state === 'playing') {
+          this.#togglePause();
+        }
+      };
+      window.matchMedia('(orientation: landscape)').addEventListener('change', orientationHandler);
+    }
 
     // Wire sound callbacks to renderer for animation-synced audio
     this.#renderer.setSoundCallbacks({
@@ -252,6 +279,8 @@ class Game {
   }
 
   #handleStart() {
+    // Dismiss tutorial if visible
+    document.getElementById('tutorial-overlay')?.classList.remove('visible');
     if (this.#state === 'idle' || this.#state === 'gameOver') {
       this.#startGame();
     } else if (this.#state === 'paused') {
@@ -562,7 +591,6 @@ class Game {
   }
 
   #togglePause() {
-    if (this.#autoPlayer.active) return; // no pause during demo
     if (this.#state === 'playing') {
       this.#state = 'paused';
       this.#sound.playPause();
@@ -701,7 +729,7 @@ class Game {
     }
     if (this.#btnPause) {
       this.#btnPause.textContent = paused ? '▶ RESUME' : '⏸ PAUSE';
-      this.#btnPause.disabled = !active || this.#autoPlayer.active;
+      this.#btnPause.disabled = !active;
     }
     if (this.#btnStop) {
       this.#btnStop.disabled = !active && this.#state !== 'gameOver';
