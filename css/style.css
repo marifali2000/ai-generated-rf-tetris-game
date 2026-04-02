@@ -492,35 +492,56 @@ kbd {
   50% { box-shadow: 0 0 20px rgba(90, 176, 255, 0.5), 0 0 40px rgba(90, 176, 255, 0.2); }
 }
 
-/* Demo settings indicator (floating text) */
+/* Demo settings indicator (floating old → new transition) */
 #demo-setting-indicator {
   position: fixed;
   top: 60px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  background: rgba(10, 25, 50, 0.9);
+  background: rgba(10, 25, 50, 0.92);
   border: 1px solid rgba(90, 176, 255, 0.5);
-  border-radius: 8px;
-  padding: 8px 20px;
+  border-radius: 10px;
+  padding: 10px 24px;
   color: #5ab0ff;
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   backdrop-filter: blur(8px);
   opacity: 0;
   pointer-events: none;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#demo-setting-indicator .demo-old {
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: line-through;
+  font-size: 12px;
+}
+
+#demo-setting-indicator .demo-arrow {
+  color: rgba(90, 176, 255, 0.7);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+#demo-setting-indicator .demo-new {
+  color: #5af0a8;
+  font-size: 15px;
+  text-shadow: 0 0 8px rgba(90, 240, 168, 0.4);
 }
 
 #demo-setting-indicator.show {
-  animation: indicatorFade 3s ease forwards;
+  animation: indicatorFade 2.5s ease forwards;
 }
 
 @keyframes indicatorFade {
   0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
-  70% { opacity: 1; }
+  20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80% { opacity: 1; }
   100% { opacity: 0; }
 }
 

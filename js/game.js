@@ -49,6 +49,7 @@ class Game {
   #inputBuffer = null;
   #dangerPulseTimer = 0;
   #lastPiecePos = null; // for trail tracking
+  #demoFrozen = false;   // true during demo setting changes
 
   constructor() {
     this.#board = new Board();
@@ -64,6 +65,8 @@ class Game {
       onSpeedChange: (v) => this.#syncSpeed(v),
       onMute: () => this.#demoSetMuted(true),
       onUnmute: () => this.#demoSetMuted(false),
+      onFreeze: () => this.#demoFreeze(),
+      onUnfreeze: () => this.#demoUnfreeze(),
       onHighlight: (type) => this.#demoHighlightDesktop(type),
       onClearHighlight: () => this.#demoClearDesktopHighlight(),
     });
@@ -454,6 +457,14 @@ class Game {
   #gameLoop(timestamp) {
     if (this.#state !== 'playing') return;
 
+    // Keep rendering but skip all game logic when demo-frozen
+    if (this.#demoFrozen) {
+      this.#lastTimestamp = timestamp;
+      this.#render();
+      this.#animFrameId = requestAnimationFrame((t) => this.#gameLoop(t));
+      return;
+    }
+
     // DAS auto-repeat
     const deltaMs = timestamp - (this.#lastTimestamp || timestamp);
     this.#lastTimestamp = timestamp;
@@ -759,6 +770,7 @@ class Game {
       // Stop demo
       this.#autoPlayer.stop();
       this.#demoCycler.stop();
+      this.#demoFrozen = false;
       this.#state = 'gameOver';
       this.#currentPiece = null;
       if (this.#animFrameId) {
@@ -798,6 +810,7 @@ class Game {
     if (this.#autoPlayer.active) {
       this.#autoPlayer.stop();
       this.#demoCycler.stop();
+      this.#demoFrozen = false;
       this.#btnDemo?.classList.remove('active');
     }
     document.getElementById('demo-controls')?.classList.add('demo-controls-hidden');
@@ -844,6 +857,23 @@ class Game {
     if (mobileMute) mobileMute.textContent = text;
     const demoMute = document.getElementById('demo-mute-btn');
     if (demoMute) demoMute.textContent = text;
+  }
+
+  /** Freeze blocks during demo setting changes — keeps rendering. */
+  #demoFreeze() {
+    this.#demoFrozen = true;
+    this.#lastDropTime = performance.now();
+    this.#lastAutoTime = performance.now();
+  }
+
+  /** Unfreeze blocks — reset timing so no jump in gravity. */
+  #demoUnfreeze() {
+    if (!this.#demoFrozen) return;
+    this.#demoFrozen = false;
+    const now = performance.now();
+    this.#lastDropTime = now;
+    this.#lastAutoTime = now;
+    this.#lastTimestamp = now;
   }
 
   /** Apply theme change from demo cycler across all UI panels. */

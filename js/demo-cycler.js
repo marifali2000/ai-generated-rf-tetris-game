@@ -1,10 +1,11 @@
 /**
  * Auto-cycles through game settings during demo mode.
- * Highlights the control being changed, applies the setting, game keeps playing.
+ * Freeze → show old→new for 2s → apply setting → unfreeze → play → repeat.
  */
 
-const STEP_INTERVAL = 6000;      // ms between setting changes
-const HIGHLIGHT_DURATION = 2500; // ms the control stays highlighted after change
+const PLAY_DURATION = 6000;      // ms to play after applying a setting
+const FREEZE_DURATION = 2000;    // ms to freeze & highlight before applying
+const SETTLE_DURATION = 1000;    // ms to show applied setting before resuming
 
 /** Maps setting type → demo panel element IDs to highlight. */
 const HIGHLIGHT_IDS = {
@@ -15,34 +16,50 @@ const HIGHLIGHT_IDS = {
   unmute: ['demo-mute-btn'],
 };
 
+/** Maps theme value → display label for old→new indicator. */
+const THEME_LABELS = {
+  glass: '🔮 Glass Shatter',
+  concrete: '🧱 Concrete Break',
+  crystal: '💎 Crystal Chime',
+  metal: '⚙️ Metal Clang',
+  ice: '❄️ Ice Crack',
+  wood: '🪵 Wood Snap',
+  plastic: '🧩 Plastic Pop',
+  gold: '🥇 Gold Ring',
+  silver: '🥈 Silver Chime',
+};
+
+/** Maps speed index → display label. */
+const SPEED_INDEX_LABELS = { '0': '0.5×', '1': '1×', '2': '2×', '3': '4×' };
+
 const DEMO_SEQUENCE = [
   { type: 'theme', value: 'concrete', label: '🧱 Concrete Break' },
   { type: 'volume', value: 40, label: '🔊 Volume: 40%' },
   { type: 'theme', value: 'crystal', label: '💎 Crystal Chime' },
-  { type: 'speed', value: '3', label: '⚡ Speed: 4×' },
+  { type: 'speed', value: '1', label: '⚡ Speed: 1×' },
   { type: 'theme', value: 'metal', label: '⚙️ Metal Clang' },
   { type: 'mute', label: '🔇 Sound: Muted' },
   { type: 'theme', value: 'ice', label: '❄️ Ice Crack' },
   { type: 'unmute', label: '🔊 Sound: On' },
   { type: 'volume', value: 90, label: '🔊 Volume: 90%' },
   { type: 'theme', value: 'wood', label: '🪵 Wood Snap' },
-  { type: 'speed', value: '0', label: '⚡ Speed: 0.5×' },
+  { type: 'speed', value: '2', label: '⚡ Speed: 2×' },
   { type: 'theme', value: 'plastic', label: '🧩 Plastic Pop' },
   { type: 'volume', value: 60, label: '🔊 Volume: 60%' },
   { type: 'theme', value: 'gold', label: '🥇 Gold Ring' },
-  { type: 'speed', value: '1', label: '⚡ Speed: 1×' },
+  { type: 'speed', value: '3', label: '⚡ Speed: 4×' },
   { type: 'theme', value: 'silver', label: '🥈 Silver Chime' },
   { type: 'volume', value: 70, label: '🔊 Volume: 70%' },
-  { type: 'speed', value: '2', label: '⚡ Speed: 2×' },
+  { type: 'speed', value: '1', label: '⚡ Speed: 1×' },
   { type: 'theme', value: 'glass', label: '🔮 Glass Shatter' },
 ];
 
 export class DemoCycler {
-  #stepTimer = null;
-  #highlightTimer = null;
+  #timer = null;
   #stepIndex = 0;
   #callbacks;
   #running = false;
+  #phase = 'idle'; // idle | freeze | play
 
   /**
    * @param {Object} callbacks
@@ -51,6 +68,8 @@ export class DemoCycler {
    * @param {Function} callbacks.onSpeedChange
    * @param {Function} callbacks.onMute
    * @param {Function} callbacks.onUnmute
+   * @param {Function} callbacks.onFreeze  — freeze game (blocks stop falling)
+   * @param {Function} callbacks.onUnfreeze — unfreeze game (blocks resume)
    * @param {Function} callbacks.onHighlight — highlight controls for a type
    * @param {Function} callbacks.onClearHighlight — remove highlights
    */
@@ -62,47 +81,58 @@ export class DemoCycler {
     this.stop();
     this.#stepIndex = 0;
     this.#running = true;
-    this.#stepTimer = setTimeout(() => this.#tick(), STEP_INTERVAL);
+    this.#phase = 'play';
+    // Let the game play before the first setting change
+    this.#timer = setTimeout(() => this.#beginFreeze(), PLAY_DURATION);
   }
 
   stop() {
     this.#running = false;
-    if (this.#stepTimer) {
-      clearTimeout(this.#stepTimer);
-      this.#stepTimer = null;
+    this.#phase = 'idle';
+    if (this.#timer) {
+      clearTimeout(this.#timer);
+      this.#timer = null;
     }
-    if (this.#highlightTimer) {
-      clearTimeout(this.#highlightTimer);
-      this.#highlightTimer = null;
-    }
-    this.#stepIndex = 0;
     this.#clearAllHighlights();
     this.#removeIndicator();
+    this.#callbacks.onUnfreeze();
   }
 
   get active() {
     return this.#running;
   }
 
-  /** Apply the setting, highlight the control, schedule next step. */
-  #tick() {
+  /** Phase 1: freeze blocks, highlight the control, show old→new indicator. */
+  #beginFreeze() {
     if (!this.#running) return;
     const step = DEMO_SEQUENCE[this.#stepIndex];
-
-    // Highlight, apply, show indicator — all at once, no pause
+    this.#phase = 'freeze';
+    this.#callbacks.onFreeze();
     this.#highlightControls(step.type);
     this.#callbacks.onHighlight(step.type);
     this.#bringDemoPanelForward();
-    this.#showIndicator(step.label);
+    const oldLabel = this.#getCurrentLabel(step.type);
+    this.#showTransitionIndicator(oldLabel, step.label);
+    this.#timer = setTimeout(() => this.#applyAndSettle(), FREEZE_DURATION);
+  }
+
+  /** Phase 2: apply setting, stay frozen so user sees the new value. */
+  #applyAndSettle() {
+    if (!this.#running) return;
+    const step = DEMO_SEQUENCE[this.#stepIndex];
     this.#applyStep(step);
+    this.#showAppliedIndicator(step.label);
+    this.#timer = setTimeout(() => this.#resume(), SETTLE_DURATION);
+  }
 
-    // Clear highlights after duration
-    this.#highlightTimer = setTimeout(() => {
-      this.#clearAllHighlights();
-    }, HIGHLIGHT_DURATION);
-
+  /** Phase 3: unfreeze, clear highlights, play for a while. */
+  #resume() {
+    if (!this.#running) return;
+    this.#phase = 'play';
+    this.#clearAllHighlights();
+    this.#callbacks.onUnfreeze();
     this.#stepIndex = (this.#stepIndex + 1) % DEMO_SEQUENCE.length;
-    this.#stepTimer = setTimeout(() => this.#tick(), STEP_INTERVAL);
+    this.#timer = setTimeout(() => this.#beginFreeze(), PLAY_DURATION);
   }
 
   #applyStep(step) {
@@ -153,7 +183,7 @@ export class DemoCycler {
     this.#restoreDemoPanelOpacity();
   }
 
-  /** Make demo panel fully opaque during highlight. */
+  /** Make demo panel fully opaque during freeze. */
   #bringDemoPanelForward() {
     document.getElementById('demo-controls')?.classList.add('demo-highlight-active');
   }
@@ -162,15 +192,51 @@ export class DemoCycler {
     document.getElementById('demo-controls')?.classList.remove('demo-highlight-active');
   }
 
-  /** Show a floating indicator with the setting name. */
-  #showIndicator(text) {
+  /** Get a human-readable label for the current value of a setting type. */
+  #getCurrentLabel(type) {
+    switch (type) {
+      case 'theme': {
+        const val = document.getElementById('demo-theme')?.value || 'glass';
+        return THEME_LABELS[val] || val;
+      }
+      case 'volume': {
+        const val = document.getElementById('demo-volume')?.value || '70';
+        return `🔊 Volume: ${val}%`;
+      }
+      case 'speed': {
+        const val = document.getElementById('demo-speed')?.value || '2';
+        return `⚡ Speed: ${SPEED_INDEX_LABELS[val] || val}`;
+      }
+      case 'mute':
+        return '🔊 Sound: On';
+      case 'unmute':
+        return '🔇 Sound: Muted';
+      default:
+        return '';
+    }
+  }
+
+  /** Show indicator with just the applied (new) setting. */
+  #showAppliedIndicator(label) {
+    let el = document.getElementById('demo-setting-indicator');
+    if (!el) return;
+    el.innerHTML = `<span class="demo-new demo-applied">✓ ${label}</span>`;
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+  }
+
+  /** Show a floating indicator with old → new transition. */
+  #showTransitionIndicator(oldLabel, newLabel) {
     let el = document.getElementById('demo-setting-indicator');
     if (!el) {
       el = document.createElement('div');
       el.id = 'demo-setting-indicator';
       document.body.appendChild(el);
     }
-    el.textContent = text;
+    el.innerHTML = `<span class="demo-old">${oldLabel}</span>`
+      + `<span class="demo-arrow">→</span>`
+      + `<span class="demo-new">${newLabel}</span>`;
     el.classList.remove('show');
     void el.offsetWidth;
     el.classList.add('show');
